@@ -1,3 +1,4 @@
+import os.path as path
 import re
 import distutils.dir_util as dir_uti
 
@@ -63,23 +64,25 @@ def askAndRemoveDir(dir, askOverride=False):
 	#verifico se la cartella esiste
 	if(path.isdir(dir)):
 		#chiedo all'utente se procede e sovrascrivere la cartella
-		if(askOverride):
-			print("La cartella {} è già presente, sovrascrivere? 0.No - 1.Sì", dir)
-		else:
-			print("Rimuovere la cartella {} ? 0.No - 1.Sì", dir)
+		while True:
+			if(askOverride):
+				print("La cartella " + dir + " è già presente, sovrascrivere? (s/n)")
+			else:
+				print("Rimuovere la cartella " + dir +" ?  (s/n)")
 
-		if(int(input()) == 1):
-			#l'utente ha scelto di sovrascrivere
-			#rimuovo la cartella
-			dir_uti.remove_tree(dir)
-			print("Cartella rimossa: {}", dir)
-			return True
-		else:
-			#l'utente ha scelto di non sovrascrive
-			print("Operazione annullata")
-			return False
+			userInput = input() 
+			if(userInput == "s"):
+				#l'utente ha scelto di sovrascrivere
+				#rimuovo la cartella
+				dir_uti.remove_tree(dir)
+				print("Cartella rimossa:", dir, end = "\n\n")
+				return True
+			elif(userInput == "n"):
+				#l'utente ha scelto di non sovrascrive
+				print("Operazione annullata", end = "\n\n")
+				return False
 	
-	return False
+	return True
 
 #chiede all'utente il nome del repository
 def askRepoName():

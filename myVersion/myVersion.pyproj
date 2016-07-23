@@ -6,12 +6,12 @@
     <ProjectGuid>7f2d7c49-d422-4e02-9f29-44945d9081c7</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>Server.py</StartupFile>
+    <StartupFile>Client.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>Server</Name>
+    <Name>myVersion</Name>
     <RootNamespace>PythonApplication1</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -29,15 +29,14 @@
     <Compile Include="Changeset.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MyVersion.py">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Client.py" />
     <Compile Include="Repository.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Server.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="uti.py" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
