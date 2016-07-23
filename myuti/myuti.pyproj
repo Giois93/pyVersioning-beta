@@ -3,16 +3,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>7f2d7c49-d422-4e02-9f29-44945d9081c7</ProjectGuid>
-    <ProjectHome>
-    </ProjectHome>
-    <StartupFile>Server.py</StartupFile>
+    <ProjectGuid>209b5ee8-4404-4a2f-931f-8fb47a30a73d</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>
+    </StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>Server</Name>
-    <RootNamespace>PythonApplication1</RootNamespace>
+    <Name>myuti</Name>
+    <RootNamespace>myuti</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,27 +22,13 @@
     <DebugSymbols>true</DebugSymbols>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="Branch.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Changeset.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MyVersion.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Repository.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Server.py">
-      <SubType>Code</SubType>
-    </Compile>
-  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="uti.py" />
+  </ItemGroup>
   <Import Condition="Exists($(PtvsTargetsFile))" Project="$(PtvsTargetsFile)" />
   <Import Condition="!Exists($(PtvsTargetsFile))" Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

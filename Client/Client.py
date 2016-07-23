@@ -20,8 +20,8 @@ Client v0.1.0
 import os
 import os.path as path
 import distutils.dir_util as dir_uti
-import Server
 import uti
+import Server
 
 #il client non deve gestire repository o branch, forse non servono le classi corrispondenti?
 #però deve potere selezionare quale branch usare (basta selezionare la cartella?)
