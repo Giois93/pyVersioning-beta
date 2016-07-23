@@ -84,6 +84,21 @@ def removeBranchMap(repoName, branchName):
 	uti.askAndRemoveDir(path.join(root, repoName, branchName))
 
 
+#
+def setRepo(repoName):
+	try:
+		currRepo = getRepo(repoName) #qui va la getrepo del client
+	except:
+		print("Il repository", repoName, "non esiste o non è stato mappato") 
+
+
+#
+def setBranch(branchName):
+	try:
+		currBranch = getBranch(branchName) #qui va la getBranch del client
+	except:
+		print("Il branch", branchName, "non esiste o non è stato mappato")
+
 ###################################
 
 def menuMyVersion():
@@ -114,6 +129,8 @@ def menu(userInput):
 	elif (command == "mapbranch")	: mapBranch(commandList.pop(), commandList.pop())
 	elif (command == "delrepo")		: removeRepositoryMap(commandList.pop())
 	elif (command == "delbranch")	: removeBranchMap(commandList.pop(), commandList.pop())
+	elif (command == "setrepo")		: setRepo(commandList.pop())
+	elif (command == "setbranch")	: setBranch(commandList.pop())
 	else							: print("Valore non ammesso", end="\n\n")
 	
 
@@ -125,6 +142,8 @@ def menu(userInput):
 	> mapbranch [repoName] [branchName]
 	> delrepo [repoName]
 	> delbranch [repoName] [branchName]
+	> setrepo [repoName]
+	> setbranch [branchName]
 	"""
 
 
@@ -135,6 +154,9 @@ myRoot = "C:/Users/Gioele/Desktop/myClient"
 #if(path.exists(root)):
 #	dir_uti.remove_tree(root)
 #my = MyVersion(root)
+
+currRepo = None
+currBranch = None
 
 menuMyVersion()
 
