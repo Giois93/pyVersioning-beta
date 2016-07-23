@@ -138,14 +138,14 @@ def menu(userInput):
 
 	#eseguo l'azione corrispondente al comando, default: "None"
 	menu =	{	"none"			: print("Valore non ammesso"),
-				"exit"			: print("Programma terminato"),
+				"exit"			: print("Programma terminato."),
 				"repolist"		: showRepos(),
 				"branchlist"	: showBranches(),
 				"maprepo"		: mapRepository(commandList.pop()),
 				"mapbranch"		: mapBranch(commandList.pop(), commandList.pop()),
 				"delrepo"		: removeRepositoryMap(commandList.pop()),
 				"delbranch"		: removeBranchMap(commandList.pop(), commandList.pop()),
-			}.get(commandList.pop(), -1)
+			}.get(commandList.pop(), "none")
 	
 	"""COMANDI:
 	> exit
@@ -157,6 +157,10 @@ def menu(userInput):
 	> delbranch [repoName] [branchName]
 	"""
 
+
+#### MAIN ####
+
+menuMyVersion()
 
 """QUESTA DOVRA' ESSERE LA CLASSE CHE SI INTERFACCIA DIRETTAMENTE AL SERVER"""
 #TODO: comunicazione con il server e ftp
