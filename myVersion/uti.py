@@ -1,6 +1,6 @@
 import os.path as path
+import shutil
 import re
-import distutils.dir_util as dir_uti
 
 
 #legge l'intero file in una stringa
@@ -74,7 +74,7 @@ def askAndRemoveDir(dir, askOverride=False):
 			if(userInput == "s"):
 				#l'utente ha scelto di sovrascrivere
 				#rimuovo la cartella
-				dir_uti.remove_tree(dir)
+				shutil.rmtree(dir)
 				print("Cartella rimossa:", dir, end = "\n\n")
 				return True
 			elif(userInput == "n"):

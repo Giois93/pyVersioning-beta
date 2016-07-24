@@ -84,3 +84,5 @@ class Branch:
 			currChangeset = Changeset(path.join(self.branchDir, str(changesetID)))
 			#copia di tutti i file e sottocartelle contenute nella cartella sourceDir dentro la cartella destDir
 			dir_uti.copy_tree(currChangeset.changesetDir, destDir)
+
+		os.remove(path.join(destDir, "changeset.txt"))

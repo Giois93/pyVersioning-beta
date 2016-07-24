@@ -30,8 +30,7 @@
 #######
 import os
 import os.path as path
-#import shutil
-import distutils.dir_util as dir_uti
+import shutil
 from Repository import Repository
 
 
@@ -115,4 +114,4 @@ class Server:
 	#rimuove un repository
 	def removeRepo(self, repoName):
 		if(self.existsRepo(repoName)):
-			dir_uti.remove_tree(path.join(self.myRoot, repoName))
+			shutil.rmtree(path.join(self.myRoot, repoName))

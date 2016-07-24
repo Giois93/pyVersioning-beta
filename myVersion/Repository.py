@@ -1,6 +1,6 @@
 import os 
 import os.path as path
-import distutils.dir_util as dir_uti
+import shutil
 from Branch import Branch
 
 class Repository:
@@ -88,13 +88,14 @@ class Repository:
 			#creo il branch sul disco e ci copio il contenuto della cartella temporanea
 			branch.createNew(tmpDir, trunk.getLastChangesetNum())
 			#rimuovo la cartella temporanea
-			dir_uti.remove_tree(tmpDir)
+			shutil.rmtree(tmpDir)
 		except:
 			raise
 
 		return branch
 
+
 	#rimuove il branc "branchName"
 	def removeBranch(self, branchName):
 		if(self.existsBranch(branchName)):
-			dir_uti.remove_tree(path.join(self.repoDir, branchName))
+			shutil.rmtree(path.join(self.repoDir, branchName))

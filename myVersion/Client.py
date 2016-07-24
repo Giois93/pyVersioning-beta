@@ -21,7 +21,6 @@ Client v0.1.0
 
 import os
 import os.path as path
-import distutils.dir_util as dir_uti
 import uti
 from Server import Server
 
@@ -34,8 +33,8 @@ class Client:
 	server = None
 
 	def __init__(self, server):
-		myRoot = "C:/Users/Gioele/Desktop/myClient"
-		currPath = myRoot
+		self.myRoot = "C:/Users/Gioele/Desktop/myClient"
+		self.currPath = self.myRoot
 		self.server = server
 
 	#mostra la lista dei repository presenti sul server
@@ -48,9 +47,9 @@ class Client:
 
 
 	#mostra la lista dei branch presenti sul server
-	def showBranches(self, repoName):
-		print("\nList of branches on Repository: {}", repoName)
-		for branch in self.server.showBranches(repoName):
+	def showBranches(self):
+		print("\nList of branches on Repository: ")
+		for branch in self.server.showBranches(self.getCurrRepo()):
 			print("- " + branch)
 		print()
 
@@ -70,6 +69,9 @@ class Client:
 				self.server.getRepo(repoName)
 				os.makedirs(clientDir)
 				print("Repository mappato in:", clientDir, end = "\n\n")
+				
+				#setto anche il repository mappato come repository corrente di default
+				self.setRepo(repoName)
 			except:
 				print("Impossibile completare l'operazione", end = "\n\n")
 
@@ -84,8 +86,14 @@ class Client:
 		if(uti.askAndRemoveDir(clientDir, True)):
 			#mappo il branch nella cartella del client
 			try:
+				#se il branch esiste sul server, creo il branch sul client
+				#altrimenti viene generata un'eccezione
+				#scarico anche la LatestVersion di default
 				self.server.mapBranch(self.getCurrRepo(), branchName, clientDir)
 				print("Branch mappato in: ", clientDir, end = "\n\n")
+				
+				#setto anche il branch mappato come branch corrente di default
+				self.setBranch(branchName)
 			except:
 				print("Impossibile completare l'operazione", end = "\n\n")
 
@@ -119,13 +127,13 @@ class Client:
 	def setBranch(self, branchName):
 		try:
 			#verifico se esiste il branch altrimenti viene generata un'eccezione
-			self.server.getRepo(getCurrRepo()).getBranch(branchName)
+			self.server.getRepo(self.getCurrRepo()).getBranch(branchName)
 			#aggiorno il branch corrente
 			self.setCurrBranch(branchName)
 			#aggiorno la cartella di esecuzione
 			branchDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
 			self.setCurrPath(branchDir)
-			print(">", getCurrPath(), ": ")
+			print(">", self.getCurrPath(), ": ")
 		except:
 			print("Il branch", branchName, "non esiste o non è stato mappato")
 
@@ -171,7 +179,7 @@ class Client:
 		#eseguo l'azione corrispondente al comando, default: "None"
 		if (command == "exit")			: print("Programma terminato.", end="\n\n")
 		elif (command == "repolist")	: self.showRepos()
-		elif (command == "branchlist")	: self.showBranches(commandList.pop())
+		elif (command == "branchlist")	: self.showBranches()
 		elif (command == "maprepo")		: self.mapRepository(commandList.pop()) 
 		elif (command == "mapbranch")	: self.mapBranch(commandList.pop())
 		elif (command == "delrepo")		: self.removeRepositoryMap(commandList.pop())
@@ -186,9 +194,9 @@ class Client:
 		> repolist
 		> branchlist [repoName]
 		> maprepo [repoName]
-		> mapbranch [repoName] [branchName]
+		> mapbranch [branchName]
 		> delrepo [repoName]
-		> delbranch [repoName] [branchName]
+		> delbranch [branchName]
 		> setrepo [repoName]
 		> setbranch [branchName]
 		"""
