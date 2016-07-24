@@ -23,142 +23,189 @@ import os
 import os.path as path
 import distutils.dir_util as dir_uti
 import uti
-import Server
+from Server import Server
 
-
-#mostra la lista dei repository presenti sul server
-def showRepos():
-	print("\nList of repositories on MyVersion server")
+class Client:
 	
-	for repo in Server.showRepos():
-		print("- " + repo)
-	print()
+	myRoot = ""
+	currPath = ""
+	currRepo = ""
+	currBranch = ""
+	server = None
+
+	def __init__(self, server):
+		myRoot = "C:/Users/Gioele/Desktop/myClient"
+		currPath = myRoot
+		self.server = server
+
+	#mostra la lista dei repository presenti sul server
+	def showRepos(self):
+		print("\nList of repositories on MyVersion server")
+	
+		for repo in self.server.showRepos():
+			print("- " + repo)
+		print()
 
 
-#mostra la lista dei branch presenti sul server
-def showBranches(repoName):
-	print("\nList of branches on Repository: {}", repoName)
-	for branch in Server.showBranches(repoName):
-		print("- " + branch)
-	print()
+	#mostra la lista dei branch presenti sul server
+	def showBranches(self, repoName):
+		print("\nList of branches on Repository: {}", repoName)
+		for branch in self.server.showBranches(repoName):
+			print("- " + branch)
+		print()
 
 
-#mappa il repository nella cartella del client
-def mapRepository(repoName):
+	#mappa il repository nella cartella del client
+	def mapRepository(self, repoName):
 
-	#ottengo il path del repository
-	clientDir = path.join(myRoot, repoName)
+		#ottengo il path del repository
+		clientDir = path.join(self.myRoot, repoName)
 
-	#chiedo all'utente se sovrascrivere la cartella
-	if(uti.askAndRemoveDir(clientDir, True)):
-		#mappo il repository nella cartella del client
+		#chiedo all'utente se sovrascrivere la cartella
+		if(uti.askAndRemoveDir(clientDir, True)):
+			#mappo il repository nella cartella del client
+			try:
+				#se il repository esiste sul server, creo una cartella sul client
+				#altrimenti viene generata un'eccezione
+				self.server.getRepo(repoName)
+				os.makedirs(clientDir)
+				print("Repository mappato in:", clientDir, end = "\n\n")
+			except:
+				print("Impossibile completare l'operazione", end = "\n\n")
+
+
+	#mappa il branch nella cartella del client
+	def mapBranch(self, branchName):
+
+		#ottengo il path del branch
+		clientDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
+
+		#chiedo all'utente se sovrascrivere la cartella
+		if(uti.askAndRemoveDir(clientDir, True)):
+			#mappo il branch nella cartella del client
+			try:
+				self.server.mapBranch(self.getCurrRepo(), branchName, clientDir)
+				print("Branch mappato in: ", clientDir, end = "\n\n")
+			except:
+				print("Impossibile completare l'operazione", end = "\n\n")
+
+
+	#rimuove la cartella del repo sul client
+	def removeRepositoryMap(self, repoName):
+		uti.askAndRemoveDir(path.join(self.myRoot, repoName))
+
+
+	#rimuove la cartella del branch sul client
+	def removeBranchMap(self, branchName):
+		uti.askAndRemoveDir(path.join(self.myRoot, self.getCurrRepo(), branchName))
+
+
+	#setta il repository corrente
+	def setRepo(self, repoName):
 		try:
-			Server.mapRepository(repoName, clientDir)
-			print("Repository mappato in:", clientDir, end = "\n\n")
+			#verifico se esiste il repository altrimenti viene generata un'eccezione
+			self.server.getRepo(repoName)
+			#aggiorno il repository corrente
+			self.setCurrRepo(repoName)
+			#aggiorno la cartella di esecuzione
+			repoDir = path.join(self.myRoot, repoName)
+			self.setCurrPath(repoDir)
+			print("> " + self.getCurrPath() + " : ")
 		except:
-			print("Impossibile completare l'operazione", end = "\n\n")
+			print("Il repository", repoName, "non esiste o non è stato mappato") 
 
 
-#mappa il branch nella cartella del client
-def mapBranch(repoName, branchName):
-
-	#ottengo il path del branch
-	clientDir = path.join(myRoot, repoName, branchName)
-
-	#chiedo all'utente se sovrascrivere la cartella
-	if(uti.askAndRemoveDir(clientDir, True)):
-		#mappo il branch nella cartella del client
+	#setta il branch corrente
+	def setBranch(self, branchName):
 		try:
-			Server.mapBranch(repoName, branchName, clientDir)
-			print("Branch mappato in: ", clientDir, end = "\n\n")
+			#verifico se esiste il branch altrimenti viene generata un'eccezione
+			self.server.getRepo(getCurrRepo()).getBranch(branchName)
+			#aggiorno il branch corrente
+			self.setCurrBranch(branchName)
+			#aggiorno la cartella di esecuzione
+			branchDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
+			self.setCurrPath(branchDir)
+			print(">", getCurrPath(), ": ")
 		except:
-			print("Impossibile completare l'operazione", end = "\n\n")
-
-#rimuove la cartella del repo sul client
-def removeRepositoryMap(repoName):
-	uti.askAndRemoveDir(path.join(root, repoName))
+			print("Il branch", branchName, "non esiste o non è stato mappato")
 
 
-#rimuove la cartella del branch sul client
-def removeBranchMap(repoName, branchName):
-	uti.askAndRemoveDir(path.join(root, repoName, branchName))
+	#setta il path di esecuzione
+	def setCurrPath(self, path):
+		self.currPath = path
+
+	#setta il repository selezionato
+	def setCurrRepo(self, repoName):
+		self.currRepo = repoName
+
+	#setta il branch selezionato
+	def setCurrBranch(self, branchName):
+		self.currBranch = branchName
+
+	#setta il path di esecuzione
+	def getCurrPath(self):
+		return self.currPath
+
+	#ritorna il repository selezionato
+	def getCurrRepo(self):
+		return self.currRepo
+
+	#ritorna il branch selezionato
+	def getCurrBranch(self):
+		return self.currBranch
 
 
-#
-def setRepo(repoName):
-	try:
-		currRepo = getRepo(repoName) #qui va la getrepo del client
-	except:
-		print("Il repository", repoName, "non esiste o non è stato mappato") 
+	###################################
 
-
-#
-def setBranch(branchName):
-	try:
-		currBranch = getBranch(branchName) #qui va la getBranch del client
-	except:
-		print("Il branch", branchName, "non esiste o non è stato mappato")
-
-###################################
-
-def menuMyVersion():
-	while True:
-		print("> ", end="")
-		userInput = input()
-		menu(userInput)
-
-		if(userInput == "exit"):
-			break
-
-
-def menu(userInput):
+	#esegue il comando "userInput"
+	def menu(self, userInput):
 	
-	command = ""
+		command = ""
 
-	#costruisco una lista di comando e argomenti
-	commandList = userInput.split()
-	commandList.reverse()
-	if(len(commandList) > 0):
-		command = commandList.pop()
+		#costruisco una lista di comando e argomenti
+		commandList = userInput.split()
+		commandList.reverse()
+		if(len(commandList) > 0):
+			command = commandList.pop()
 	
-	#eseguo l'azione corrispondente al comando, default: "None"
-	if (command == "exit")			: print("Programma terminato.", end="\n\n")
-	elif (command == "repolist")	: showRepos()
-	elif (command == "branchlist")	: showBranches(commandList.pop())
-	elif (command == "maprepo")		: mapRepository(commandList.pop()) 
-	elif (command == "mapbranch")	: mapBranch(commandList.pop(), commandList.pop())
-	elif (command == "delrepo")		: removeRepositoryMap(commandList.pop())
-	elif (command == "delbranch")	: removeBranchMap(commandList.pop(), commandList.pop())
-	elif (command == "setrepo")		: setRepo(commandList.pop())
-	elif (command == "setbranch")	: setBranch(commandList.pop())
-	else							: print("Valore non ammesso", end="\n\n")
+		#eseguo l'azione corrispondente al comando, default: "None"
+		if (command == "exit")			: print("Programma terminato.", end="\n\n")
+		elif (command == "repolist")	: self.showRepos()
+		elif (command == "branchlist")	: self.showBranches(commandList.pop())
+		elif (command == "maprepo")		: self.mapRepository(commandList.pop()) 
+		elif (command == "mapbranch")	: self.mapBranch(commandList.pop())
+		elif (command == "delrepo")		: self.removeRepositoryMap(commandList.pop())
+		elif (command == "delbranch")	: self.removeBranchMap(commandList.pop())
+		elif (command == "setrepo")		: self.setRepo(commandList.pop())
+		elif (command == "setbranch")	: self.setBranch(commandList.pop())
+		else							: print("Valore non ammesso", end="\n\n")
 	
 
-	"""COMANDI:
-	> exit
-	> repolist
-	> branchlist [repoName]
-	> maprepo [repoName]
-	> mapbranch [repoName] [branchName]
-	> delrepo [repoName]
-	> delbranch [repoName] [branchName]
-	> setrepo [repoName]
-	> setbranch [branchName]
-	"""
+		"""COMANDI:
+		> exit
+		> repolist
+		> branchlist [repoName]
+		> maprepo [repoName]
+		> mapbranch [repoName] [branchName]
+		> delrepo [repoName]
+		> delbranch [repoName] [branchName]
+		> setrepo [repoName]
+		> setbranch [branchName]
+		"""
 
 
+	#esegue i comandi dell'utente fino al comando "exit"
+	def runMenu(self):
+		#eseguo i comandi dell'utente
+		while True:
+			print("> ", end="")
+			userInput = input()
+			self.menu(userInput)
+		
+			#il programma termina con il comando "exit"
+			if(userInput == "exit"):
+				break
 
 
-#### MAIN ####
-myRoot = "C:/Users/Gioele/Desktop/myClient"
-#if(path.exists(root)):
-#	dir_uti.remove_tree(root)
-#my = MyVersion(root)
-
-currRepo = None
-currBranch = None
-
-menuMyVersion()
-
-"""QUESTA DOVRA' ESSERE LA CLASSE CHE SI INTERFACCIA DIRETTAMENTE AL SERVER"""
-#TODO: comunicazione con il server e ftp
+	"""QUESTA DOVRA' ESSERE LA CLASSE CHE SI INTERFACCIA DIRETTAMENTE AL SERVER"""
+	#TODO: comunicazione con il server e ftp
