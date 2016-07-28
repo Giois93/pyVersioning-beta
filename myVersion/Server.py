@@ -43,7 +43,7 @@ class Server:
 	myRoot = ""
 
 	def __init__(self):
-		self.myRoot = "C:/Users/Gioele/Desktop/myServer"	#cartella di default dei repository creati
+		self.myRoot = "C:/myServer"	#cartella di default dei repository creati
 
 
 	#copia la cartella del branch nella cartella di destinazione
@@ -115,3 +115,42 @@ class Server:
 	def removeRepo(self, repoName):
 		if(self.existsRepo(repoName)):
 			shutil.rmtree(path.join(self.myRoot, repoName))
+
+"""
+	#funzione di test per il server standalone
+	def runTest(self):
+
+		if(path.exists(self.myRoot)):
+			shutil.rmtree(self.myRoot)
+		
+		#creazione nuovo repository
+		sourceDir = "C:\proj"
+		repo = self.addRepo(sourceDir)
+
+		trunk = repo.getTrunk()
+		try:
+			trunk2 = self.addRepo(sourceDir).getTrunk()
+		except:
+			pass
+
+		#####
+		#creazione changeset
+		try:
+			branch = repo.getBranch("branch1")
+		except:
+			branch = repo.addBranch("branch1")
+			branch = repo.getBranch("branch1")
+	
+
+		#####
+		#creazione changeset
+		trunk.addChangeset("C:\proj_edit1")
+
+
+		####
+		#getLatestVersion
+		tmpDir = "C:\my_tmp"
+		if(path.exists(tmpDir)):
+			shutil.rmtree(tmpDir)
+		trunk.getLatestVersion(tmpDir)
+"""

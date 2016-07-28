@@ -33,7 +33,7 @@ class Client:
 	server = None
 
 	def __init__(self, server):
-		self.myRoot = "C:/Users/Gioele/Desktop/myClient"
+		self.myRoot = "C:/myClient"
 		self.currPath = self.myRoot
 		self.server = server
 
@@ -48,8 +48,16 @@ class Client:
 
 	#mostra la lista dei branch presenti sul server
 	def showBranches(self):
-		print("\nList of branches on Repository: ")
+		print("\nList of branches on repository " + self.getCurrRepo() + " : ")
 		for branch in self.server.showBranches(self.getCurrRepo()):
+			print("- " + branch)
+		print()
+
+
+	#mostra la lista dei changeset presenti in questo branch
+	def viewHistory(self):
+		print("\nList of changeset on branch " + self.getCurrBranch() + " : ")
+		for changeSet in self.server.getRepo(self.getCurrRepo()).getBranch(self.getCurrBranch()).getChangesetList():
 			print("- " + branch)
 		print()
 
@@ -138,25 +146,62 @@ class Client:
 			print("Il branch", branchName, "non esiste o non è stato mappato")
 
 
+	#scarica l'ultima versione e la copia nella cartella del branch
+	def getLatestVersion(self):
+		self.server.getRepo(self.getCurrRepo()).getBranch(self.getCurrBranch()).getLatestVersion(self.getCurrPath())
+		"""TODO"""
+		return
+
+	
+	#scarica una versione specifica (identificata dal numero di changeset) e la copia nella cartella del branch
+	def getSpecificVersion(self, changesetNum):
+		"""TODO"""
+		return
+
+
+	#stampa una lista dei file modificati in locale con data di ultima modifica
+	def getPendingChanges():
+		"""TODO"""
+		"""Serve una verifica di tutti i files con compare delle date con quelli del server per checkuout automatico"""
+
+
+	#annulla le modifiche sul file e riporta la versione a quella del server
+	def undoFile(filePath):
+		"""TODO"""
+		"""deve sovrascrivere il file con quello del server"""
+
+
+	#crea un nuovo changeset con le modifiche dei file in pending
+	def commit():
+		"""TODO"""
+		"""deve prendere una lista dei file in pending e copiarli nel server con un commit e nuovo changeset
+		"""
+
+
 	#setta il path di esecuzione
 	def setCurrPath(self, path):
 		self.currPath = path
+
 
 	#setta il repository selezionato
 	def setCurrRepo(self, repoName):
 		self.currRepo = repoName
 
+
 	#setta il branch selezionato
 	def setCurrBranch(self, branchName):
 		self.currBranch = branchName
+
 
 	#setta il path di esecuzione
 	def getCurrPath(self):
 		return self.currPath
 
+
 	#ritorna il repository selezionato
 	def getCurrRepo(self):
 		return self.currRepo
+
 
 	#ritorna il branch selezionato
 	def getCurrBranch(self):
@@ -167,27 +212,36 @@ class Client:
 
 	#esegue il comando "userInput"
 	def menu(self, userInput):
-	
-		command = ""
 
 		#costruisco una lista di comando e argomenti
 		commandList = userInput.split()
 		commandList.reverse()
-		if(len(commandList) > 0):
+
+		try:
 			command = commandList.pop()
-	
-		#eseguo l'azione corrispondente al comando, default: "None"
-		if (command == "exit")			: print("Programma terminato.", end="\n\n")
-		elif (command == "repolist")	: self.showRepos()
-		elif (command == "branchlist")	: self.showBranches()
-		elif (command == "maprepo")		: self.mapRepository(commandList.pop()) 
-		elif (command == "mapbranch")	: self.mapBranch(commandList.pop())
-		elif (command == "delrepo")		: self.removeRepositoryMap(commandList.pop())
-		elif (command == "delbranch")	: self.removeBranchMap(commandList.pop())
-		elif (command == "setrepo")		: self.setRepo(commandList.pop())
-		elif (command == "setbranch")	: self.setBranch(commandList.pop())
-		else							: print("Valore non ammesso", end="\n\n")
-	
+		
+			#eseguo l'azione corrispondente al comando, default: "None"
+			try:
+				if (command == "exit")				: print("Programma terminato.", end="\n\n")
+				elif (command == "repolist")		: self.showRepos()
+				elif (command == "branchlist")		: self.showBranches()
+				elif (command == "viewhistory")		: self.viewHistory()
+				elif (command == "maprepo")			: self.mapRepository(commandList.pop()) 
+				elif (command == "mapbranch")		: self.mapBranch(commandList.pop())
+				elif (command == "delrepo")			: self.removeRepositoryMap(commandList.pop())
+				elif (command == "delbranch")		: self.removeBranchMap(commandList.pop())
+				elif (command == "setrepo")			: self.setRepo(commandList.pop())
+				elif (command == "setbranch")		: self.setBranch(commandList.pop())
+				elif (command == "getlatest")		: self.getLatestVersion()
+				elif (command == "getspecific")		: self.getSpecificVersion(commandList.pop())
+				elif (command == "pendingChanges")	: self.getPendingChanges()
+				elif (command == "undo")			: self.undoFile(commandList.pop())
+				elif (command == "commit")			: self.commit()
+				else								: print("Valore non ammesso", end="\n\n")
+			except:
+				print("Errore: parametri mancanti", end="\n\n")
+		except:
+			pass
 
 		"""COMANDI:
 		> exit

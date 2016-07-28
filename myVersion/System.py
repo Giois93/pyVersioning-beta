@@ -3,3 +3,6 @@ from Client import Client
 
 ### MAIN ###
 Client(Server()).runMenu()
+
+### Server stand-alone ###
+#Server().runTest()
