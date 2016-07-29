@@ -69,9 +69,16 @@ class Branch:
 		
 		#prendo l'ultimo changeset
 		lastChangeset = int(uti.readFileByTag("last_changeset: ", self.branchTxt))
+		
+		#prendo la versione associata all'ultimo changeset
+		self.getSpecificVersion(lastChangeset, destDir)
 
+	
+	#copia la versione completa fino al "changesetNum" nella cartella destDir
+	def getSpecificVersion(self, changesetNum, destDir):
+		
 		#scorro tutti i changeset all'indietro fino al primo changeset di backup
-		for changesetID in range(lastChangeset, -1, -1):
+		for changesetID in range(changesetNum, -1, -1):
 			currChangeset = Changeset(path.join(self.branchDir, str(changesetID)))
 			if(currChangeset.isBackup()):
 				break
@@ -80,7 +87,7 @@ class Branch:
 		dir_uti.copy_tree(currChangeset.changesetDir, destDir)
 
 		#scorro tutti i changeset successivi e copio i file presenti nella cartella temporanea
-		for changesetID in range(int(path.basename(currChangeset.changesetDir)) + 1, lastChangeset + 1):
+		for changesetID in range(int(path.basename(currChangeset.changesetDir)) + 1, changesetNum + 1):
 			currChangeset = Changeset(path.join(self.branchDir, str(changesetID)))
 			#copia di tutti i file e sottocartelle contenute nella cartella sourceDir dentro la cartella destDir
 			dir_uti.copy_tree(currChangeset.changesetDir, destDir)

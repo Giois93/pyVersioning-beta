@@ -21,6 +21,8 @@ Client v0.1.0
 
 import os
 import os.path as path
+import time
+import datetime
 import uti
 from Server import Server
 
@@ -148,31 +150,65 @@ class Client:
 
 	#scarica l'ultima versione e la copia nella cartella del branch
 	def getLatestVersion(self):
-		self.server.getRepo(self.getCurrRepo()).getBranch(self.getCurrBranch()).getLatestVersion(self.getCurrPath())
-		"""TODO"""
-		return
+		#chiedo all'utente se sovrascrivere la cartella
+		if(uti.askAndRemoveDir(self.getCurrPath())):
+			#prendo la latestVersion da Repository e Branch corrente
+			self.server.getRepo(self.getCurrRepo()).getBranch(self.getCurrBranch()).getLatestVersion(self.getCurrPath())
 
 	
 	#scarica una versione specifica (identificata dal numero di changeset) e la copia nella cartella del branch
 	def getSpecificVersion(self, changesetNum):
-		"""TODO"""
-		return
+		#chiedo all'utente se sovrascrivere la cartella
+		if(uti.askAndRemoveDir(self.getCurrPath())):
+			#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
+			self.server.getRepo(self.getCurrRepo()).getBranch(self.getCurrBranch()).getSpecificVersion(changesetNum, self.getCurrPath())
 
 
 	#stampa una lista dei file modificati in locale con data di ultima modifica
-	def getPendingChanges():
-		"""TODO"""
-		"""Serve una verifica di tutti i files con compare delle date con quelli del server per checkuout automatico"""
+	def getPendingChanges(self):
 
+		#prendo la cartella corrente dal client
+		root = self.getCurrPath()
+
+		#prendo la cartella corrente dal server
+		serverRoot = self.server.getRepo(self.getCurrRepo()).getBranch(self.getCurrBranch()).branchDir
+
+		#scorro tutti i file della cartella
+		for dirPath, dirNames, files in os.walk(root):
+			for fileName in files:
+				localFile = path.join(dirPath, fileName)
+
+				serverFile = localFile.replace(self.getCurrBranch(), serverRoot)
+
+				###TODO
+				for changeset in changesets
+				serverFile.replace(serverRoot, path.join(serverRoot, #changesetcorrente)
+				#devo prendere il percorso ../branchdir
+				#sostituire ../branchdir con il percorso della cartella dell'ultimo changeset sul server (e di quelli che lo precedono se non trovo il file)
+				#se trovo il file
+					#comparare le date
+					#se il file locale è più recente (e non è già in pending) lo aggiungo al file di pending
+				#se non trovo il file
+					#aggiungerlo ai pending (è un add)
+
+				#####
+				#confronto le date di ultima modifica dei file
+				if((path.getmtime(localFile)) > path.getmtime(serverFile)):
+					self.addToPending(localFile)
+
+
+
+		"""Serve una verifica di tutti i files con compare delle date con quelli del server per checkuout automatico"""
+		"""devo comparare ogni file con l'ultima versione dello stesso file nei changeset del branch corrente, se è più recente va in pending"""
 
 	#annulla le modifiche sul file e riporta la versione a quella del server
-	def undoFile(filePath):
+	def undoFile(self, filePath):
 		"""TODO"""
 		"""deve sovrascrivere il file con quello del server"""
 
 
 	#crea un nuovo changeset con le modifiche dei file in pending
-	def commit():
+	def commit(self, filePath):
 		"""TODO"""
 		"""deve prendere una lista dei file in pending e copiarli nel server con un commit e nuovo changeset
 		"""
