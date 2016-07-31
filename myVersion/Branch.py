@@ -43,7 +43,7 @@ class Branch:
 		#se sto inserendo il primo changeset nel branch scrivo anche il tag "changeset_0"
 		if (len(os.listdir(self.branchDir)) == 1):
 			uti.writeFile("changeset_0: " + str(originalChangesetNum), self.branchTxt)
-		uti.writeFileByTag("last_changeset: ", str(self.getNextChangesetNum()), self.branchTxt)
+		uti.writeFileByTag("last_changeset", str(self.getNextChangesetNum()), self.branchTxt)
 
 
 	#ritorna l'ultimo changeset del branch
@@ -54,7 +54,7 @@ class Branch:
 	#ritorna il numero del last_changeset se il brach esiste, -1 per un nuovo branch
 	def getLastChangesetNum(self):
 		try:
-			return int(uti.readFileByTag("last_changeset: ", self.branchTxt))
+			return int(uti.readFileByTag("last_changeset", self.branchTxt))
 		except:
 			return -1
 
@@ -68,7 +68,7 @@ class Branch:
 	def getLatestVersion(self, destDir):
 		
 		#prendo l'ultimo changeset
-		lastChangeset = int(uti.readFileByTag("last_changeset: ", self.branchTxt))
+		lastChangeset = int(uti.readFileByTag("last_changeset", self.branchTxt))
 		
 		#prendo la versione associata all'ultimo changeset
 		self.getSpecificVersion(lastChangeset, destDir)
