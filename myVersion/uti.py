@@ -2,6 +2,9 @@ import os.path as path
 import shutil
 import re
 
+"""TODO: sostituire le .compile() e .search() con .findall() es. re.findall(r"\w+ly", text)
+https://docs.python.org/2/library/re.html#finding-all-adverbs
+"""
 
 #legge l'intero file in una stringa
 def readFile(filePath):
@@ -47,16 +50,16 @@ def writeFileByTag(tag, value, filePath):
 	#try:
 	#se ho trovato il tag lo sostituisco
 	pattern = re.compile(tag + ": (\w+)")
-	if(pattern.search(fileStr) != None):
+	if(pattern.search(fileStr) != None): 
 		#re.search(tag + "(\w+)", fileStr)
 		#prendo le occorrenze del tag e le sostituisco con i nuovi valori	
-		newFileStr = re.sub(tag + "(\w+)", tag + str(value), fileStr)
+		newFileStr = re.sub(tag + ": (\w+)", tag + ": " + str(value), fileStr)
 		#sovrascrivo il file
 		writeFile(newFileStr, filePath, False)
 	else:
 	#except:
 		#se non ho trovato il tag lo aggiungo
-		writeFile(tag + value, filePath)
+		writeFile(tag + ": " + value, filePath)
 
 
 #chiede all'utente se rimuovere/sovrascrivere la cartella "dir" ed eventualmente la rimuove

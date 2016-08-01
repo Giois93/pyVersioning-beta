@@ -157,6 +157,8 @@ class Client:
 			#prendo la latestVersion da Repository e Branch corrente
 			self.getCurrBranchOnServer().getLatestVersion(self.getCurrPath())
 
+		uti.writeFile("last_changeset: " + self.getCurrBranchOnServer().getLastChangesetNum, self.getPendingFile())
+
 	
 	#scarica una versione specifica (identificata dal numero di changeset) e la copia nella cartella del branch
 	def getSpecificVersion(self, changesetNum):
@@ -164,6 +166,8 @@ class Client:
 		if(uti.askAndRemoveDir(self.getCurrPath())):
 			#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
 			self.getCurrBranchOnServer().getSpecificVersion(changesetNum, self.getCurrPath())
+
+		uti.writeFile("last_changeset: " + self.getCurrBranchOnServer().getLastChangesetNum, self.getPendingFile())
 
 
 	#stampa una lista dei file modificati in locale con data di ultima modifica
@@ -210,21 +214,23 @@ class Client:
 
 	#aggiunge il file alla lista dei pending
 	def addPendingFile(self, file, addedFile=False):
-		"""TODO"""
-		return
+		uti.writeFile(file, self.getPendingFile())
 
 
 	#rimuove il file alla lista dei pending
 	def delPendingFile(self, file):
-		"""TODO"""
-		return
+		#prendo la stringa di tutto il file
+		fileStr = uti.readFile(self.getPendingFile())
+		#rimuovo il file dalla lista dei pending
+		fileStr.replace("file: "+ file + "\n", "")
+		#sovrascrivo il file
+		uti.writeFile(fileStr, self.getPendingFile(), True)
 
 
 	#legge il file dei pending e ritorna una lista 
-	def getPendingList():
-		"""TODO"""
-		return
-		
+	def getPendingList(self):
+		return uti.readFileByTag("file", self.getPendingFile())
+
 
 	#crea un nuovo changeset con le modifiche dei file in pending
 	def commit(self, filePath):
@@ -304,9 +310,13 @@ class Client:
 		self.currBranch = branchName
 
 
-	#setta il path di esecuzione
+	#ritorna il path di esecuzione
 	def getCurrPath(self):
 		return self.currPath
+
+	#ritorna il file dei pending nel branch corrente
+	def getPendingFile(self):
+		return path.join(self.getCurrPath(), "pending.txt")
 
 
 	#ritorna il repository selezionato

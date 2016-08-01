@@ -68,7 +68,7 @@ class Branch:
 	def getLatestVersion(self, destDir):
 		
 		#prendo l'ultimo changeset
-		lastChangeset = int(uti.readFileByTag("last_changeset", self.branchTxt))
+		lastChangeset = self.getLastChangesetNum()
 		
 		#prendo la versione associata all'ultimo changeset
 		self.getSpecificVersion(lastChangeset, destDir)

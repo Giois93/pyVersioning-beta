@@ -116,7 +116,7 @@ class Server:
 		if(self.existsRepo(repoName)):
 			shutil.rmtree(path.join(self.myRoot, repoName))
 
-"""
+
 	#funzione di test per il server standalone
 	def runTest(self):
 
@@ -153,4 +153,3 @@ class Server:
 		if(path.exists(tmpDir)):
 			shutil.rmtree(tmpDir)
 		trunk.getLatestVersion(tmpDir)
-"""
