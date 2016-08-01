@@ -48,7 +48,7 @@ class Changeset:
 	#ritorna True se il changeset è un changeset di backup
 	def isBackup(self):
 		#leggo il tag is_backup del file
-		if(int(uti.readFileByTag("is_backup", self.changesetTxt)) == 1):
+		if(int(uti.readFileByTag("is_backup", self.changesetTxt)[0]) == 1):
 			return True
 		
 		return False

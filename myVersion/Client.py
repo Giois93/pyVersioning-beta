@@ -59,10 +59,10 @@ class Client:
 
 
 	#mostra la lista dei changeset presenti in questo branch
-	def viewHistory(self):
+	def showHistory(self):
 		print("\nList of changeset on branch " + self.getCurrBranch() + " : ")
 		for changeSet in self.getCurrBranchOnServer().getChangesetList():
-			print("- " + branch)
+			print("- " + changeSet)
 		print()
 
 
@@ -156,8 +156,8 @@ class Client:
 		if(uti.askAndRemoveDir(self.getCurrPath())):
 			#prendo la latestVersion da Repository e Branch corrente
 			self.getCurrBranchOnServer().getLatestVersion(self.getCurrPath())
-
-		uti.writeFile("last_changeset: " + self.getCurrBranchOnServer().getLastChangesetNum, self.getPendingFile())
+			uti.writeFile("last_changeset: " + str(self.getCurrBranchOnServer().getLastChangesetNum()), self.getPendingFile())
+			print("Versione locale aggiornata con successo")
 
 	
 	#scarica una versione specifica (identificata dal numero di changeset) e la copia nella cartella del branch
@@ -167,7 +167,7 @@ class Client:
 			#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
 			self.getCurrBranchOnServer().getSpecificVersion(changesetNum, self.getCurrPath())
 
-		uti.writeFile("last_changeset: " + self.getCurrBranchOnServer().getLastChangesetNum, self.getPendingFile())
+		uti.writeFile("last_changeset: " + self.getCurrBranchOnServer().getLastChangesetNum(), self.getPendingFile())
 
 
 	#stampa una lista dei file modificati in locale con data di ultima modifica
@@ -352,7 +352,7 @@ class Client:
 			prevChangesetTxt = path.join(prevChangesetDir, "changeset.txt")
 					
 			#se l'ultimo changeset era un backup devo interrompere la ricerca
-			if(int(uti.readFileByTag("is_backup", prevChangesetTxt)) == 1):
+			if(int(uti.readFileByTag("is_backup", prevChangesetTxt)[0]) == 1):
 				raise Exception("File non trovato")
 
 			#ricavo la cartella del changeset corrente
@@ -380,26 +380,26 @@ class Client:
 			command = commandList.pop()
 		
 			#eseguo l'azione corrispondente al comando, default: "None"
-			try:
-				if	 (command == "exit")			: print("Programma terminato.", end="\n\n")
-				elif (command == "repolist")		: self.showRepos()
-				elif (command == "branchlist")		: self.showBranches()
-				elif (command == "maprepo")			: self.mapRepository(commandList.pop()) 
-				elif (command == "mapbranch")		: self.mapBranch(commandList.pop())
-				elif (command == "delrepo")			: self.removeRepositoryMap(commandList.pop())
-				elif (command == "delbranch")		: self.removeBranchMap(commandList.pop())
-				elif (command == "setrepo")			: self.setRepo(commandList.pop())
-				elif (command == "setbranch")		: self.setBranch(commandList.pop())
-				elif (command == "viewhistory")		: self.viewHistory()
-				elif (command == "getlatest")		: self.getLatestVersion()
-				elif (command == "getspecific")		: self.getSpecificVersion(commandList.pop())
-				elif (command == "pending")			: self.printPendingChanges()
-				elif (command == "commit")			: self.commit()
-				elif (command == "undo")			: self.undoFile(commandList.pop())
-				elif (command == "undoAll")			: self.undoAll()
-				else								: print("Valore non ammesso", end="\n\n")
-			except:
-				print("Errore: parametri mancanti", end="\n\n")
+			#try:
+			if	 (command == "exit")			: print("Programma terminato.", end="\n\n")
+			elif (command == "repolist")		: self.showRepos()
+			elif (command == "branchlist")		: self.showBranches()
+			elif (command == "maprepo")			: self.mapRepository(commandList.pop()) 
+			elif (command == "mapbranch")		: self.mapBranch(commandList.pop())
+			elif (command == "delrepo")			: self.removeRepositoryMap(commandList.pop())
+			elif (command == "delbranch")		: self.removeBranchMap(commandList.pop())
+			elif (command == "setrepo")			: self.setRepo(commandList.pop())
+			elif (command == "setbranch")		: self.setBranch(commandList.pop())
+			elif (command == "history")			: self.showHistory()
+			elif (command == "getlatest")		: self.getLatestVersion()
+			elif (command == "getspecific")		: self.getSpecificVersion(commandList.pop())
+			elif (command == "pending")			: self.printPendingChanges()
+			elif (command == "commit")			: self.commit()
+			elif (command == "undo")			: self.undoFile(commandList.pop())
+			elif (command == "undoAll")			: self.undoAll()
+			else								: print("Valore non ammesso", end="\n\n")
+			#except:
+			#	print("Errore: parametri mancanti", end="\n\n")
 		except:
 			pass
 
@@ -413,7 +413,7 @@ class Client:
 		> delbranch [branchName]
 		> setrepo [repoName]
 		> setbranch [branchName]
-		> viewhistory
+		> history
 		> getlatest
 		> getspecific
 		> pending

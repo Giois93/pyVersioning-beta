@@ -1,6 +1,7 @@
 import os 
 import os.path as path
 import distutils.dir_util as dir_uti
+import datetime
 import uti
 from Changeset import Changeset
 
@@ -54,7 +55,7 @@ class Branch:
 	#ritorna il numero del last_changeset se il brach esiste, -1 per un nuovo branch
 	def getLastChangesetNum(self):
 		try:
-			return int(uti.readFileByTag("last_changeset", self.branchTxt))
+			return int(uti.readFileByTag("last_changeset", self.branchTxt)[0])
 		except:
 			return -1
 
@@ -64,6 +65,21 @@ class Branch:
 		return self.getLastChangesetNum() + 1
 
 
+	#ritorna la lista dei changeset
+	def getChangesetList(self):
+		#prendo tutte le cartelle all'interno del branch (i changeset)
+		dirs = [ dirName for dirName in os.listdir(self.branchDir) if (path.isdir(path.join(self.branchDir, dirName))) ]
+		
+		#ritorno una tupla di "chageset - data creazione"
+		results = ()
+		for dir in dirs:
+			dirPath = path.join(self.branchDir, dir)
+			date = datetime.datetime.fromtimestamp(path.getctime(dirPath)).strftime("%Y-%m-%d %H:%M:%S")
+			results = results + (dir + " - " + str(date),)
+
+		return results
+
+	
 	#copia l'ultima versione completa nella cartella destDir
 	def getLatestVersion(self, destDir):
 		
