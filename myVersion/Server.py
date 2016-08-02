@@ -1,33 +1,3 @@
-#creazione repo OK
-#creazione repo esistente OK
-#creazione più repo OK
-#creazione di repo da cartelle e cartelle con sottcartelle OK
-#creazione branch OK
-#creazione branch esistente OK
-#creazione nuovo changeset OK (add OK - edit OK)
-#implementare la getlatestversion OK
-#creare backup con getlatestversion OK
-"""Server v1.0.0
-- creazione nuovo repo
-- creazione repo esistente
-- creazione di più repo
-- creazione di repo da sorgenti con cartelle e sottocartelle
-- creazione trunk
-- creazione nuovo branch
-- creazione branch esistente
-- creazione nuovo changeset da cartella esterna con soli file modificati
-	+ file aggiuntivi
-	+ file modificati
-- implementazione della GetLatestVersion, copia di tutti i changeset fino a quello di backup
-"""
-
-"""TODO:
-- rimozione repo/branch
-- creazione changeset di backup
-- gestione file rimossi (si potrebbero semplicemente scrivere nel file della cartella del commit - oppure aggiungere un estensione alla fine e quando si fa il commit rimuoverli tutti)
-"""
-
-#######
 import os
 import os.path as path
 import shutil
@@ -35,8 +5,6 @@ from Repository import Repository
 
 
 ###################################
-
-"""QUESTA DOVRA' ESSERE LA CLASSE CHE SI INTERFACCIA DIRETTAMENTE AL CLIENT"""
 
 class Server:
 
@@ -144,7 +112,7 @@ class Server:
 
 		#####
 		#creazione changeset
-		trunk.addChangeset("C:\proj_edit1")
+		trunk.addChangeset("C:\proj_edit1", "commento_1")
 
 
 		####

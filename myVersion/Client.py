@@ -1,30 +1,8 @@
-"""TODO
-Client v0.1.0
-- cartella root
-- lista dei repo
-- lista dei branch
-- map di un repository (deve limitarsi a creare la cartella)
-- map di un branch (deve limitarsi a creare la cartella)
-- rimozione map di un repository
-- rimozione map di un branch
-- settare/selezionare un repo (serve la classe Repository)
-- settare/selezionare un branch (serve la classe Branch)
-- getlatest (devo scaricare solo il backup non tutto il branch/repo)
-- checkout di file (segnare nel file .txt i file checkati out)
-- checkin (copia dei file in pending nella cartella pending_changes temporanea nel branch)
-- undo (rimozione di record dal file)
-- compare (richiede una copia temporanea del file dal server)
-- takeServerVersion
-- takeLocalVersion
-
-"""
-
 import os
 import os.path as path
 import time
 import datetime
 import shutil
-import distutils.dir_util as dir_uti
 import uti
 from Server import Server
 
@@ -167,7 +145,7 @@ class Client:
 			#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
 			self.getCurrBranchOnServer().getSpecificVersion(changesetNum, self.getCurrPath())
 
-		uti.writeFile("last_changeset: " + self.getCurrBranchOnServer().getLastChangesetNum(), self.getPendingFile())
+		uti.writeFile("last_changeset: " + str(changesetNum), self.getPendingFile())
 
 
 	#stampa una lista dei file modificati in locale con data di ultima modifica
@@ -214,7 +192,7 @@ class Client:
 
 	#aggiunge il file alla lista dei pending
 	def addPendingFile(self, file, addedFile=False):
-		uti.writeFile(file, self.getPendingFile())
+		uti.writeFile("file :" + file, self.getPendingFile())
 
 
 	#rimuove il file alla lista dei pending
@@ -222,7 +200,7 @@ class Client:
 		#prendo la stringa di tutto il file
 		fileStr = uti.readFile(self.getPendingFile())
 		#rimuovo il file dalla lista dei pending
-		fileStr.replace("file: "+ file + "\n", "")
+		fileStr.replace("file: " + file + "\n", "")
 		#sovrascrivo il file
 		uti.writeFile(fileStr, self.getPendingFile(), True)
 
@@ -232,31 +210,38 @@ class Client:
 		return uti.readFileByTag("file", self.getPendingFile())
 
 
-	#crea un nuovo changeset con le modifiche dei file in pending
-	def commit(self, filePath):
-		
+	#crea un nuovo changeset con le modifiche del solo file in input
+	def commit(self, fileToCommit = None, comment = ""):
 		#creo una cartella temporanea
 		tmpDir = path.join(self.getCurrPath(), "tmp")
 
 		#scorro tutti i file in pending
-		for file in getPendingChanges():
-			#copio il file nella cartella temporanea (creo le cartelle se non presenti)
-			#prendo il path del file da copiare
-			tmpFileDir = path.dirname(file.replace(self.getCurrPath(), tmpDir))
-			#se non esiste creo il percorso
-			if(path.isdir(tmpFileDir) == False):
-				os.makedirs(tmpFileDir)
+		for file in self.getPendingChanges():
+			#se è stato specificato un file, effetto il commit solo di quello, altrimenti committo tutto
+			if((file == fileToCommit) | (fileToCommit == None)):
+				#copio il file nella cartella temporanea (creo le cartelle se non presenti)
+				#prendo il path del file da copiare
+				tmpFileDir = path.dirname(file.replace(self.getCurrPath(), tmpDir))
+				#se non esiste creo il percorso
+				if(path.isdir(tmpFileDir) == False):
+					os.makedirs(tmpFileDir)
 
-			#copio il file (con metadati)
-			shutil.copy2(file, tmpFileDir)
+				#copio il file (con metadati)
+				shutil.copy2(file, tmpFileDir)
 		
 		#creo un nuovo changeset in cui copiare la cartella temporanea
-		self.getCurrBranchOnServer().addChangeset(tmpDir)
+		self.getCurrBranchOnServer().addChangeset(tmpDir, comment)
 
 		#rimuovo la cartella temporanea
-		dir_uti.remove_tree(tmpDir)
+		shutil.rmtree(tmpDir)
 		
 		print("Commit effettuato.")
+
+
+	#crea un nuovo changeset con le modifiche dei file in pending
+	def commitAll(self, comment):
+		
+		self.commit(comment = comment)
 
 		#Chiedo all'utente se desidera anche aggiornare la versione locale
 		while True:
@@ -381,6 +366,8 @@ class Client:
 		
 			#eseguo l'azione corrispondente al comando, default: "None"
 			#try:
+			##OK##
+			"""TODO: per tutti questi comandi bisogna gestire il caso in cui non ci sia uno degli argomenti o il path corrente sia non compatibile con il comando"""
 			if	 (command == "exit")			: print("Programma terminato.", end="\n\n")
 			elif (command == "repolist")		: self.showRepos()
 			elif (command == "branchlist")		: self.showBranches()
@@ -390,18 +377,20 @@ class Client:
 			elif (command == "delbranch")		: self.removeBranchMap(commandList.pop())
 			elif (command == "setrepo")			: self.setRepo(commandList.pop())
 			elif (command == "setbranch")		: self.setBranch(commandList.pop())
-			elif (command == "history")			: self.showHistory()
-			elif (command == "getlatest")		: self.getLatestVersion()
-			elif (command == "getspecific")		: self.getSpecificVersion(commandList.pop())
+			elif (command == "history")			: self.showHistory() #deve ritornare anche il commento associato al commit
+			##TO TEST##
+			elif (command == "getlatest")		: self.getLatestVersion() #eccezione nella copy_tree
+			elif (command == "getspecific")		: self.getSpecificVersion(int(commandList.pop())) #eccezione nella copy_tree
 			elif (command == "pending")			: self.printPendingChanges()
-			elif (command == "commit")			: self.commit()
+			elif (command == "commit")			: self.commit(commandList.pop(), commandList.pop())
+			elif (command == "commitall")		: self.commitAll(commandList.pop())
 			elif (command == "undo")			: self.undoFile(commandList.pop())
 			elif (command == "undoAll")			: self.undoAll()
 			else								: print("Valore non ammesso", end="\n\n")
 			#except:
 			#	print("Errore: parametri mancanti", end="\n\n")
-		except:
-			pass
+		except Exception as ex:
+			print(ex)
 
 		"""COMANDI:
 		> exit
@@ -417,10 +406,10 @@ class Client:
 		> getlatest
 		> getspecific
 		> pending
-		> commit
+		> commit [file] [comment]
+		> commitall [comment]
 		> undo [file]
 		> undoall
-		
 		"""
 
 
@@ -435,7 +424,3 @@ class Client:
 			#il programma termina con il comando "exit"
 			if(userInput == "exit"):
 				break
-
-
-	"""QUESTA DOVRA' ESSERE LA CLASSE CHE SI INTERFACCIA DIRETTAMENTE AL SERVER"""
-	#TODO: comunicazione con il server e ftp

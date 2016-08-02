@@ -17,12 +17,6 @@ def readFile(filePath):
 #ritorna il valore del tag passato, letto da file
 def readFileByTag(tag, filePath):
 	#se ho trovato il tag lo restituisco
-	"""pattern = re.compile(tag + ": (\w+)")
-	results = pattern.search(readFile(filePath))
-	if(results != None):
-		return results.group(1)
-	else:
-		raise Exception("Tag not present")"""
 	return re.findall(tag + ": (\w+)", readFile(filePath))
 	
 
@@ -46,19 +40,6 @@ def writeFileByTag(tag, value, filePath):
 
 	#apro il file
 	fileStr = readFile(filePath)
-
-	"""
-	#se non ho trovato il tag lo aggiungo
-	pattern = re.compile(tag + ": (\w+)")
-	if(pattern.search(fileStr) != None): 
-		#prendo le occorrenze del tag e le sostituisco con i nuovi valori	
-		newFileStr = re.sub(tag + ": (\w+)", tag + ": " + str(value), fileStr)
-		#sovrascrivo il file
-		writeFile(newFileStr, filePath, False)
-	else:
-		#se non ho trovato il tag lo aggiungo
-		writeFile(tag + ": " + value, filePath)
-	"""
 
 	#cerco il tag
 	results = re.findall(tag + ": (\w+)", fileStr)

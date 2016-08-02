@@ -23,11 +23,11 @@ class Branch:
 		if(path.isdir(self.branchDir)):
 			raise Exception
 
-		self.addChangeset(sourceDir, originalChangeset, True)
+		self.addChangeset(sourceDir, "changeset_0", originalChangeset, True)
 
 
 	#crea il prossimo changeset copiandoci la cartella sourceDir
-	def addChangeset(self, sourceDir, originalChangesetNum = None, isBackup = False):
+	def addChangeset(self, sourceDir, comment, originalChangesetNum = None, isBackup = False):
 		
 		#se non è specificato il changeset iniziale prendo l'id dell'ultimo changeset di questo branch
 		if(originalChangesetNum == None):
@@ -45,11 +45,17 @@ class Branch:
 		if (len(os.listdir(self.branchDir)) == 1):
 			uti.writeFile("changeset_0: " + str(originalChangesetNum), self.branchTxt)
 		uti.writeFileByTag("last_changeset", str(self.getNextChangesetNum()), self.branchTxt)
+		uti.writeFileByTag("comment", comment, self.branchTxt)
+
+
+	#ritorna il changeset associato al "changesetNum"
+	def getChangeset(self, changesetNum):
+		return Changeset(path.join(self.branchDir, str(changesetNum)))
 
 
 	#ritorna l'ultimo changeset del branch
 	def getLastChangeset(self):
-		return Changeset(path.join(self.branchDir, str(self.getLastChangesetNum())))
+		return getChangeset(self.getLastChangesetNum())
 
 
 	#ritorna il numero del last_changeset se il brach esiste, -1 per un nuovo branch
@@ -70,12 +76,17 @@ class Branch:
 		#prendo tutte le cartelle all'interno del branch (i changeset)
 		dirs = [ dirName for dirName in os.listdir(self.branchDir) if (path.isdir(path.join(self.branchDir, dirName))) ]
 		
-		#ritorno una tupla di "chageset - data creazione"
+		#ritorno una tupla di "chageset - data creazione - commento"
 		results = ()
 		for dir in dirs:
+			#prendo il path della cartella del changeset
 			dirPath = path.join(self.branchDir, dir)
+			#prendo la data di creazione del changeset
 			date = datetime.datetime.fromtimestamp(path.getctime(dirPath)).strftime("%Y-%m-%d %H:%M:%S")
-			results = results + (dir + " - " + str(date),)
+			#prendo il commento dal file del changeset
+			comment = uti.readFileByTag("comment", self.getChangeset(int(dir)).changesetTxt)
+			#aggiungo il changeset e le sue statistiche
+			results = results + ("{} - {} - {} ".format(dir, str(date), comment),)
 
 		return results
 
