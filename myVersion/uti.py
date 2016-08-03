@@ -14,17 +14,23 @@ CHANGESET_FILE = "changeset.txt"
 
 #legge l'intero file in una stringa
 def readFile(filePath):
-	file = open(filePath, "r")
-	fileStr = str(file.read())
-	file.close()
+	try:
+		file = open(filePath, "r")
+		fileStr = str(file.read())
+		file.close()
+	except:
+		raise
+	
 	return fileStr
 
 	
 #ritorna il valore del tag passato, letto da file
 def readFileByTag(tag, filePath):
 	#se ho trovato il tag lo restituisco
-	return re.findall(tag + ": (.+)", readFile(filePath))
-	
+	try:
+		return re.findall(tag + ": (.+)", readFile(filePath))
+	except:
+		raise	
 
 #scrive il file in append o in sovrascrittura
 def writeFile(string, filePath, append = True):
@@ -62,27 +68,31 @@ def writeFileByTag(tag, value, filePath):
 
 
 #chiede all'utente se rimuovere/sovrascrivere la cartella "dir" ed eventualmente la rimuove
-def askAndRemoveDir(dir, askOverride=False):
+def askAndRemoveDir(dir, ask=True, askOverride=False):
+
 	#verifico se la cartella esiste
 	if(path.isdir(dir)):
-		#chiedo all'utente se procede e sovrascrivere la cartella
-		while True:
-			if(askOverride):
-				print("La cartella " + dir + " è già presente, sovrascrivere? (s/n)")
-			else:
-				print("Rimuovere la cartella " + dir +" ?  (s/n)")
+		if(ask == False):
+			shutil.rmtree(dir)
+		else:
+			#chiedo all'utente se procede e sovrascrivere la cartella
+			while True:
+				if(askOverride):
+					print("La cartella " + dir + " è già presente, sovrascrivere? (s/n)")
+				else:
+					print("Rimuovere la cartella " + dir +" ?  (s/n)")
 
-			userInput = input() 
-			if(userInput == "s"):
-				#l'utente ha scelto di sovrascrivere
-				#rimuovo la cartella
-				shutil.rmtree(dir)
-				print("Cartella rimossa:", dir, end = "\n\n")
-				return True
-			elif(userInput == "n"):
-				#l'utente ha scelto di non sovrascrive
-				print("Operazione annullata", end = "\n\n")
-				return False
+				userInput = input() 
+				if(userInput == "s"):
+					#l'utente ha scelto di sovrascrivere
+					#rimuovo la cartella
+					shutil.rmtree(dir)
+					print("Cartella rimossa:", dir, end = "\n\n")
+					return True
+				elif(userInput == "n"):
+					#l'utente ha scelto di non sovrascrive
+					print("Operazione annullata", end = "\n\n")
+					return False
 	
 	return True
 

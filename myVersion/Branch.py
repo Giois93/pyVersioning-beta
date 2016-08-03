@@ -86,8 +86,13 @@ class Branch:
 			dirPath = path.join(self.branchDir, dir)
 			#prendo la data di creazione del changeset
 			date = datetime.datetime.fromtimestamp(path.getctime(dirPath)).strftime("%Y-%m-%d %H:%M:%S")
-			#prendo il commento dal file del changeset
-			comment = uti.readFileByTag("comment", self.getChangeset(int(dir)).changesetTxt)[0]
+			
+			try:
+				#prendo il commento dal file del changeset
+				comment = uti.readFileByTag("comment", self.getChangeset(int(dir)).changesetTxt)[0]
+			except:
+				comment = ""
+
 			#aggiungo il changeset e le sue statistiche
 			results = results + ("{} - {} - {} ".format(dir, str(date), comment),)
 
