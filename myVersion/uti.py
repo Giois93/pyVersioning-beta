@@ -6,6 +6,12 @@ import re
 https://docs.python.org/2/library/re.html#finding-all-adverbs
 """
 
+#costanti
+PENDING_FILE = "pending.txt"
+BRANCH_FILE = "branch.txt"
+CHANGESET_FILE = "changeset.txt"
+
+
 #legge l'intero file in una stringa
 def readFile(filePath):
 	file = open(filePath, "r")
@@ -17,7 +23,7 @@ def readFile(filePath):
 #ritorna il valore del tag passato, letto da file
 def readFileByTag(tag, filePath):
 	#se ho trovato il tag lo restituisco
-	return re.findall(tag + ": (\w+)", readFile(filePath))
+	return re.findall(tag + ": (.+)", readFile(filePath))
 	
 
 #scrive il file in append o in sovrascrittura

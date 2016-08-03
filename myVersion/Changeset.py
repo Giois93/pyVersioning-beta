@@ -3,6 +3,7 @@ import os.path as path
 import time
 import distutils.dir_util as dir_uti
 import uti
+from uti import CHANGESET_FILE
 
 
 
@@ -20,7 +21,7 @@ class Changeset:
 
 	def __init__(self, changesetDir):
 		self.changesetDir = changesetDir
-		self.changesetTxt = path.join(self.changesetDir, "changeset.txt")
+		self.changesetTxt = path.join(self.changesetDir, CHANGESET_FILE)
 
 
 	#crea un nuovo changeset sul disco
