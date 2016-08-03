@@ -19,6 +19,78 @@ class Client:
 		self.currPath = self.myRoot
 		self.server = server
 
+
+	#esegue i comandi dell'utente fino al comando "exit"
+	def runMenu(self):
+		#eseguo i comandi dell'utente
+		while True:
+			print("> ", end="")
+			userInput = input()
+			self.menu(userInput)
+		
+			#il programma termina con il comando "exit"
+			if(userInput == "exit"):
+				break
+
+
+	#esegue il comando "userInput"
+	def menu(self, userInput):
+
+		#costruisco una lista di comando e argomenti
+		commandList = userInput.split()
+		commandList.reverse()
+
+		try:
+			command = commandList.pop()
+		
+			#eseguo l'azione corrispondente al comando, default: "None"
+			#try:
+			##OK##
+			"""TODO: per tutti questi comandi bisogna gestire il caso in cui non ci sia uno degli argomenti o il path corrente sia non compatibile con il comando"""
+			if	 (command == "exit")			: print("Programma terminato.", end="\n\n")
+			elif (command == "repolist")		: self.showRepos()
+			elif (command == "branchlist")		: self.showBranches()
+			elif (command == "maprepo")			: self.mapRepository(commandList.pop()) 
+			elif (command == "mapbranch")		: self.mapBranch(commandList.pop())
+			elif (command == "delrepo")			: self.removeRepositoryMap(commandList.pop())
+			elif (command == "delbranch")		: self.removeBranchMap(commandList.pop())
+			elif (command == "setrepo")			: self.setRepo(commandList.pop())
+			elif (command == "setbranch")		: self.setBranch(commandList.pop())
+			elif (command == "history")			: self.showHistory() #deve ritornare anche il commento associato al commit
+			##TO TEST##
+			elif (command == "getlatest")		: self.getLatestVersion() 
+			elif (command == "getspecific")		: self.getSpecificVersion(int(commandList.pop()))
+			elif (command == "pending")			: self.printPendingChanges()
+			elif (command == "commit")			: self.commit(commandList.pop(), commandList.pop())
+			elif (command == "commitall")		: self.commitAll(commandList.pop())
+			elif (command == "undo")			: self.undoFile(commandList.pop())
+			elif (command == "undoAll")			: self.undoAll()
+			else								: print("Valore non ammesso", end="\n\n")
+			#except:
+			#	print("Errore: parametri mancanti", end="\n\n")
+		except Exception as ex:
+			print(ex)
+
+		"""COMANDI:
+		> exit
+		> repolist
+		> branchlist [repoName]
+		> maprepo [repoName]
+		> mapbranch [branchName]
+		> delrepo [repoName]
+		> delbranch [branchName]
+		> setrepo [repoName]
+		> setbranch [branchName]
+		> history
+		> getlatest
+		> getspecific
+		> pending
+		> commit [file] [comment]
+		> commitall [comment]
+		> undo [file]
+		> undoall
+		"""
+
 	#mostra la lista dei repository presenti sul server
 	def showRepos(self):
 		print("\nList of repositories on MyVersion server")
@@ -155,7 +227,7 @@ class Client:
 			#prendo la data di ultima modifica del file
 			date = datetime.datetime.fromtimestamp(path.getmtime(file))
 			#stampo file e data ultima modifica
-			print(file,replace(self.getCurrPath(), ""), date)
+			print(file.replace(self.getCurrPath(), ""), date)
 
 
 	
@@ -354,73 +426,3 @@ class Client:
 
 	###################################
 
-	#esegue il comando "userInput"
-	def menu(self, userInput):
-
-		#costruisco una lista di comando e argomenti
-		commandList = userInput.split()
-		commandList.reverse()
-
-		try:
-			command = commandList.pop()
-		
-			#eseguo l'azione corrispondente al comando, default: "None"
-			#try:
-			##OK##
-			"""TODO: per tutti questi comandi bisogna gestire il caso in cui non ci sia uno degli argomenti o il path corrente sia non compatibile con il comando"""
-			if	 (command == "exit")			: print("Programma terminato.", end="\n\n")
-			elif (command == "repolist")		: self.showRepos()
-			elif (command == "branchlist")		: self.showBranches()
-			elif (command == "maprepo")			: self.mapRepository(commandList.pop()) 
-			elif (command == "mapbranch")		: self.mapBranch(commandList.pop())
-			elif (command == "delrepo")			: self.removeRepositoryMap(commandList.pop())
-			elif (command == "delbranch")		: self.removeBranchMap(commandList.pop())
-			elif (command == "setrepo")			: self.setRepo(commandList.pop())
-			elif (command == "setbranch")		: self.setBranch(commandList.pop())
-			elif (command == "history")			: self.showHistory() #deve ritornare anche il commento associato al commit
-			##TO TEST##
-			elif (command == "getlatest")		: self.getLatestVersion() #eccezione nella copy_tree
-			elif (command == "getspecific")		: self.getSpecificVersion(int(commandList.pop())) #eccezione nella copy_tree
-			elif (command == "pending")			: self.printPendingChanges()
-			elif (command == "commit")			: self.commit(commandList.pop(), commandList.pop())
-			elif (command == "commitall")		: self.commitAll(commandList.pop())
-			elif (command == "undo")			: self.undoFile(commandList.pop())
-			elif (command == "undoAll")			: self.undoAll()
-			else								: print("Valore non ammesso", end="\n\n")
-			#except:
-			#	print("Errore: parametri mancanti", end="\n\n")
-		except Exception as ex:
-			print(ex)
-
-		"""COMANDI:
-		> exit
-		> repolist
-		> branchlist [repoName]
-		> maprepo [repoName]
-		> mapbranch [branchName]
-		> delrepo [repoName]
-		> delbranch [branchName]
-		> setrepo [repoName]
-		> setbranch [branchName]
-		> history
-		> getlatest
-		> getspecific
-		> pending
-		> commit [file] [comment]
-		> commitall [comment]
-		> undo [file]
-		> undoall
-		"""
-
-
-	#esegue i comandi dell'utente fino al comando "exit"
-	def runMenu(self):
-		#eseguo i comandi dell'utente
-		while True:
-			print("> ", end="")
-			userInput = input()
-			self.menu(userInput)
-		
-			#il programma termina con il comando "exit"
-			if(userInput == "exit"):
-				break

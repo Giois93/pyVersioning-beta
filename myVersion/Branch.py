@@ -1,5 +1,6 @@
 import os 
 import os.path as path
+import shutil
 import distutils.dir_util as dir_uti
 import datetime
 import uti
@@ -84,7 +85,7 @@ class Branch:
 			#prendo la data di creazione del changeset
 			date = datetime.datetime.fromtimestamp(path.getctime(dirPath)).strftime("%Y-%m-%d %H:%M:%S")
 			#prendo il commento dal file del changeset
-			comment = uti.readFileByTag("comment", self.getChangeset(int(dir)).changesetTxt)
+			comment = uti.readFileByTag("comment", self.getChangeset(int(dir)).changesetTxt)[0]
 			#aggiungo il changeset e le sue statistiche
 			results = results + ("{} - {} - {} ".format(dir, str(date), comment),)
 
@@ -111,7 +112,10 @@ class Branch:
 				break
 
 		#copio tutto il changeset di backup nella cartella provvisoria
-		dir_uti.copy_tree(currChangeset.changesetDir, destDir)
+		try:
+			shutil.copytree(currChangeset.changesetDir, destDir)
+		except Exception as ex:
+			print(ex)
 
 		#scorro tutti i changeset successivi e copio i file presenti nella cartella temporanea
 		for changesetID in range(int(path.basename(currChangeset.changesetDir)) + 1, changesetNum + 1):
