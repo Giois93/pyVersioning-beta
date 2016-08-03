@@ -4,6 +4,8 @@ import shutil
 import distutils.dir_util as dir_uti
 import datetime
 import uti
+from uti import BRANCH_FILE
+from uti import CHANGESET_FILE
 from Changeset import Changeset
 
 class Branch:
@@ -15,7 +17,7 @@ class Branch:
 	#branchRoot: path del branch
 	def __init__(self, branchDir):
 		self.branchDir = branchDir
-		self.branchTxt = path.join(self.branchDir, "branch.txt")
+		self.branchTxt = path.join(self.branchDir, BRANCH_FILE)
 
 
 	#crea un nuovo branch sul disco, aggiunge il changeset_0 e il file branch.txt
@@ -46,7 +48,7 @@ class Branch:
 		if (len(os.listdir(self.branchDir)) == 1):
 			uti.writeFile("changeset_0: " + str(originalChangesetNum), self.branchTxt)
 		uti.writeFileByTag("last_changeset", str(self.getNextChangesetNum()), self.branchTxt)
-		uti.writeFileByTag("comment", comment, self.branchTxt)
+		uti.writeFileByTag("comment", comment, changeset.changesetTxt)
 
 
 	#ritorna il changeset associato al "changesetNum"
@@ -123,4 +125,4 @@ class Branch:
 			#copia di tutti i file e sottocartelle contenute nella cartella sourceDir dentro la cartella destDir
 			dir_uti.copy_tree(currChangeset.changesetDir, destDir)
 
-		os.remove(path.join(destDir, "changeset.txt"))
+		os.remove(path.join(destDir, CHANGESET_FILE))

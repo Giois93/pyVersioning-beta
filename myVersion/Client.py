@@ -4,6 +4,8 @@ import time
 import datetime
 import shutil
 import uti
+from uti import PENDING_FILE
+from uti import CHANGESET_FILE
 from Server import Server
 
 class Client:
@@ -56,11 +58,11 @@ class Client:
 			elif (command == "delbranch")		: self.removeBranchMap(commandList.pop())
 			elif (command == "setrepo")			: self.setRepo(commandList.pop())
 			elif (command == "setbranch")		: self.setBranch(commandList.pop())
-			elif (command == "history")			: self.showHistory() #deve ritornare anche il commento associato al commit
-			##TO TEST##
+			elif (command == "history")			: self.showHistory()
 			elif (command == "getlatest")		: self.getLatestVersion() 
 			elif (command == "getspecific")		: self.getSpecificVersion(int(commandList.pop()))
-			elif (command == "pending")			: self.printPendingChanges()
+			##TO TEST##
+			elif (command == "pending")			: self.printPendingChanges() #TODO: rimuovere vecchi file
 			elif (command == "commit")			: self.commit(commandList.pop(), commandList.pop())
 			elif (command == "commitall")		: self.commitAll(commandList.pop())
 			elif (command == "undo")			: self.undoFile(commandList.pop())
@@ -225,10 +227,9 @@ class Client:
 		#scorro tutti i file nella lista dei pending
 		for file in self.getPendingChanges():
 			#prendo la data di ultima modifica del file
-			date = datetime.datetime.fromtimestamp(path.getmtime(file))
+			date = datetime.datetime.fromtimestamp(path.getmtime(file)).strftime("%Y-%m-%d %H:%M:%S")
 			#stampo file e data ultima modifica
 			print(file.replace(self.getCurrPath(), ""), date)
-
 
 	
 	#ritorna una lista dei file modificati in locale
@@ -242,20 +243,23 @@ class Client:
 		#scorro tutti i file della cartella
 		for dirPath, dirNames, files in os.walk(localRoot):
 			for fileName in files:
-				localFile = path.join(dirPath, fileName)
+				if(fileName != PENDING_FILE):
+					localFile = path.join(dirPath, fileName)
 				
-				try:
-					#cerco sul server il file corrispondente al localFile
-					serverFile = self.findFileOnServer(localFile, serverBranch)
+					try:
+						#cerco sul server il file corrispondente al localFile
+						serverFile = self.findFileOnServer(localFile, serverBranch)
 				
-					#confronto le date di ultima modifica dei file
-					#se il file locale è stato modificato va aggiunto ai pending
-					if((path.getmtime(localFile)) > path.getmtime(serverFile)):
-						self.addToPending(localFile)
+						#confronto le date di ultima modifica dei file
+						#se il file locale è stato modificato va aggiunto ai pending
+						localDate = path.getmtime(localFile)
+						serverDate = path.getmtime(serverFile)
 
-				except:		
-					#se il file non viene trovato nel server vuol dire che è stato aggiunto in locale
-					if(found == False):
+						if((path.getmtime(localFile)) > path.getmtime(serverFile)):
+							self.addPendingFile(localFile)
+
+					except:		
+						#se il file non viene trovato nel server vuol dire che è stato aggiunto in locale
 						self.addPendingFile(localFile, addedFile=True)
 		
 		#ritorno la lista dei pendig
@@ -264,7 +268,7 @@ class Client:
 
 	#aggiunge il file alla lista dei pending
 	def addPendingFile(self, file, addedFile=False):
-		uti.writeFile("file :" + file, self.getPendingFile())
+		uti.writeFile("file: " + file, self.getPendingFile())
 
 
 	#rimuove il file alla lista dei pending
@@ -332,9 +336,13 @@ class Client:
 			print("Questo comando annullerà le modifiche sul file", file, ", sei sicuro? (s/n) :")
 			userInput = input()
 			if(userInput == "s"):
-				#prendo il file corrispondente dal server e lo sovrascrivo al file locale
-				serverFile = self.findFileOnServer(file, self.getCurrBranchOnServer().branchDir)
-				shutil.copy2(serverFile, path.dirname(file))
+				try:
+					#prendo il file corrispondente dal server e lo sovrascrivo al file locale
+					serverFile = self.findFileOnServer(file, self.getCurrBranchOnServer().branchDir)
+					shutil.copy2(serverFile, path.dirname(file))
+				except:
+					#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
+					os.remove(file)
 				break
 			elif(userInput == "n"):
 				break
@@ -373,7 +381,7 @@ class Client:
 
 	#ritorna il file dei pending nel branch corrente
 	def getPendingFile(self):
-		return path.join(self.getCurrPath(), "pending.txt")
+		return path.join(self.getCurrPath(), PENDING_FILE)
 
 
 	#ritorna il repository selezionato
@@ -400,27 +408,29 @@ class Client:
 	def findFileOnServer(self, localFile, branchDir):
 		
 		#scorro tutti i changeset presenti nella cartella del branch a partire dal più recente
-		for changeset in os.listdir(branchDir).reverse():
+		for changeset in reversed(os.listdir(branchDir)):
+			if(path.isdir(path.join(branchDir, changeset))):
+				#prendo la cartella del changeset precedente (più recente)
+				prevChangesetDir = path.join(branchDir, str(int(changeset) + 1))
+
+				#se il changeset precedente non esiste questo è il più recente
+				if(path.isdir(prevChangesetDir)):
+					#apro il file del changeset precedente
+					prevChangesetTxt = path.join(prevChangesetDir, CHANGESET_FILE)
 					
-			#prendo la cartella del changeset precedente
-			prevChangesetDir = path.join(branchDir, int(changeset) - 1)
+					#se l'ultimo changeset era un backup devo interrompere la ricerca
+					if(int(uti.readFileByTag("is_backup", prevChangesetTxt)[0]) == 1):
+						raise Exception("File non trovato")
 
-			#apro il file del changeset precedente
-			prevChangesetTxt = path.join(prevChangesetDir, "changeset.txt")
-					
-			#se l'ultimo changeset era un backup devo interrompere la ricerca
-			if(int(uti.readFileByTag("is_backup", prevChangesetTxt)[0]) == 1):
-				raise Exception("File non trovato")
+				#ricavo la cartella del changeset corrente
+				changesetDir = path.join(branchDir, changeset)
 
-			#ricavo la cartella del changeset corrente
-			changesetDir = path.join(branchDir, changeset)
-
-			#ricavo il path del file sul server
-			serverFile = localFile.replace(localRoot, changesetDir)
+				#ricavo il path del file sul server
+				serverFile = localFile.replace(self.getCurrPath(), changesetDir)
 				
-			#se il file esiste in questo branch interrompo la ricerca
-			if(path.isfile(serverFile)):
-				break
+				#se il file esiste in questo branch interrompo la ricerca
+				if(path.isfile(serverFile)):
+					break
 
 		return serverFile
 
