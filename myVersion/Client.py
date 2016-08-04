@@ -62,36 +62,17 @@ class Client:
 			elif (command == "getlatest")		: self.getLatestVersion() 
 			elif (command == "getspecific")		: self.getSpecificVersion(int(commandList.pop()))
 			elif (command == "pending")			: self.printPendingChanges()
-			##TO TEST##
 			elif (command == "commit")			: self.commit(commandList.pop(), commandList.pop())
 			elif (command == "commitall")		: self.commitAll(commandList.pop())
 			elif (command == "undo")			: self.undoFile(commandList.pop())
 			elif (command == "undoall")			: self.undoAll()
+			elif (command == "help")			: self.printHelp()
 			else								: print("Valore non ammesso", end="\n\n")
 			#except:
 			#	print("Errore: parametri mancanti", end="\n\n")
 		except Exception as ex:
 			print(ex)
 
-		"""COMANDI:
-		> exit
-		> repolist
-		> branchlist [repoName]
-		> maprepo [repoName]
-		> mapbranch [branchName]
-		> delrepo [repoName]
-		> delbranch [branchName]
-		> setrepo [repoName]
-		> setbranch [branchName]
-		> history
-		> getlatest
-		> getspecific
-		> pending
-		> commit [file] [comment]
-		> commitall [comment]
-		> undo [file]
-		> undoall
-		"""
 
 	#mostra la lista dei repository presenti sul server
 	def showRepos(self):
@@ -209,6 +190,7 @@ class Client:
 			#prendo la latestVersion da Repository e Branch corrente
 			self.getCurrBranchOnServer().getLatestVersion(self.getCurrPath())
 			print("Versione locale aggiornata con successo", end="\n\n")
+			uti.writeFile("last_changeset" + str(self.getCurrBranchOnServer().getLastChangesetNum()), self.getPendingFile())
 
 	
 	#scarica una versione specifica (identificata dal numero di changeset) e la copia nella cartella del branch
@@ -217,6 +199,7 @@ class Client:
 		if(uti.askAndRemoveDir(self.getCurrPath(), ask=False)):
 			#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
 			self.getCurrBranchOnServer().getSpecificVersion(changesetNum, self.getCurrPath())
+			uti.writeFile("last_changeset" + str(changesetNum), self.getPendingFile())
 
 
 	#stampa una lista dei file modificati in locale con data di ultima modifica
@@ -238,7 +221,15 @@ class Client:
 	def getPendingChanges(self):
 		#rimuovo il file dei pending vecchio
 		if(path.isfile(self.getPendingFile())):
-			os.remove(self.getPendingFile())
+			try:
+				#memorizzo il changeset originale
+				originalChangeset = int(uti.readFileByTag("last_changeset", self.getPendingFile())[0])
+				#rimuovo il file
+				os.remove(self.getPendingFile())
+				#scrivo il file e ci copio il changeset originale
+				uti.writeFile("last_changeset" + str(originalChangeset), self.getPendingFile())
+			except:
+				raise Exception("Errore: file", PENDING_FILE, "corrotto o non presente")
 
 		#prendo la cartella corrente dal client
 		localRoot = self.getCurrPath()
@@ -263,6 +254,8 @@ class Client:
 
 						if((path.getmtime(localFile)) > path.getmtime(serverFile)):
 							self.addPendingFile(localFile)
+						elif((path.getmtime(localFile)) < path.getmtime(serverFile)):
+							self.addPendingFile(localFile, older=True)
 
 					except:		
 						#se il file non viene trovato nel server vuol dire che è stato aggiunto in locale
@@ -273,8 +266,15 @@ class Client:
 
 
 	#aggiunge il file alla lista dei pending
-	def addPendingFile(self, file, addedFile=False):
-		uti.writeFile("file: " + file, self.getPendingFile())
+	def addPendingFile(self, file, addedFile=False, older=False):
+
+		info = ""
+		if(addedFile):
+			info += " add "
+		if(older):
+			info += " older "
+
+		uti.writeFile("file: " + file + info, self.getPendingFile())
 
 
 	#rimuove il file alla lista dei pending
@@ -293,6 +293,7 @@ class Client:
 			return uti.readFileByTag("file", self.getPendingFile())
 		except:
 			return ()
+
 
 	#crea un nuovo changeset con le modifiche del solo file in input
 	def commit(self, fileToCommit = None, comment = ""):
@@ -324,7 +325,6 @@ class Client:
 
 	#crea un nuovo changeset con le modifiche dei file in pending
 	def commitAll(self, comment):
-		
 		self.commit(comment = comment)
 
 		#Chiedo all'utente se desidera anche aggiornare la versione locale
@@ -346,7 +346,7 @@ class Client:
 			if(userInput == "s"):
 				try:
 					#prendo il file corrispondente dal server e lo sovrascrivo al file locale
-					serverFile = self.findFileOnServer(file, self.getCurrBranchOnServer().branchDir)
+					serverFile = self.findFileOnServer(file, self.getCurrBranchOnServer().branchDir, int(uti.readFileByTag("last_changeset", self.getPendingFile())[0]))
 					shutil.copy2(serverFile, path.dirname(file))
 				except:
 					#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
@@ -362,10 +362,32 @@ class Client:
 			print("Questo comando cancellerà tutti i pending, sei sicuro? (s/n) :")
 			userInput = input()
 			if(userInput == "s"):
-				self.getLatestVersion()
+				self.getSpecificVersion(int(uti.readFileByTag("last_changeset", self.getPendingFile())[0]))
 				break
 			elif(userInput == "n"):
 				break
+
+
+	#stampa una lista di comandi con descrizione
+	def printHelp(self):
+		print("> exit - chiude il programma",
+			  "> repolist - stampa la lista dei repositories presenti sul server",
+			  "> branchlist [repoName] - stampa una lista dei branchs presenti sul repository \"reponame\" sul server",
+			  "> maprepo [repoName] - mappa il repository \"repoName\" nella macchina locale",
+			  "> mapbranch [branchName] - mappa il branch \"branchName\" nella macchina locale",
+			  "> delrepo [repoName] - elimina il repository \"repoName\" dalla macchina locale",
+			  "> delbranch [branchName] - elimina il branch \"branchName\" dalla macchina locale",
+			  "> setrepo [repoName] - imposta il repository \"repoName\" come repository corrente",
+			  "> setbranch [branchName] - imposta il branch \"branchName\" come branch corrente",
+			  "> history - stampa la lista dei changeset del branch corrente",
+			  "> getlatest - scarica la versione più recente del branch corrente",
+			  "> getspecific [changeset] - scarica la versione specificata in \"changeset\" del branch corrente",
+			  "> pending - stampa una lista dei file modificati in locale",
+			  "> commit [file] [comment] - effettua il commit del file \"file\" associando il commento \"comment\"",
+			  "> commitall [comment] - effettua il commit di tutti i file in pending associando il commento \"comment\"",
+			  "> undo [file] - annulla le modifiche sul file \"file\"",
+			  "> undoall - annulla le modifiche su tutti i file in pending e scarica l'ultima versione",
+			  "> help - stampa la guida", sep="\n")
 
 
 	#setta il path di esecuzione
@@ -411,12 +433,23 @@ class Client:
 	def getCurrBranchOnServer(self):
 		return self.server.getRepo(self.getCurrRepo()).getBranch(self.getCurrBranch())
 
+
 	#ritorna il percorso del file sul server, il file viene cercato a partire da branchDir
-	def findFileOnServer(self, localFile, branchDir): 
+	def findFileOnServer(self, localFile, branchDir, startChangeset=None): 
 		"""TODO: DA SPOSTARE NEL SERVER - usare oggetti del server"""
+
+		#se non diversamente specificato, la ricerca parte dall'ultimo changeset
+		if(startChangeset == None):
+			startChangeset = self.getCurrBranchOnServer().getLastChangesetNum()
+
 		#scorro tutti i changeset presenti nella cartella del branch a partire dal più recente
 		for changeset in reversed(os.listdir(branchDir)):
 			if(path.isdir(path.join(branchDir, changeset))):
+
+				#non considero i changeset più recenti di quello di partenza
+				if(int(changeset) > startChangeset): 
+					continue
+
 				#prendo la cartella del changeset precedente (più recente)
 				prevChangesetDir = path.join(branchDir, str(int(changeset) + 1))
 
@@ -440,6 +473,3 @@ class Client:
 					break
 
 		return serverFile
-
-	###################################
-
