@@ -47,7 +47,14 @@ class Client:
 			command = commandList.pop()
 		
 			if (command == "exit"): 
+				if(len(commandList) != 0):
+					raise Exception("Parametri errati")
 				print("Programma terminato.", end="\n\n")
+			
+			elif (command == "currdir"):
+				if(len(commandList) != 0):
+					raise Exception("Parametri errati")
+				print("> {}:".format(self.getCurrPath()), end="\n\n")
 
 			elif (command == "repolist"): 
 				if(len(commandList) != 0):
@@ -225,7 +232,7 @@ class Client:
 				#setto anche il repository mappato come repository corrente di default
 				self.setRepo(repoName)
 			except:
-				print("Impossibile completare l'operazione", end = "\n\n")
+				print("Repository non trovato", end = "\n\n")
 
 
 	#mappa il branch nella cartella del client
@@ -242,22 +249,27 @@ class Client:
 				#altrimenti viene generata un'eccezione
 				#scarico anche la LatestVersion di default
 				self.server.mapBranch(self.getCurrRepo(), branchName, clientDir)
-				print("Branch mappato in: ", clientDir, end = "\n\n")
+				print("Branch mappato in:", clientDir, end = "\n\n")
 				
 				#setto anche il branch mappato come branch corrente di default
 				self.setBranch(branchName)
 			except:
-				print("Impossibile completare l'operazione", end = "\n\n")
+				print("Branch non trovato", end = "\n\n")
 
 
 	#rimuove la cartella del repo sul client
 	def removeRepositoryMap(self, repoName):
 		uti.askAndRemoveDir(path.join(self.myRoot, repoName))
+		if(self.getCurrRepo() == repoName):
+			self.setCurrRepo("")
+			self.setCurrBranch("")
 
 
 	#rimuove la cartella del branch sul client
 	def removeBranchMap(self, branchName):
 		uti.askAndRemoveDir(path.join(self.myRoot, self.getCurrRepo(), branchName))
+		if(self.getCurrBranch() == branchName):
+			self.setCurrBranch("")
 
 
 	#setta il repository corrente
@@ -265,13 +277,18 @@ class Client:
 		try:
 			#verifico se esiste il repository altrimenti viene generata un'eccezione
 			self.server.getRepo(repoName)
+			
+			#ottengo la cartella del repository
+			repoDir = path.join(self.myRoot, repoName)
+			#verifico che la cartella esista
+			if(path.isdir(repoDir) == False):
+				raise Exception
+
 			#aggiorno il repository corrente
 			self.setCurrRepo(repoName)
 			self.setCurrBranch("")
-			#aggiorno la cartella di esecuzione
-			repoDir = path.join(self.myRoot, repoName)
-			self.setCurrPath(repoDir)
-			print("> " + self.getCurrPath() + " : ")
+			
+			print("> " + self.getCurrPath() + ": ")
 		except:
 			print("Il repository", repoName, "non esiste o non è stato mappato") 
 
@@ -281,11 +298,16 @@ class Client:
 		try:
 			#verifico se esiste il branch altrimenti viene generata un'eccezione
 			self.getCurrRepoOnServer().getBranch(branchName)
+			
+			#ottengo la cartella del branch
+			branchDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
+			#verifico che la cartella locale esista
+			if(path.isdir(branchDir) == False):
+				raise Exception
+			
 			#aggiorno il branch corrente
 			self.setCurrBranch(branchName)
-			#aggiorno la cartella di esecuzione
-			branchDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
-			self.setCurrPath(branchDir)
+			
 			print(">", self.getCurrPath(), ": ")
 		except:
 			print("Il branch", branchName, "non esiste o non è stato mappato")
@@ -506,11 +528,13 @@ class Client:
 	#setta il repository selezionato
 	def setCurrRepo(self, repoName):
 		self.currRepo = repoName
+		self.setCurrPath(path.join(self.myRoot, repoName))
 
 
 	#setta il branch selezionato
 	def setCurrBranch(self, branchName):
 		self.currBranch = branchName
+		self.setCurrPath(path.join(self.myRoot, self.getCurrRepo(), branchName))
 
 
 	#ritorna il path di esecuzione
