@@ -48,28 +48,98 @@ class Client:
 			#eseguo l'azione corrispondente al comando, default: "None"
 			#try:
 			##OK##
-			"""TODO: per tutti questi comandi bisogna gestire il caso in cui non ci sia uno degli argomenti o il path corrente sia non compatibile con il comando"""
-			if	 (command == "exit")			: print("Programma terminato.", end="\n\n")
-			elif (command == "repolist")		: self.showRepos()
-			elif (command == "branchlist")		: self.showBranches()
-			elif (command == "maprepo")			: self.mapRepository(commandList.pop()) 
-			elif (command == "mapbranch")		: self.mapBranch(commandList.pop())
-			elif (command == "delrepo")			: self.removeRepositoryMap(commandList.pop())
-			elif (command == "delbranch")		: self.removeBranchMap(commandList.pop())
-			elif (command == "setrepo")			: self.setRepo(commandList.pop())
-			elif (command == "setbranch")		: self.setBranch(commandList.pop())
-			elif (command == "history")			: self.showHistory()
-			elif (command == "getlatest")		: self.getLatestVersion() 
-			elif (command == "getspecific")		: self.getSpecificVersion(int(commandList.pop()))
-			elif (command == "pending")			: self.printPendingChanges()
-			elif (command == "commit")			: self.commit(commandList.pop(), commandList.pop())
-			elif (command == "commitall")		: self.commitAll(commandList.pop())
-			elif (command == "undo")			: self.undoFile(commandList.pop())
-			elif (command == "undoall")			: self.undoAll()
-			elif (command == "help")			: self.printHelp()
-			else								: print("Valore non ammesso", end="\n\n")
-			#except:
-			#	print("Errore: parametri mancanti", end="\n\n")
+			"""TODO: per tutti questi comandi bisogna gestire il caso in cui non ci sia uno degli argomenti (FATTO) o il path corrente sia non compatibile con il comando"""
+			if (command == "exit"): 
+				print("Programma terminato.", end="\n\n")
+
+			elif (command == "repolist"): 
+				if(len(commandList) != 0):
+					raise Exception("Parametri errati")
+				self.showRepos() 
+			
+			elif (command == "branchlist"): 
+				if(len(commandList) != 0):
+					raise Exception("Parametri errati")
+				self.showBranches()
+
+			elif (command == "maprepo"): 
+				if(len(commandList) != 1):
+					raise Exception("Parametri errati")
+				self.mapRepository(commandList.pop()) 
+
+			elif (command == "mapbranch"): 
+				if(len(commandList) != 1):
+					raise Exception("Parametri errati")
+				self.mapBranch(commandList.pop())
+
+			elif (command == "delrepo"): 
+				if(len(commandList) != 1):
+					raise Exception("Parametri errati")
+				self.removeRepositoryMap(commandList.pop())
+
+			elif (command == "delbranch"):
+				if(len(commandList) != 1):
+					raise Exception("Parametri errati")
+				self.removeBranchMap(commandList.pop())
+
+			elif (command == "setrepo"):
+				if(len(commandList) != 1):
+					raise Exception("Parametri errati")
+				self.setRepo(commandList.pop())
+
+			elif (command == "setbranch"): 
+				if(len(commandList) != 1):
+					raise Exception("Parametri errati")
+				self.setBranch(commandList.pop())
+
+			elif (command == "history"): 
+				if(len(commandList) != 0):
+					raise Exception("Parametri errati")
+				self.showHistory()
+
+			elif (command == "getlatest"): 
+				if(len(commandList) != 0):
+					raise Exception("Parametri errati")
+				self.getLatestVersion() 
+
+			elif (command == "getspecific"):
+				if(len(commandList) != 1):
+					raise Exception("Parametri errati")
+				self.getSpecificVersion(int(commandList.pop()))
+
+			elif (command == "pending"): 
+				if(len(commandList) != 0):
+					raise Exception("Parametri errati")
+				self.printPendingChanges()
+
+			elif (command == "commit"): 
+				if(len(commandList) != 2):
+					raise Exception("Parametri errati")
+				self.commit(commandList.pop(), commandList.pop())
+
+			elif (command == "commitall"): 
+				if(len(commandList) != 1):
+					raise Exception("Parametri errati")
+				self.commitAll(commandList.pop())
+
+			elif (command == "undo"): 
+				if(len(commandList) != 1):
+					raise Exception("Parametri errati")
+				self.undoFile(commandList.pop())
+
+			elif (command == "undoall"): 
+				if(len(commandList) != 0):
+					raise Exception("Parametri errati")
+				self.undoAll()
+
+			elif (command == "help"): 
+				if(len(commandList) != 0):
+					raise Exception("Parametri errati")
+				self.printHelp()
+
+			else: 
+				print("Valore non ammesso", end="\n\n")
+
 		except Exception as ex:
 			print(ex)
 
@@ -372,7 +442,7 @@ class Client:
 	def printHelp(self):
 		print("> exit - chiude il programma",
 			  "> repolist - stampa la lista dei repositories presenti sul server",
-			  "> branchlist [repoName] - stampa una lista dei branchs presenti sul repository \"reponame\" sul server",
+			  "> branchlist - stampa una lista dei branchs presenti sul repository corrente sul server",
 			  "> maprepo [repoName] - mappa il repository \"repoName\" nella macchina locale",
 			  "> mapbranch [branchName] - mappa il branch \"branchName\" nella macchina locale",
 			  "> delrepo [repoName] - elimina il repository \"repoName\" dalla macchina locale",
