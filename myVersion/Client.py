@@ -42,13 +42,10 @@ class Client:
 		commandList = userInput.split()
 		commandList.reverse()
 
+		#eseguo il comando
 		try:
 			command = commandList.pop()
 		
-			#eseguo l'azione corrispondente al comando, default: "None"
-			#try:
-			##OK##
-			"""TODO: per tutti questi comandi bisogna gestire il caso in cui non ci sia uno degli argomenti (FATTO) o il path corrente sia non compatibile con il comando"""
 			if (command == "exit"): 
 				print("Programma terminato.", end="\n\n")
 
@@ -60,6 +57,8 @@ class Client:
 			elif (command == "branchlist"): 
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
 				self.showBranches()
 
 			elif (command == "maprepo"): 
@@ -70,6 +69,8 @@ class Client:
 			elif (command == "mapbranch"): 
 				if(len(commandList) != 1):
 					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
 				self.mapBranch(commandList.pop())
 
 			elif (command == "delrepo"): 
@@ -80,6 +81,8 @@ class Client:
 			elif (command == "delbranch"):
 				if(len(commandList) != 1):
 					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
 				self.removeBranchMap(commandList.pop())
 
 			elif (command == "setrepo"):
@@ -90,46 +93,80 @@ class Client:
 			elif (command == "setbranch"): 
 				if(len(commandList) != 1):
 					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
 				self.setBranch(commandList.pop())
 
 			elif (command == "history"): 
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
+				elif(not self.getCurrBranch()):
+					raise Exception("Nessun branch settato")
 				self.showHistory()
 
 			elif (command == "getlatest"): 
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
+				elif(not self.getCurrBranch()):
+					raise Exception("Nessun branch settato")
 				self.getLatestVersion() 
 
 			elif (command == "getspecific"):
 				if(len(commandList) != 1):
 					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
+				elif(not self.getCurrBranch()):
+					raise Exception("Nessun branch settato")
 				self.getSpecificVersion(int(commandList.pop()))
 
 			elif (command == "pending"): 
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
+				elif(not self.getCurrBranch()):
+					raise Exception("Nessun branch settato")
 				self.printPendingChanges()
 
 			elif (command == "commit"): 
 				if(len(commandList) != 2):
 					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
+				elif(not self.getCurrBranch()):
+					raise Exception("Nessun branch settato")
 				self.commit(commandList.pop(), commandList.pop())
 
 			elif (command == "commitall"): 
 				if(len(commandList) != 1):
 					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
+				elif(not self.getCurrBranch()):
+					raise Exception("Nessun branch settato")
 				self.commitAll(commandList.pop())
 
 			elif (command == "undo"): 
 				if(len(commandList) != 1):
 					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
+				elif(not self.getCurrBranch()):
+					raise Exception("Nessun branch settato")
 				self.undoFile(commandList.pop())
 
 			elif (command == "undoall"): 
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
+				elif(not self.getCurrBranch()):
+					raise Exception("Nessun branch settato")
 				self.undoAll()
 
 			elif (command == "help"): 
@@ -141,7 +178,7 @@ class Client:
 				print("Valore non ammesso", end="\n\n")
 
 		except Exception as ex:
-			print(ex)
+			print("Errore:", ex)
 
 
 	#mostra la lista dei repository presenti sul server
@@ -230,6 +267,7 @@ class Client:
 			self.server.getRepo(repoName)
 			#aggiorno il repository corrente
 			self.setCurrRepo(repoName)
+			self.setCurrBranch("")
 			#aggiorno la cartella di esecuzione
 			repoDir = path.join(self.myRoot, repoName)
 			self.setCurrPath(repoDir)
