@@ -44,8 +44,12 @@ class Client:
 
 		#eseguo il comando
 		try:
-			command = commandList.pop()
-		
+			
+			try:
+				command = commandList.pop()
+			except:
+				print("Valore non ammesso", end="\n\n")
+
 			if (command == "exit"): 
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
@@ -185,7 +189,7 @@ class Client:
 				print("Valore non ammesso", end="\n\n")
 
 		except Exception as ex:
-			print("Errore:", ex)
+			print("Errore:", ex, end="\n\n")
 
 
 	#mostra la lista dei repository presenti sul server
@@ -290,7 +294,7 @@ class Client:
 			
 			print("> " + self.getCurrPath() + ": ")
 		except:
-			print("Il repository", repoName, "non esiste o non è stato mappato") 
+			print("Il repository", repoName, "non esiste o non è stato mappato", end="\n\n") 
 
 
 	#setta il branch corrente
@@ -310,7 +314,7 @@ class Client:
 			
 			print(">", self.getCurrPath(), ": ")
 		except:
-			print("Il branch", branchName, "non esiste o non è stato mappato")
+			print("Il branch", branchName, "non esiste o non è stato mappato", end="\n\n")
 
 
 	#scarica l'ultima versione e la copia nella cartella del branch

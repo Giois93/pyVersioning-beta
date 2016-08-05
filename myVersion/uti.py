@@ -93,9 +93,6 @@ def askAndRemoveDir(dir, ask=True, askOverride=False):
 					#l'utente ha scelto di non sovrascrive
 					print("Operazione annullata", end = "\n\n")
 					return False
-	else:
-		print("Cartella non presente", end = "\n\n")
-
 	return True
 
 #chiede all'utente il nome del repository
