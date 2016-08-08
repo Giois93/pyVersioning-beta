@@ -46,7 +46,7 @@ class Branch:
 		#scivo il suo file
 		#se sto inserendo il primo changeset nel branch scrivo anche il tag "changeset_0"
 		if (len(os.listdir(self.branchDir)) == 1):
-			uti.writeFile("changeset_0: " + str(originalChangesetNum), self.branchTxt)
+			uti.writeFileByTag("changeset_0", str(originalChangesetNum), self.branchTxt)
 		uti.writeFileByTag("last_changeset", str(self.getNextChangesetNum()), self.branchTxt)
 		uti.writeFileByTag("comment", comment, changeset.changesetTxt)
 

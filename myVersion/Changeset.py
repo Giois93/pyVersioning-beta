@@ -5,14 +5,6 @@ import distutils.dir_util as dir_uti
 import uti
 from uti import CHANGESET_FILE
 
-
-
-""" TODO:
-- nel changeset devono esserci solo i file modificati (salvo backup), da gestire con la sourceDir esternamente
-  chi crea il changeset "NON" backup deve creare una cartella temporanea, passarla in modo che venga copiata nel changeset e poi eliminarla
-- NON ANNOTO l'utente che ha creato il changeset
-"""
-
 class Changeset:
 	
 	changesetDir = ""	#path del changeset
@@ -43,7 +35,7 @@ class Changeset:
 			uti.writeFile("is_backup: 0", self.changesetTxt, False);
 
 		#scrivo data e ora di crezione
-		uti.writeFile("date: " + time.strftime("%d/%m/%Y") + " " + time.strftime("%H:%M:%S"), self.changesetTxt)
+		uti.writeFile("date: {} {}".format(time.strftime("%d/%m/%Y"), time.strftime("%H:%M:%S")), self.changesetTxt)
 
 
 	#ritorna True se il changeset è un changeset di backup

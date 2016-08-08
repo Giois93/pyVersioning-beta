@@ -3,9 +3,11 @@ import os.path as path
 import time
 import datetime
 import shutil
+import subprocess
 import uti
 from uti import PENDING_FILE
 from uti import CHANGESET_FILE
+from uti import LAST_RUN
 from Server import Server
 
 class Client:
@@ -18,8 +20,17 @@ class Client:
 
 	def __init__(self, server):
 		self.myRoot = "C:/myClient"
-		self.currPath = self.myRoot
 		self.server = server
+
+		#chiedo all'utente se desidera anche aggiornare la versione locale
+		if(uti.askQuestion("Impostare l'ultimo percorso aperto?")):
+			try:
+				self.setCurrPath(uti.readFileByTag("last_path", self.getLastRunFile())[0])
+			except:
+				print("Impossibile effettuare l'operazione richiesta")
+				self.setCurrPath(self.myRoot)
+		else:
+			self.setCurrPath(self.myRoot)
 
 
 	#esegue i comandi dell'utente fino al comando "exit"
@@ -53,12 +64,19 @@ class Client:
 			if (command == "exit"): 
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
+
+				uti.writeFileByTag("last_path", self.getCurrPath(), self.getLastRunFile()) #TODO non funziona la writefilebytag() se il tag c'è già
 				print("Programma terminato.", end="\n\n")
 			
+			elif (command == "clear"):
+				if(len(commandList) != 0):
+					raise Exception("Parametri errati")
+				os.system("cls")
+
 			elif (command == "currdir"):
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
-				print("> {}:".format(self.getCurrPath()), end="\n\n")
+				print("> {}".format(self.getCurrPath()), end="\n\n")
 
 			elif (command == "repolist"): 
 				if(len(commandList) != 0):
@@ -135,6 +153,7 @@ class Client:
 					raise Exception("Nessun branch settato")
 				self.getSpecificVersion(int(commandList.pop()))
 
+				#TO TEST: file aggiunti e rimossi
 			elif (command == "pending"): 
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
@@ -144,6 +163,7 @@ class Client:
 					raise Exception("Nessun branch settato")
 				self.printPendingChanges()
 
+				#TO TEST
 			elif (command == "commit"): 
 				if(len(commandList) != 2):
 					raise Exception("Parametri errati")
@@ -197,23 +217,23 @@ class Client:
 		print("\nRepositories sul server di MyVersion")
 	
 		for repo in self.server.showRepos():
-			print("- " + repo)
+			print("- {}".format(repo))
 		print()
 
 
 	#mostra la lista dei branch presenti sul server
 	def showBranches(self):
-		print("\nBranches sul repository " + self.getCurrRepo() + ": ")
+		print("\nBranches sul repository {}:".format(self.getCurrRepo()))
 		for branch in self.server.showBranches(self.getCurrRepo()):
-			print("- " + branch)
+			print("- {}".format(branch))
 		print()
 
 
 	#mostra la lista dei changeset presenti in questo branch
 	def showHistory(self):
-		print("\nChangeset del branch " + self.getCurrBranch() + ": ")
+		print("\nChangeset del branch {}:".format(self.getCurrBranch()))
 		for changeSet in self.getCurrBranchOnServer().getChangesetList():
-			print("- " + changeSet)
+			print("- {}".format(changeSet))
 		print()
 
 
@@ -263,17 +283,25 @@ class Client:
 
 	#rimuove la cartella del repo sul client
 	def removeRepositoryMap(self, repoName):
-		uti.askAndRemoveDir(path.join(self.myRoot, repoName))
-		if(self.getCurrRepo() == repoName):
-			self.setCurrRepo("")
-			self.setCurrBranch("")
+		repodir = path.join(self.myRoot, repoName)
+		if(path.isdir(repodir)):
+			uti.askAndRemoveDir(repodir)
+			if(self.getCurrRepo() == repoName):
+				self.setCurrRepo("")
+				self.setCurrBranch("")
+		else:
+			print("Repository {} non presente".format(repoName), end="\n\n")
 
 
 	#rimuove la cartella del branch sul client
 	def removeBranchMap(self, branchName):
-		uti.askAndRemoveDir(path.join(self.myRoot, self.getCurrRepo(), branchName))
-		if(self.getCurrBranch() == branchName):
-			self.setCurrBranch("")
+		branchdir = path.join(self.myRoot, self.getCurrRepo(), branchName)
+		if(path.isdir(branchdir)):
+			uti.askAndRemoveDir(branchdir)
+			if(self.getCurrBranch() == branchName):
+				self.setCurrBranch("")
+		else:
+			print("Branch {} non presente".format(branchName), end="\n\n")
 
 
 	#setta il repository corrente
@@ -292,7 +320,7 @@ class Client:
 			self.setCurrRepo(repoName)
 			self.setCurrBranch("")
 			
-			print("> " + self.getCurrPath() + ": ")
+			print("> {}".format(self.getCurrPath()), end="\n\n")
 		except:
 			print("Il repository", repoName, "non esiste o non è stato mappato", end="\n\n") 
 
@@ -312,7 +340,7 @@ class Client:
 			#aggiorno il branch corrente
 			self.setCurrBranch(branchName)
 			
-			print(">", self.getCurrPath(), ": ")
+			print("> {}".format(self.getCurrPath()), end="\n\n")
 		except:
 			print("Il branch", branchName, "non esiste o non è stato mappato", end="\n\n")
 
@@ -323,8 +351,8 @@ class Client:
 		if(uti.askAndRemoveDir(self.getCurrPath(), ask=False)):
 			#prendo la latestVersion da Repository e Branch corrente
 			self.getCurrBranchOnServer().getLatestVersion(self.getCurrPath())
+			uti.writeFileByTag("last_changeset", self.getCurrBranchOnServer().getLastChangesetNum(), self.getPendingFile())
 			print("Versione locale aggiornata con successo", end="\n\n")
-			uti.writeFile("last_changeset" + str(self.getCurrBranchOnServer().getLastChangesetNum()), self.getPendingFile())
 
 	
 	#scarica una versione specifica (identificata dal numero di changeset) e la copia nella cartella del branch
@@ -333,7 +361,8 @@ class Client:
 		if(uti.askAndRemoveDir(self.getCurrPath(), ask=False)):
 			#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
 			self.getCurrBranchOnServer().getSpecificVersion(changesetNum, self.getCurrPath())
-			uti.writeFile("last_changeset" + str(changesetNum), self.getPendingFile())
+			uti.writeFileByTag("last_changeset", changesetNum, self.getPendingFile())
+			print("Versione locale aggiornata con successo", end="\n\n")
 
 
 	#stampa una lista dei file modificati in locale con data di ultima modifica
@@ -361,9 +390,9 @@ class Client:
 				#rimuovo il file
 				os.remove(self.getPendingFile())
 				#scrivo il file e ci copio il changeset originale
-				uti.writeFile("last_changeset" + str(originalChangeset), self.getPendingFile())
+				uti.writeFileByTag("last_changeset", originalChangeset, self.getPendingFile())
 			except:
-				raise Exception("Errore: file", PENDING_FILE, "corrotto o non presente")
+				raise Exception("Errore: file {} corrotto o non presente".format(PENDING_FILE))
 
 		#prendo la cartella corrente dal client
 		localRoot = self.getCurrPath()
@@ -378,7 +407,8 @@ class Client:
 					localFile = path.join(dirPath, fileName)
 				
 					try:
-						#cerco sul server il file corrispondente al localFile
+						#cerco sul server il file corrispondente al localFile 
+						#(cerco sempre a partire dall'ultima versione così da segnalare anche file vecchi)
 						serverFile = self.findFileOnServer(localFile, serverBranch)
 				
 						#confronto le date di ultima modifica dei file
@@ -401,14 +431,14 @@ class Client:
 
 	#aggiunge il file alla lista dei pending
 	def addPendingFile(self, file, addedFile=False, older=False):
-
+		""" TODO:problema in lettura, vengono letti insieme ai path dei file, devo cambiare la readfilebytag"""
 		info = ""
 		if(addedFile):
-			info += " add "
+			info += "add "
 		if(older):
-			info += " older "
+			info += "older "
 
-		uti.writeFile("file: " + file + info, self.getPendingFile())
+		uti.writeFile("{} file={}".format(info, file), self.getPendingFile())
 
 
 	#rimuove il file alla lista dei pending
@@ -416,13 +446,14 @@ class Client:
 		#prendo la stringa di tutto il file
 		fileStr = uti.readFile(self.getPendingFile())
 		#rimuovo il file dalla lista dei pending
-		fileStr.replace("file: " + file + "\n", "")
+		fileStr.replace("file={}\n".format(file), "")
 		#sovrascrivo il file
 		uti.writeFile(fileStr, self.getPendingFile(), True)
 
 
 	#legge il file dei pending e ritorna una lista 
 	def getPendingList(self):
+		"""DEVO RITORNARE SIA I FILE IN PENDING SIA I TAG ADD, REMOVED, OLDER - USARE UNA TUPLA?"""
 		try:
 			return uti.readFileByTag("file", self.getPendingFile())
 		except:
@@ -461,46 +492,26 @@ class Client:
 	def commitAll(self, comment):
 		self.commit(comment = comment)
 
-		#Chiedo all'utente se desidera anche aggiornare la versione locale
-		while True:
-			print("Scaricare ultima versione? (s/n): ")
-			userInput = input()
-			if(userInput == "s"):
-				self.getLatestVersion()
-				break
-			elif(userInput == "n"):
-				break
+		#chiedo all'utente se desidera anche aggiornare la versione locale
+		if(uti.askQuestion("Scaricare ultima versione?")):
+			self.getLatestVersion()
 
 						
 	#annulla le modifiche sul file e riporta la versione a quella del server
 	def undoFile(self, file):
-		while True:
-			print("Questo comando annullerà le modifiche sul file", file, ", sei sicuro? (s/n) :")
-			userInput = input()
-			if(userInput == "s"):
-				try:
-					#prendo il file corrispondente dal server e lo sovrascrivo al file locale
-					serverFile = self.findFileOnServer(file, self.getCurrBranchOnServer().branchDir, int(uti.readFileByTag("last_changeset", self.getPendingFile())[0]))
-					shutil.copy2(serverFile, path.dirname(file))
-				except:
-					#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
-					os.remove(file)
-				break
-			elif(userInput == "n"):
-				break
+		if(uti.askQuestion("Questo comando annullerà le modifiche sul file {}, sei sicuro?".format(file))):
+			try:
+				#prendo il file corrispondente dal server e lo sovrascrivo al file locale
+				serverFile = self.findFileOnServer(file, self.getCurrBranchOnServer().branchDir, int(uti.readFileByTag("last_changeset", self.getPendingFile())[0]))
+				shutil.copy2(serverFile, path.dirname(file))
+			except:
+				#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
+				os.remove(file)
 
-	
 	#annulla tutte le modifiche e riporta la versione a quella del server
 	def undoAll(self):
-		while True:
-			print("Questo comando cancellerà tutti i pending, sei sicuro? (s/n) :")
-			userInput = input()
-			if(userInput == "s"):
-				self.getSpecificVersion(int(uti.readFileByTag("last_changeset", self.getPendingFile())[0]))
-				break
-			elif(userInput == "n"):
-				break
-
+		if(uti.askQuestion("Questo comando cancellerà tutti i pending, sei sicuro?")):
+			self.getSpecificVersion(int(uti.readFileByTag("last_changeset", self.getPendingFile())[0]))
 
 	#stampa una lista di comandi con descrizione
 	def printHelp(self):
@@ -521,6 +532,7 @@ class Client:
 			  "> commitall [comment] - effettua il commit di tutti i file in pending associando il commento \"comment\"",
 			  "> undo [file] - annulla le modifiche sul file \"file\"",
 			  "> undoall - annulla le modifiche su tutti i file in pending e scarica l'ultima versione",
+			  "> clear - pulisce il terminale",
 			  "> help - stampa la guida", sep="\n")
 
 
@@ -545,10 +557,6 @@ class Client:
 	def getCurrPath(self):
 		return self.currPath
 
-	#ritorna il file dei pending nel branch corrente
-	def getPendingFile(self):
-		return path.join(self.getCurrPath(), PENDING_FILE)
-
 
 	#ritorna il repository selezionato
 	def getCurrRepo(self):
@@ -558,6 +566,16 @@ class Client:
 	#ritorna il branch selezionato
 	def getCurrBranch(self):
 		return self.currBranch
+
+
+	#ritorna il file dei pending nel branch corrente
+	def getPendingFile(self):
+		return path.join(self.getCurrPath(), PENDING_FILE)
+
+	
+	#ritorna il file dell'ultimo run
+	def getLastRunFile(self):
+		return path.join(self.myRoot, LAST_RUN)
 
 
 	#ritorna il repository del server corrispondente a quello corrente

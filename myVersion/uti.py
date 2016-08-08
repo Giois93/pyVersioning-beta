@@ -10,7 +10,7 @@ https://docs.python.org/2/library/re.html#finding-all-adverbs
 PENDING_FILE = "pending.txt"
 BRANCH_FILE = "branch.txt"
 CHANGESET_FILE = "changeset.txt"
-
+LAST_RUN = "lastrun.txt"
 
 #legge l'intero file in una stringa
 def readFile(filePath):
@@ -28,7 +28,7 @@ def readFile(filePath):
 def readFileByTag(tag, filePath):
 	#se ho trovato il tag lo restituisco
 	try:
-		return re.findall(tag + ": (.+)", readFile(filePath))
+		return re.findall("{}=(.+)".format(tag), readFile(filePath))
 	except:
 		raise	
 
@@ -51,20 +51,27 @@ def writeFile(string, filePath, append = True):
 def writeFileByTag(tag, value, filePath):
 
 	#apro il file
-	fileStr = readFile(filePath)
+	try:
+		fileStr = readFile(filePath)
 
-	#cerco il tag
-	results = re.findall(tag + ": (\w+)", fileStr)
+		#cerco il tag
+		results = re.findall("{}=(\w+)".format(tag), fileStr)
 
-	if(len(results) == 0):
+		if(len(results) == 0):
+			#se non ho trovato il tag lo aggiungo
+			writeFile("{}={}".format(tag, str(value)), filePath)
+		else:
+			#se ho trovato il tag lo sostituisco
+			#prendo tutte le occorrenze del tag e le sostituisco con i nuovi valori	
+			try:
+				newFileStr = re.sub("{}=(\w+)".format(tag), "{}={}".format(tag, str(value)), fileStr)
+			except Exception as ex: 
+				print(ex)
+			#sovrascrivo il file
+			writeFile(newFileStr, filePath, False)
+	except:
 		#se non ho trovato il tag lo aggiungo
-		writeFile(tag + ": " + value, filePath)
-	else:
-		#se ho trovato il tag lo sostituisco
-		#prendo tutte le occorrenze del tag e le sostituisco con i nuovi valori	
-		newFileStr = re.sub(tag + ": (\w+)", tag + ": " + str(value), fileStr)
-		#sovrascrivo il file
-		writeFile(newFileStr, filePath, False)
+		writeFile("{}={}".format(tag, str(value)), filePath)
 
 
 #chiede all'utente se rimuovere/sovrascrivere la cartella "dir" ed eventualmente la rimuove
@@ -78,36 +85,30 @@ def askAndRemoveDir(dir, ask=True, askOverride=False):
 			#chiedo all'utente se procede e sovrascrivere la cartella
 			while True:
 				if(askOverride):
-					print("La cartella " + dir + " è già presente, sovrascrivere? (s/n)")
+					msg = "La cartella {} è già presente, sovrascrivere?".format(dir)
 				else:
-					print("Rimuovere la cartella " + dir +" ?  (s/n)")
-
-				userInput = input() 
-				if(userInput == "s"):
+					msg = "Rimuovere la cartella {}?".format(dir)
+				
+				if(askQuestion(msg)):
 					#l'utente ha scelto di sovrascrivere
 					#rimuovo la cartella
 					shutil.rmtree(dir)
 					print("Cartella rimossa:", dir, end = "\n\n")
 					return True
-				elif(userInput == "n"):
+				else:
 					#l'utente ha scelto di non sovrascrive
 					print("Operazione annullata", end = "\n\n")
 					return False
 	return True
 
-#chiede all'utente il nome del repository
-def askRepoName():
-	print("Digitare il nome del Repository:")
-	return input()
 
-
-#chiede all'utente il nome del branch
-def askBranchName():
-	print("Digitare il nome del Branch:")
-	return input()
-
-
-#chiede all'utente il path del repository
-def askRepoDestDir():
-	print("Digitare il path del Repository:")
-	return input()
+#rivolge la domanda "question" all'utente, attende una risposta 
+#"s": ritorna True - "n": ritorna False - altrimenti ripete la domanda
+def askQuestion(question):
+	while True:
+		print(question, "(s/n)")
+		userInput = input()
+		if(userInput == "s"):
+			return True
+		elif(userInput == "n"):
+			return False
