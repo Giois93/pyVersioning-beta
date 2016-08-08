@@ -527,10 +527,12 @@ class Client:
 				#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
 				os.remove(file)
 
+
 	#annulla tutte le modifiche e riporta la versione a quella del server
 	def undoAll(self):
 		if(uti.askQuestion("Questo comando cancellerà tutti i pending, sei sicuro?")):
 			self.getSpecificVersion(int(uti.readFileByTag("last_changeset", self.getPendingFile())[0]))
+
 
 	#stampa una lista di comandi con descrizione
 	def printHelp(self):
