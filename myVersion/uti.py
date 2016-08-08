@@ -7,10 +7,11 @@ https://docs.python.org/2/library/re.html#finding-all-adverbs
 """
 
 #costanti
-PENDING_FILE = "pending.txt"
-BRANCH_FILE = "branch.txt"
-CHANGESET_FILE = "changeset.txt"
-LAST_RUN = "lastrun.txt"
+PENDING_FILE	= "pending.txt"
+BRANCH_FILE		= "branch.txt"
+CHANGESET_FILE	= "changeset.txt"
+LAST_RUN_FILE	= "lastrun.txt"
+
 
 #legge l'intero file in una stringa
 def readFile(filePath):
@@ -31,6 +32,7 @@ def readFileByTag(tag, filePath):
 		return re.findall("{}=(.+)".format(tag), readFile(filePath))
 	except:
 		raise	
+
 
 #scrive il file in append o in sovrascrittura
 def writeFile(string, filePath, append = True):
@@ -63,10 +65,8 @@ def writeFileByTag(tag, value, filePath):
 		else:
 			#se ho trovato il tag lo sostituisco
 			#prendo tutte le occorrenze del tag e le sostituisco con i nuovi valori	
-			try:
-				newFileStr = re.sub("{}=(\w+)".format(tag), "{}={}".format(tag, str(value)), fileStr)
-			except Exception as ex: 
-				print(ex)
+			newFileStr = re.sub("{}=(\w+)".format(tag), "{}={}".format(tag, str(value)), fileStr)
+
 			#sovrascrivo il file
 			writeFile(newFileStr, filePath, False)
 	except:
@@ -85,15 +85,15 @@ def askAndRemoveDir(dir, ask=True, askOverride=False):
 			#chiedo all'utente se procede e sovrascrivere la cartella
 			while True:
 				if(askOverride):
-					msg = "La cartella {} è già presente, sovrascrivere?".format(dir)
+					msg = "La cartella {} è già presente, sovrascrivere?".format(getPathForPrint(dir))
 				else:
-					msg = "Rimuovere la cartella {}?".format(dir)
+					msg = "Rimuovere la cartella {}?".format(getPathForPrint(dir))
 				
 				if(askQuestion(msg)):
 					#l'utente ha scelto di sovrascrivere
 					#rimuovo la cartella
 					shutil.rmtree(dir)
-					print("Cartella rimossa:", dir, end = "\n\n")
+					print("Cartella rimossa:", getPathForPrint(dir), end = "\n\n")
 					return True
 				else:
 					#l'utente ha scelto di non sovrascrive
@@ -112,3 +112,7 @@ def askQuestion(question):
 			return True
 		elif(userInput == "n"):
 			return False
+
+
+def getPathForPrint(path):
+	return path.replace("/", "\\")

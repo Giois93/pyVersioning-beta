@@ -7,7 +7,7 @@ import subprocess
 import uti
 from uti import PENDING_FILE
 from uti import CHANGESET_FILE
-from uti import LAST_RUN
+from uti import LAST_RUN_FILE
 from Server import Server
 
 class Client:
@@ -22,13 +22,20 @@ class Client:
 		self.myRoot = "C:/myClient"
 		self.server = server
 
-		#chiedo all'utente se desidera anche aggiornare la versione locale
+		#chiedo all'utente se desidera impostare l'ultimo percorso usato
 		if(uti.askQuestion("Impostare l'ultimo percorso aperto?")):
 			try:
-				self.setCurrPath(uti.readFileByTag("last_path", self.getLastRunFile())[0])
+				#setto il repository se memorizzato nel file
+				self.setCurrRepo(uti.readFileByTag("last_repo", self.getLastRunFile())[0])
 			except:
 				print("Impossibile effettuare l'operazione richiesta")
 				self.setCurrPath(self.myRoot)
+
+			try:
+				#setto il branch se memorizzato nel file
+				self.setCurrBranch(uti.readFileByTag("last_branch", self.getLastRunFile())[0])
+			except:
+				pass
 		else:
 			self.setCurrPath(self.myRoot)
 
@@ -64,8 +71,8 @@ class Client:
 			if (command == "exit"): 
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
-
-				uti.writeFileByTag("last_path", self.getCurrPath(), self.getLastRunFile()) #TODO non funziona la writefilebytag() se il tag c'è già
+				uti.writeFileByTag("last_repo", self.getCurrRepo(), self.getLastRunFile())
+				uti.writeFileByTag("last_branch", self.getCurrBranch(), self.getLastRunFile()) #la writefilebytag non fa replace come dovrebbe
 				print("Programma terminato.", end="\n\n")
 			
 			elif (command == "clear"):
@@ -76,7 +83,7 @@ class Client:
 			elif (command == "currdir"):
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
-				print("> {}".format(self.getCurrPath()), end="\n\n")
+				print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
 
 			elif (command == "repolist"): 
 				if(len(commandList) != 0):
@@ -217,7 +224,13 @@ class Client:
 		print("\nRepositories sul server di MyVersion")
 	
 		for repo in self.server.showRepos():
-			print("- {}".format(repo))
+			#ottengo la cartella del repository
+			repoDir = path.join(self.myRoot, repo)
+			#verifico che la cartella esista in locale
+			if(path.isdir(repoDir)):
+				print("- {} ({})".format(repo, "mapped"))
+			else:
+				print("- {}".format(repo))
 		print()
 
 
@@ -225,7 +238,13 @@ class Client:
 	def showBranches(self):
 		print("\nBranches sul repository {}:".format(self.getCurrRepo()))
 		for branch in self.server.showBranches(self.getCurrRepo()):
-			print("- {}".format(branch))
+			#ottengo la cartella del branch
+			branchdir = path.join(self.myRoot, self.getCurrRepo(), branch)
+			#verifico che la cartella esista in locale
+			if(path.isdir(branchdir)):
+				print("- {} ({})".format(branch, "mapped"))
+			else:
+				print("- {}".format(branch))
 		print()
 
 
@@ -320,7 +339,7 @@ class Client:
 			self.setCurrRepo(repoName)
 			self.setCurrBranch("")
 			
-			print("> {}".format(self.getCurrPath()), end="\n\n")
+			print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
 		except:
 			print("Il repository", repoName, "non esiste o non è stato mappato", end="\n\n") 
 
@@ -340,7 +359,7 @@ class Client:
 			#aggiorno il branch corrente
 			self.setCurrBranch(branchName)
 			
-			print("> {}".format(self.getCurrPath()), end="\n\n")
+			print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
 		except:
 			print("Il branch", branchName, "non esiste o non è stato mappato", end="\n\n")
 
@@ -575,7 +594,7 @@ class Client:
 	
 	#ritorna il file dell'ultimo run
 	def getLastRunFile(self):
-		return path.join(self.myRoot, LAST_RUN)
+		return path.join(self.myRoot, LAST_RUN_FILE)
 
 
 	#ritorna il repository del server corrispondente a quello corrente
