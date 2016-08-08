@@ -72,7 +72,7 @@ class Client:
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
 				uti.writeFileByTag("last_repo", self.getCurrRepo(), self.getLastRunFile())
-				uti.writeFileByTag("last_branch", self.getCurrBranch(), self.getLastRunFile()) #la writefilebytag non fa replace come dovrebbe
+				uti.writeFileByTag("last_branch", self.getCurrBranch(), self.getLastRunFile())
 				print("Programma terminato.", end="\n\n")
 			
 			elif (command == "clear"):
