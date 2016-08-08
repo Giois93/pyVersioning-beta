@@ -2,10 +2,6 @@ import os.path as path
 import shutil
 import re
 
-"""TODO: sostituire le .compile() e .search() con .findall() es. re.findall(r"\w+ly", text)
-https://docs.python.org/2/library/re.html#finding-all-adverbs
-"""
-
 #costanti
 PENDING_FILE	= "pending.txt"
 BRANCH_FILE		= "branch.txt"
@@ -57,7 +53,7 @@ def writeFileByTag(tag, value, filePath):
 		fileStr = readFile(filePath)
 
 		#cerco il tag
-		results = re.findall("{}=(\w+)".format(tag), fileStr)
+		results = re.findall("{}=(\w*)".format(tag), fileStr)
 
 		if(len(results) == 0):
 			#se non ho trovato il tag lo aggiungo
@@ -65,7 +61,7 @@ def writeFileByTag(tag, value, filePath):
 		else:
 			#se ho trovato il tag lo sostituisco
 			#prendo tutte le occorrenze del tag e le sostituisco con i nuovi valori	
-			newFileStr = re.sub("{}=(\w+)".format(tag), "{}={}".format(tag, str(value)), fileStr)
+			newFileStr = re.sub("{}=(\w*)".format(tag), "{}={}".format(tag, str(value)), fileStr)
 
 			#sovrascrivo il file
 			writeFile(newFileStr, filePath, False)
