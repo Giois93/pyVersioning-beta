@@ -160,7 +160,6 @@ class Client:
 					raise Exception("Nessun branch settato")
 				self.getSpecificVersion(int(commandList.pop()))
 
-				#TO TEST: file aggiunti e rimossi
 			elif (command == "pending"): 
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
@@ -511,13 +510,23 @@ class Client:
 	#annulla le modifiche sul file e riporta la versione a quella del server
 	def undoFile(self, file):
 		if(uti.askQuestion("Questo comando annullerà le modifiche sul file {}, sei sicuro?".format(file))):
-			try:
-				#prendo il file corrispondente dal server e lo sovrascrivo al file locale
-				serverFile = self.findFileOnServer(file, self.getCurrBranchOnServer().branchDir, int(uti.readFileByTag("last_changeset", self.getPendingFile())[0]))
-				shutil.copy2(serverFile, path.dirname(file))
-			except:
-				#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
-				os.remove(file)
+			#prendo il file corrispondente dal server e lo sovrascrivo al file locale
+			found = False
+			for currFile in self.getPendingList():
+				if(path.basename(currFile) == file):
+					found = True
+					try:
+						originalChangeset = int(uti.readFileByTag("last_changeset", self.getPendingFile())[0])
+						serverFile = self.findFileOnServer(currFile, self.getCurrBranchOnServer().branchDir, originalChangeset)
+						shutil.copy2(serverFile, path.dirname(currFile))
+						break
+					except:
+						#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
+						os.remove(file)
+			
+			if(found == False):
+				print("File non trovato")
+				self.printPendingChanges()
 
 
 	#annulla tutte le modifiche e riporta la versione a quella del server
