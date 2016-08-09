@@ -29,10 +29,10 @@ class Changeset:
 
 		#scrivo il file del nuovo changeset
 		#scrivo se il changeset è un backup
-		if(isBackup):
-			uti.writeFile("is_backup: 1", self.changesetTxt, False)
+		if (isBackup):
+			uti.writeFileByTag("is_backup", 1, self.changesetTxt)
 		else:
-			uti.writeFile("is_backup: 0", self.changesetTxt, False);
+			uti.writeFileByTag("is_backup", 0, self.changesetTxt);
 
 		#scrivo data e ora di crezione
 		uti.writeFile("date: {} {}".format(time.strftime("%d/%m/%Y"), time.strftime("%H:%M:%S")), self.changesetTxt)
@@ -42,7 +42,7 @@ class Changeset:
 	def isBackup(self):
 		try:
 			#leggo il tag is_backup del file
-			if(int(uti.readFileByTag("is_backup", self.changesetTxt)[0]) == 1):
+			if (int(uti.readFileByTag("is_backup", self.changesetTxt)[0]) == 1):
 				return True
 			return False
 		except:

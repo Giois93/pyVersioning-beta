@@ -18,7 +18,7 @@ class Repository:
 	#crea un nuovo repository sul disco e crea il ramo trunk
 	#se esiste già solleva un'eccezione
 	def createNew(self, sourceDir):
-		if(path.isdir(self.repoDir)):
+		if (path.isdir(self.repoDir)):
 			raise Exception
 
 		self.addTrunk(sourceDir)
@@ -26,7 +26,7 @@ class Repository:
 
 	#ritorna True se il branch è presente sul disco, False altrimenti
 	def existsBranch(self, branchName):
-		if(path.isdir(path.join(self.repoDir, branchName))):
+		if (path.isdir(path.join(self.repoDir, branchName))):
 			return True;
 
 		return False;
@@ -34,7 +34,7 @@ class Repository:
 
 	#ritorna il Branch "branchName", se non esiste solleva un'eccezione
 	def getBranch(self, branchName):
-		if(self.existsBranch(branchName)):
+		if (self.existsBranch(branchName)):
 			return Branch(path.join(self.repoDir, branchName))
 
 		raise Exception("Il branch non esiste.");
@@ -97,5 +97,5 @@ class Repository:
 
 	#rimuove il branc "branchName"
 	def removeBranch(self, branchName):
-		if(self.existsBranch(branchName)):
+		if (self.existsBranch(branchName)):
 			shutil.rmtree(path.join(self.repoDir, branchName))

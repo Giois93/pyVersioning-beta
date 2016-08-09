@@ -23,18 +23,18 @@ class Branch:
 	#crea un nuovo branch sul disco, aggiunge il changeset_0 e il file branch.txt
 	#se esiste già solleva un'eccezione
 	def createNew(self, sourceDir, originalChangeset = 0):
-		if(path.isdir(self.branchDir)):
+		if (path.isdir(self.branchDir)):
 			raise Exception
 
 		self.addChangeset(sourceDir, "changeset_0", originalChangeset, True)
 
 
 	#crea il prossimo changeset copiandoci la cartella sourceDir
-	def addChangeset(self, sourceDir, comment, originalChangesetNum = None, isBackup = False):
+	def addChangeset(self, sourceDir, comment, changesetNum = None, isBackup = False):
 		
 		#se non è specificato il changeset iniziale prendo l'id dell'ultimo changeset di questo branch
-		if(originalChangesetNum == None):
-			originalChangesetNum = self.getNextChangesetNum() 
+		if (changesetNum == None):
+			changesetNum = self.getNextChangesetNum() 
 		
 		#creo una cartella per il changeset
 		changesetDir = path.join(self.branchDir, str(self.getNextChangesetNum()))
@@ -46,10 +46,12 @@ class Branch:
 		#scivo il suo file
 		#se sto inserendo il primo changeset nel branch scrivo anche il tag "changeset_0"
 		if (len(os.listdir(self.branchDir)) == 1):
-			uti.writeFileByTag("changeset_0", str(originalChangesetNum), self.branchTxt)
+			uti.writeFileByTag("changeset_0", str(changesetNum), self.branchTxt)
 		uti.writeFileByTag("last_changeset", str(self.getNextChangesetNum()), self.branchTxt)
 		uti.writeFileByTag("comment", comment, changeset.changesetTxt)
-
+		return changesetNum
+		"""TODO: ogni tanto devo fare un changeset di backup
+		qui posso fare un controllo: se l'ultimo changeset di backup è almeno 10 changeset indietro ne creo uno"""
 
 	#ritorna il changeset associato al "changesetNum"
 	def getChangeset(self, changesetNum):
@@ -115,7 +117,7 @@ class Branch:
 		#scorro tutti i changeset all'indietro fino al primo changeset di backup
 		for changesetID in range(changesetNum, -1, -1):
 			currChangeset = Changeset(path.join(self.branchDir, str(changesetID)))
-			if(currChangeset.isBackup()):
+			if (currChangeset.isBackup()):
 				break
 
 		#copio tutto il changeset di backup nella cartella provvisoria

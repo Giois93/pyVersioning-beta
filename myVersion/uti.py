@@ -1,6 +1,7 @@
 import os.path as path
 import shutil
 import re
+import difflib
 
 #costanti
 PENDING_FILE	= "pending.txt"
@@ -33,7 +34,7 @@ def readFileByTag(tag, filePath):
 #scrive il file in append o in sovrascrittura
 def writeFile(string, filePath, append = True):
 	#apro il file
-	if(append): 
+	if (append): 
 		file = open(filePath, "a")
 	else: 
 		file = open(filePath, "w")
@@ -55,7 +56,7 @@ def writeFileByTag(tag, value, filePath):
 		#cerco il tag
 		results = re.findall("{}=(.*)".format(tag), fileStr)
 
-		if(len(results) == 0):
+		if (len(results) == 0):
 			#se non ho trovato il tag lo aggiungo
 			writeFile("{}={}".format(tag, str(value)), filePath)
 		else:
@@ -74,18 +75,18 @@ def writeFileByTag(tag, value, filePath):
 def askAndRemoveDir(dir, ask=True, askOverride=False):
 
 	#verifico se la cartella esiste
-	if(path.isdir(dir)):
-		if(ask == False):
+	if (path.isdir(dir)):
+		if (ask == False):
 			shutil.rmtree(dir)
 		else:
 			#chiedo all'utente se procede e sovrascrivere la cartella
 			while True:
-				if(askOverride):
+				if (askOverride):
 					msg = "La cartella {} è già presente, sovrascrivere?".format(getPathForPrint(dir))
 				else:
 					msg = "Rimuovere la cartella {}?".format(getPathForPrint(dir))
 				
-				if(askQuestion(msg)):
+				if (askQuestion(msg)):
 					#l'utente ha scelto di sovrascrivere
 					#rimuovo la cartella
 					shutil.rmtree(dir)
@@ -104,11 +105,16 @@ def askQuestion(question):
 	while True:
 		print(question, "(s/n)")
 		userInput = input()
-		if(userInput == "s"):
+		if ((userInput == "s") | (userInput == "S")):
 			return True
-		elif(userInput == "n"):
+		elif ((userInput == "n") | (userInput == "N")):
 			return False
 
-
+#formatta un path per la stampa a video
 def getPathForPrint(path):
 	return path.replace("/", "\\")
+
+
+#effettua un diff di due file
+def diff(file1, file2):
+	return difflib.ndiff(open(file1).readlines(), open(file2).readlines())

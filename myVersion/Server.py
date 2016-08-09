@@ -36,7 +36,7 @@ class Server:
 
 	#ritorna True se il repository è presente sul disco, False altrimenti
 	def existsRepo(self, repoName):
-		if(path.isdir(path.join(self.myRoot, repoName))):
+		if (path.isdir(path.join(self.myRoot, repoName))):
 			return True;
 
 		return False;
@@ -44,7 +44,7 @@ class Server:
 
 	#ritorna il repository "repoName", se non esiste solleva un'eccezione
 	def getRepo(self, repoName):
-		if(self.existsRepo(repoName)):
+		if (self.existsRepo(repoName)):
 			return Repository(path.join(self.myRoot, repoName))
 
 		raise Exception("Il repository non esiste.");
@@ -63,7 +63,7 @@ class Server:
 	def addRepo(self, sourceDir, repoName = None):
 		#se non viene specificato, il nome del repository viene impostato 
 		#a quello della sourceDir
-		if(repoName == None):
+		if (repoName == None):
 			repoName = path.basename(sourceDir)
 
 		#creo un oggetto repository
@@ -81,14 +81,14 @@ class Server:
 
 	#rimuove un repository
 	def removeRepo(self, repoName):
-		if(self.existsRepo(repoName)):
+		if (self.existsRepo(repoName)):
 			shutil.rmtree(path.join(self.myRoot, repoName))
 
 
 	#funzione di test per il server standalone
 	def runTest(self):
 
-		if(path.exists(self.myRoot)):
+		if (path.exists(self.myRoot)):
 			shutil.rmtree(self.myRoot)
 		
 		#creazione nuovo repository
@@ -118,6 +118,6 @@ class Server:
 		####
 		#getLatestVersion
 		tmpDir = "C:\my_tmp"
-		if(path.exists(tmpDir)):
+		if (path.exists(tmpDir)):
 			shutil.rmtree(tmpDir)
 		trunk.getLatestVersion(tmpDir)
