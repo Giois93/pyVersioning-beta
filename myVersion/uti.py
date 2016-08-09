@@ -25,7 +25,7 @@ def readFile(filePath):
 def readFileByTag(tag, filePath):
 	#se ho trovato il tag lo restituisco
 	try:
-		return re.findall("{}=(.+)".format(tag), readFile(filePath))
+		return re.findall("{}=(.*)".format(tag), readFile(filePath))
 	except:
 		raise	
 
@@ -53,7 +53,7 @@ def writeFileByTag(tag, value, filePath):
 		fileStr = readFile(filePath)
 
 		#cerco il tag
-		results = re.findall("{}=(\w*)".format(tag), fileStr)
+		results = re.findall("{}=(.*)".format(tag), fileStr)
 
 		if(len(results) == 0):
 			#se non ho trovato il tag lo aggiungo
@@ -61,7 +61,7 @@ def writeFileByTag(tag, value, filePath):
 		else:
 			#se ho trovato il tag lo sostituisco
 			#prendo tutte le occorrenze del tag e le sostituisco con i nuovi valori	
-			newFileStr = re.sub("{}=(\w*)".format(tag), "{}={}".format(tag, str(value)), fileStr)
+			newFileStr = re.sub("{}=(.*)".format(tag), "{}={}".format(tag, str(value)), fileStr)
 
 			#sovrascrivo il file
 			writeFile(newFileStr, filePath, False)

@@ -83,7 +83,7 @@ class Client:
 			elif (command == "currdir"):
 				if(len(commandList) != 0):
 					raise Exception("Parametri errati")
-				print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
+				print("> {}".format(uti.getPathForPrint(self.getCurrPath())))
 
 			elif (command == "repolist"): 
 				if(len(commandList) != 0):
@@ -395,7 +395,7 @@ class Client:
 				#prendo la data di ultima modifica del file
 				date = datetime.datetime.fromtimestamp(path.getmtime(file)).strftime("%Y-%m-%d %H:%M:%S")
 				#stampo file e data ultima modifica
-				print(file.replace(self.getCurrPath(), ""), date)
+				print("{} - {}".format(file.replace(self.getCurrPath(), ""), date))
 			print()
 
 	
@@ -438,26 +438,19 @@ class Client:
 						if((path.getmtime(localFile)) > path.getmtime(serverFile)):
 							self.addPendingFile(localFile)
 						elif((path.getmtime(localFile)) < path.getmtime(serverFile)):
-							self.addPendingFile(localFile, older=True)
+							self.addPendingFile(localFile)
 
 					except:		
 						#se il file non viene trovato nel server vuol dire che è stato aggiunto in locale
-						self.addPendingFile(localFile, addedFile=True)
+						self.addPendingFile(localFile)
 		
 		#ritorno la lista dei pendig
 		return self.getPendingList()
 
 
 	#aggiunge il file alla lista dei pending
-	def addPendingFile(self, file, addedFile=False, older=False):
-		""" TODO:problema in lettura, vengono letti insieme ai path dei file, devo cambiare la readfilebytag"""
-		info = ""
-		if(addedFile):
-			info += "add "
-		if(older):
-			info += "older "
-
-		uti.writeFile("{} file={}".format(info, file), self.getPendingFile())
+	def addPendingFile(self, file):
+		uti.writeFile("file={}".format(file), self.getPendingFile())
 
 
 	#rimuove il file alla lista dei pending
@@ -472,7 +465,6 @@ class Client:
 
 	#legge il file dei pending e ritorna una lista 
 	def getPendingList(self):
-		"""DEVO RITORNARE SIA I FILE IN PENDING SIA I TAG ADD, REMOVED, OLDER - USARE UNA TUPLA?"""
 		try:
 			return uti.readFileByTag("file", self.getPendingFile())
 		except:
