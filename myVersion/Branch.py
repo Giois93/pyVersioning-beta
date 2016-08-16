@@ -120,7 +120,7 @@ class Branch:
 				comment = ""
 
 			#aggiungo il changeset e le sue statistiche
-			results = results + ("{} - {} - {} ".format(dir, str(date), comment),)
+			results += ("{} - {} - {} ".format(dir, str(date), comment), )
 
 		return results
 

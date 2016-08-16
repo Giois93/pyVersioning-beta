@@ -118,7 +118,18 @@ def getPathForPrint(path):
 
 #effettua un diff di due file
 def diff(file1, file2):
-	return difflib.ndiff(open(file1).readlines(), open(file2).readlines())
+	#ottengo le differenze frai due file
+	diff = difflib.ndiff(open(file1).readlines(), open(file2).readlines())
+	
+	#stampo tutte le differenze con il numero di riga corrispondente
+	line = 0
+	changes = ()
+	for change in diff:
+		++line
+		if (change.startswith("+") or change.startswith("-")):
+			changes += ("{}: {}".format(str(line), change), )
+
+	return changes
 
 
 #ritorna un oggetto data da una stringa "dd/mm/YY HH:MM:SS"

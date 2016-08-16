@@ -555,16 +555,18 @@ class Client:
 				except:
 					#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
 					os.remove(file)
+				print("Modifiche annullate.", end="\n\n")
 			except:
-				print("File non trovato")
+				print("File non trovato.", end="\n\n")
 				self.printPendingChanges()
 
 
 	#annulla tutte le modifiche e riporta la versione a quella del server
 	def undoAll(self):
 		if (uti.askQuestion("Questo comando cancellerà tutti i pending, sei sicuro?")):
+			print("Modifiche annullate.", end="\n\n")
 			self.getSpecificVersion(int(uti.readFileByTag("last_changeset", self.getPendingFile())[0]))
-
+		
 
 	#effettua il merge del file in pending con il file sul server
 	def compare(self, localFile):
@@ -572,7 +574,7 @@ class Client:
 			pendingFile = self.findFileInPending(localFile)
 			try:
 				serverFile = self.findFileOnServer(pendingFile, self.getCurrBranchOnServer().branchDir)
-				print ("".join(uti.diff(pendingFile, serverFile)))
+				print ("".join(uti.diff(serverFile, pendingFile)))
 				###TODO###
 			except Exception as e:
 				print(e)
