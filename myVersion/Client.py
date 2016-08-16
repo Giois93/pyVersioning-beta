@@ -19,7 +19,7 @@ class Client:
 	server = None
 
 	def __init__(self, server):
-		self.myRoot = "C:/myClient"
+		self.myRoot = "C:\my\myclient"
 		self.server = server
 
 		#chiedo all'utente se desidera impostare l'ultimo percorso usato

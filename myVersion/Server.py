@@ -11,7 +11,7 @@ class Server:
 	myRoot = ""
 
 	def __init__(self):
-		self.myRoot = "C:/myServer"	#cartella di default dei repository creati
+		self.myRoot = "C:\my\myServer"	#cartella di default dei repository creati
 
 
 	#copia la cartella del branch nella cartella di destinazione
@@ -92,7 +92,7 @@ class Server:
 			shutil.rmtree(self.myRoot)
 		
 		#creazione nuovo repository
-		sourceDir = "C:\proj"
+		sourceDir = "C:\my\proj"
 		repo = self.addRepo(sourceDir)
 
 		trunk = repo.getTrunk()
@@ -112,12 +112,18 @@ class Server:
 
 		#####
 		#creazione changeset
-		trunk.addChangeset("C:\proj_edit1", "commento_1")
+		trunk.addChangeset("C:\my\proj_v2", "commento_1")
 
 
-		####
+		#####
 		#getLatestVersion
-		tmpDir = "C:\my_tmp"
+		tmpDir = "C:\my\my_tmp"
 		if (path.exists(tmpDir)):
 			shutil.rmtree(tmpDir)
 		trunk.getLatestVersion(tmpDir)
+
+
+		#####
+		sourceDir = "C:\my\projB"
+		self.addRepo(sourceDir, "progetto_2")
+		

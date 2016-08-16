@@ -43,7 +43,7 @@ class Branch:
 		changeset = Changeset(changesetDir)
 		changeset.createNew(sourceDir, isBackup)
 
-		#scivo il suo file
+		#scrivo il suo file
 		#se sto inserendo il primo changeset nel branch scrivo anche il tag "changeset_0"
 		if (len(os.listdir(self.branchDir)) == 1):
 			uti.writeFileByTag("changeset_0", str(changesetNum), self.branchTxt)
@@ -52,6 +52,7 @@ class Branch:
 		return changesetNum
 		"""TODO: ogni tanto devo fare un changeset di backup
 		qui posso fare un controllo: se l'ultimo changeset di backup è almeno 10 changeset indietro ne creo uno"""
+
 
 	#ritorna il changeset associato al "changesetNum"
 	def getChangeset(self, changesetNum):
