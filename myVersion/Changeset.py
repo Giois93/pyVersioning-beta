@@ -35,7 +35,7 @@ class Changeset:
 			uti.writeFileByTag("is_backup", 0, self.changesetTxt);
 
 		#scrivo data e ora di crezione
-		uti.writeFile("date: {} {}".format(time.strftime("%d/%m/%Y"), time.strftime("%H:%M:%S")), self.changesetTxt)
+		uti.writeFileByTag("date", "{} {}".format(time.strftime("%d/%m/%Y"), time.strftime("%H:%M:%S")), self.changesetTxt)
 
 
 	#ritorna True se il changeset è un changeset di backup

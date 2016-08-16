@@ -538,9 +538,8 @@ class Client:
 		if (path.isdir(sourceDir)):
 			shutil.rmtree(sourceDir)
 		
-		"""NON HA FUNZIONATO"""
+		"""TODO: NON HA FUNZIONATO"""
 		uti.writeFileByTag("last_changeset", changesetNum, self.getPendingFile())
-
 
 
 	#annulla le modifiche sul file e riporta la versione a quella del server
@@ -605,7 +604,7 @@ class Client:
 			  "> undoall - annulla le modifiche su tutti i file in pending e scarica l'ultima versione",
 			  "> compare [file] - effettua un confronto fra il file \"file\" e la versione del server",
 			  "> clear - pulisce il terminale",
-			  "> help - stampa la guida", sep="\n")
+			  "> help - stampa la guida", sep="\n", end="\n\n")
 
 
 	#setta il path di esecuzione
@@ -660,7 +659,7 @@ class Client:
 		return self.server.getRepo(self.getCurrRepo()).getBranch(self.getCurrBranch())
 
 
-	"""TODO: non ammette 2 file con lo stesso nome"""
+	"""NOTA: non ammette 2 file con lo stesso nome"""
 	#cerca il file "fileName" frai pending
 	def findFileInPending(self, fileName):
 		for pendingFile in self.getPendingChanges():

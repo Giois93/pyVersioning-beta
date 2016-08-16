@@ -2,6 +2,7 @@ import os.path as path
 import shutil
 import re
 import difflib
+import datetime
 
 #costanti
 PENDING_FILE	= "pending.txt"
@@ -118,3 +119,9 @@ def getPathForPrint(path):
 #effettua un diff di due file
 def diff(file1, file2):
 	return difflib.ndiff(open(file1).readlines(), open(file2).readlines())
+
+
+#ritorna un oggetto data da una stringa "dd/mm/YY HH:MM:SS"
+def getDate(dateStr):
+	[day,month,year] = map(int, dateStr.split()[0].split('/'))
+	return datetime.date(year, month, day)

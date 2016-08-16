@@ -2,7 +2,7 @@ from Server import Server
 from Client import Client
 
 ### MAIN ###
-#Client(Server()).runMenu()
+Client(Server()).runMenu()
 
 ### Server stand-alone ###
-Server().runTest()
+#Server().runTest()

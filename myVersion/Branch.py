@@ -32,6 +32,30 @@ class Branch:
 	#crea il prossimo changeset copiandoci la cartella sourceDir
 	def addChangeset(self, sourceDir, comment, changesetNum = None, isBackup = False):
 		
+		#controllo se è necessario creare un changeset di backup (ne viene fatto uno ogni giorno)
+		#cerco l'ultimo changeset di backup
+		if(isBackup == False):
+			try:
+				lastBackupChangeset = self.getLastBackupChangeset(self.getLastChangesetNum())
+
+				#prendo la data dell'ultimo changeset di backup
+				dateStr = uti.readFileByTag("date", lastBackupChangeset.changesetTxt)[0]
+				date = uti.getDate(dateStr)
+
+				#prendo la data odierna
+				today = datetime.date.today()
+				#se è passato un giorno dall'ultimo backup ne creo uno
+				diff = abs(today - date)
+				if(diff.days > 0):
+					#creo una cartella temporanea e ci copio una ultima versione completa
+					tmpDir = path.join(self.branchDir, "tmp")
+					self.getLatestVersion(tmpDir)
+					#creo un changeset di backup con l'ultima versione
+					self.addChangeset(tmpDir, comment = "backup {}".format(dateStr), isBackup = True)
+					shutil.rmtree(tmpDir)
+			except:
+				pass
+
 		#se non è specificato il changeset iniziale prendo l'id dell'ultimo changeset di questo branch
 		if (changesetNum == None):
 			changesetNum = self.getNextChangesetNum() 
@@ -49,9 +73,8 @@ class Branch:
 			uti.writeFileByTag("changeset_0", str(changesetNum), self.branchTxt)
 		uti.writeFileByTag("last_changeset", str(self.getNextChangesetNum()), self.branchTxt)
 		uti.writeFileByTag("comment", comment, changeset.changesetTxt)
+
 		return changesetNum
-		"""TODO: ogni tanto devo fare un changeset di backup
-		qui posso fare un controllo: se l'ultimo changeset di backup è almeno 10 changeset indietro ne creo uno"""
 
 
 	#ritorna il changeset associato al "changesetNum"
@@ -116,10 +139,7 @@ class Branch:
 	def getSpecificVersion(self, changesetNum, destDir):
 		
 		#scorro tutti i changeset all'indietro fino al primo changeset di backup
-		for changesetID in range(changesetNum, -1, -1):
-			currChangeset = Changeset(path.join(self.branchDir, str(changesetID)))
-			if (currChangeset.isBackup()):
-				break
+		currChangeset = self.getLastBackupChangeset(changesetNum)
 
 		#copio tutto il changeset di backup nella cartella provvisoria
 		try:
@@ -134,3 +154,16 @@ class Branch:
 			dir_uti.copy_tree(currChangeset.changesetDir, destDir)
 
 		os.remove(path.join(destDir, CHANGESET_FILE))
+
+	
+	#ritorna l'ultimo changeset di backup
+	def getLastBackupChangeset(self, startChangeset):
+		#scorro tutti i changeset all'indietro fino al primo changeset di backup
+		for changesetID in range(startChangeset, -1, -1):
+			currChangeset = Changeset(path.join(self.branchDir, str(changesetID)))
+			if (currChangeset.isBackup()):
+				return currChangeset;
+		
+		#se non viene trovato nessun changeset di backup alzo un'eccezione
+		raise Exception
+		
