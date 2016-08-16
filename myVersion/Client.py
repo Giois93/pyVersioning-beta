@@ -170,7 +170,7 @@ class Client:
 				self.printPendingChanges()
 
 				#TO TEST
-			elif (command == "commitone"): 
+			elif (command == "commit"): 
 				if (len(commandList) != 2):
 					raise Exception("Parametri errati")
 				elif(not self.getCurrRepo()):
@@ -496,7 +496,7 @@ class Client:
 		self.addForCommit(file, tmpDir)
 		self.doCommit(tmpDir, comment)
 		self.delPendingFile(file)
-		print("File: {} aggiornato con successo.".format(fileName))
+		print("File: {} aggiornato con successo.".format(fileName), end="\n\n")
 
 
 	#crea un nuovo changeset con le modifiche dei file in pending
@@ -509,7 +509,7 @@ class Client:
 		
 		self.doCommit(tmpDir, comment)
 
-		print("Modifiche inviate con successo.")
+		print("Modifiche inviate con successo.", end="\n\n")
 
 		#chiedo all'utente se desidera anche aggiornare la versione locale
 		if (uti.askQuestion("Scaricare ultima versione?")):
@@ -600,7 +600,7 @@ class Client:
 			  "> getlatest - scarica la versione più recente del branch corrente",
 			  "> getspecific [changeset] - scarica la versione specificata in \"changeset\" del branch corrente",
 			  "> pending - stampa una lista dei file modificati in locale",
-			  "> commitOne [file] [comment] - effettua il commit del file \"file\" associando il commento \"comment\"",
+			  "> commit [file] [comment] - effettua il commit del file \"file\" associando il commento \"comment\"",
 			  "> commitall [comment] - effettua il commit di tutti i file in pending associando il commento \"comment\"",
 			  "> undo [file] - annulla le modifiche sul file \"file\"",
 			  "> undoall - annulla le modifiche su tutti i file in pending e scarica l'ultima versione",
