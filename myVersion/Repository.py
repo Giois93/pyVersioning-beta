@@ -13,7 +13,7 @@ class Repository:
 	def __init__(self, repoDir):
 		self.repoName = path.basename(repoDir)
 		self.repoDir = repoDir
-
+		self.trunkDir = path.join(self.repoDir, "trunk")
 
 	#crea un nuovo repository sul disco e crea il ramo trunk
 	#se esiste già solleva un'eccezione
@@ -57,7 +57,6 @@ class Repository:
 	#se il branch esiste già viene sollevata un'eccezione
 	def addTrunk(self, sourceDir):
 		#creo un'oggetto Branch per il ramo trunk
-		self.trunkDir = path.join(self.repoDir, "trunk")
 		branch = Branch(self.trunkDir)
 		
 		#creo un branch sul disco

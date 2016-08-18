@@ -85,6 +85,18 @@ class Client:
 					raise Exception("Parametri errati")
 				print("> {}".format(uti.getPathForPrint(self.getCurrPath())))
 
+			elif (command == "createrepo"):
+				if (len(commandList) != 1):
+					raise Exception("Parametri errati")
+				self.createRepo(commandList.pop()) 
+				
+			elif (command == "createbranch"):
+				if (len(commandList) != 1):
+					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
+				self.createBranch(commandList.pop()) 
+
 			elif (command == "repolist"): 
 				if (len(commandList) != 0):
 					raise Exception("Parametri errati")
@@ -225,6 +237,22 @@ class Client:
 		except Exception as ex:
 			print(ex, end="\n\n")
 
+
+	#crea un nuovo repository sul server
+	def createRepo(self, repoName):
+		print("Inserire il path della cartella da caricare sul server:")
+		sourceDir = input()
+		if (path.isdir(sourceDir) == False):
+			raise Exception("Percorso errato.")
+
+		self.server.addRepo(sourceDir, repoName)
+		print("Repository {} creato con successo.".format(repoName), end="\n\n")
+
+	
+	#crea un nuovo branch sul server
+	def createBranch(self, branchName):
+		self.server.getRepo(self.getCurrRepo()).addBranch(branchName)
+		print("Branch {} creato con successo.".format(branchName), end="\n\n")	
 
 	#mostra la lista dei repository presenti sul server
 	def showRepos(self):
@@ -590,6 +618,8 @@ class Client:
 		print("> exit - chiude il programma",
 			  "> repolist - stampa la lista dei repositories presenti sul server",
 			  "> branchlist - stampa una lista dei branchs presenti sul repository corrente sul server",
+			  "> createrepo [repoName] - crea il repository \"repoName\" nel server",
+			  "> createbranch [branchName] - crea il branch \"branchName\" nel server",
 			  "> maprepo [repoName] - mappa il repository \"repoName\" nella macchina locale",
 			  "> mapbranch [branchName] - mappa il branch \"branchName\" nella macchina locale",
 			  "> delrepo [repoName] - elimina il repository \"repoName\" dalla macchina locale",
