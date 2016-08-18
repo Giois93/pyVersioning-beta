@@ -124,6 +124,7 @@ class Server:
 		return serverFile
 
 
+	"""
 	#funzione di test per il server standalone
 	def runTest(self):
 
@@ -165,4 +166,5 @@ class Server:
 		#####
 		sourceDir = "C:\my\projB"
 		self.addRepo(sourceDir, "progetto_2")
+	"""
 		
