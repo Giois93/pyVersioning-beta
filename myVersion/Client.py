@@ -169,22 +169,22 @@ class Client:
 				self.printPendingChanges()
 
 			elif (command == "commit"): 
-				if (len(commandList) != 2):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
-				elif(not self.getCurrBranch()):
-					raise Exception("Nessun branch settato")
-				self.commitOne(commandList.pop(), commandList.pop())
-
-			elif (command == "commitall"): 
 				if (len(commandList) != 1):
 					raise Exception("Parametri errati")
 				elif(not self.getCurrRepo()):
 					raise Exception("Nessun repository settato")
 				elif(not self.getCurrBranch()):
 					raise Exception("Nessun branch settato")
-				self.commitAll(commandList.pop())
+				self.commitOne(commandList.pop())
+
+			elif (command == "commitall"): 
+				if (len(commandList) != 0):
+					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
+				elif(not self.getCurrBranch()):
+					raise Exception("Nessun branch settato")
+				self.commitAll()
 
 			elif (command == "undo"): 
 				if (len(commandList) != 1):
@@ -222,7 +222,7 @@ class Client:
 				print("Valore non ammesso", end="\n\n")
 
 		except Exception as ex:
-			print("Errore:", ex, end="\n\n")
+			print(ex, end="\n\n")
 
 
 	#mostra la lista dei repository presenti sul server
@@ -395,7 +395,7 @@ class Client:
 		#scorro tutti i file nella lista dei pending
 		pendingList = self.getPendingChanges()
 		if (len(pendingList) == 0):
-			print("Nessun file in modifica.", end="\n\n")
+			raise Exception("Nessun file in modifica.")
 		else:
 			print("Lista dei file in modifica:")
 			for file in pendingList:
@@ -480,7 +480,8 @@ class Client:
 
 
 	#crea un nuovo changeset con le modifiche del solo file in input
-	def commitOne(self, fileName, comment = ""):
+	def commitOne(self, fileName):
+
 		#creo una cartella temporanea
 		tmpDir = path.join(self.getCurrPath(), "tmp")
 		
@@ -489,22 +490,38 @@ class Client:
 			file = self.findFileInPending(fileName)
 		except:
 			raise
-
+		
 		#aggiunto i file da committare nella cartella temporanea
 		self.addForCommit(file, tmpDir)
+		
+		#effettuo il commit
+		print("Inserire un commento: ")
+		comment = input()
 		self.doCommit(tmpDir, comment)
 		self.delPendingFile(file)
 		print("File: {} aggiornato con successo.".format(fileName), end="\n\n")
 
 
 	#crea un nuovo changeset con le modifiche dei file in pending
-	def commitAll(self, comment=""):
+	def commitAll(self):
+
 		#creo una cartella temporanea
 		tmpDir = path.join(self.getCurrPath(), "tmp")
+		if (path.isdir(tmpDir)):
+			shutil.rmtree(tmpDir)
 
-		for file in self.getPendingChanges():
+		#scorro tutti i file nella lista dei pending
+		pendingList = self.getPendingChanges()
+		if (len(pendingList) == 0):
+			raise Exception("Nessun file in modifica.")
+
+		#aggiungo ai pending tutti i file diversi dalla versione del server
+		for file in pendingList:
 			self.addForCommit(file, tmpDir)
-		
+
+		#effettuo il commit
+		print("Inserire un commento: ")
+		comment = input()
 		self.doCommit(tmpDir, comment)
 
 		print("Modifiche inviate con successo.", end="\n\n")
