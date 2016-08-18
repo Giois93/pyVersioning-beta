@@ -574,14 +574,11 @@ class Client:
 			try:
 				serverFile = self.findFileOnServer(pendingFile, self.getCurrBranchOnServer().branchDir)
 				print ("".join(uti.diff(serverFile, pendingFile)))
-				###TODO###
 			except Exception as e:
 				print(e)
 		except:
 			print("File non presente in pending", end="\n\n")
 			self.printPendingChanges()
-
-		
 
 
 	#stampa una lista di comandi con descrizione
@@ -651,15 +648,23 @@ class Client:
 
 
 	#ritorna il repository del server corrispondente a quello corrente
+		"""TODO: DA SPOSTARE NEL SERVER - usare oggetti del server"""
 	def getCurrRepoOnServer(self):
 		return self.server.getRepo(self.getCurrRepo())
 
 
 	#ritorna il branch del server corrispondente a quello corrente
+		"""TODO: DA SPOSTARE NEL SERVER - usare oggetti del server"""
 	def getCurrBranchOnServer(self):
 		return self.server.getRepo(self.getCurrRepo()).getBranch(self.getCurrBranch())
 
 
+	#ritorna il percorso del file sul server, il file viene cercato a partire da branchDir
+	def findFileOnServer(self, localFile, branchDir, startChangeset=None): 
+		#TODO: dovrei fare una copia locale del file e ritornare il suo path per il confronto
+		return self.server.findFile(self.getCurrRepo(), self.getCurrBranch(), localFile.replace("{}\\".format(self.getCurrPath()), ""), startChangeset)
+
+	
 	"""NOTA: non ammette 2 file con lo stesso nome"""
 	#cerca il file "fileName" frai pending
 	def findFileInPending(self, fileName):
@@ -668,44 +673,3 @@ class Client:
 				return pendingFile
 
 		raise Exception("File non trovato in pending")
-
-
-	#ritorna il percorso del file sul server, il file viene cercato a partire da branchDir
-	def findFileOnServer(self, localFile, branchDir, startChangeset=None): 
-		"""TODO: DA SPOSTARE NEL SERVER - usare oggetti del server"""
-
-		#se non diversamente specificato, la ricerca parte dall'ultimo changeset
-		if (startChangeset == None):
-			startChangeset = self.getCurrBranchOnServer().getLastChangesetNum()
-
-		#scorro tutti i changeset presenti nella cartella del branch a partire dal più recente
-		for changeset in reversed(os.listdir(branchDir)):
-			if (path.isdir(path.join(branchDir, changeset))):
-
-				#non considero i changeset più recenti di quello di partenza
-				if (int(changeset) > startChangeset): 
-					continue
-
-				#prendo la cartella del changeset precedente (più recente)
-				prevChangesetDir = path.join(branchDir, str(int(changeset) + 1))
-
-				#se il changeset precedente non esiste questo è il più recente
-				if (path.isdir(prevChangesetDir)):
-					#apro il file del changeset precedente
-					prevChangesetTxt = path.join(prevChangesetDir, CHANGESET_FILE)
-					
-					#se l'ultimo changeset era un backup devo interrompere la ricerca
-					if (int(uti.readFileByTag("is_backup", prevChangesetTxt)[0]) == 1):
-						raise Exception("File non trovato")
-
-				#ricavo la cartella del changeset corrente
-				changesetDir = path.join(branchDir, changeset)
-
-				#ricavo il path del file sul server
-				serverFile = localFile.replace(self.getCurrPath(), changesetDir)
-				
-				#se il file esiste in questo branch interrompo la ricerca
-				if (path.isfile(serverFile)):
-					break
-
-		return serverFile

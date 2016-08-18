@@ -85,6 +85,45 @@ class Server:
 			shutil.rmtree(path.join(self.myRoot, repoName))
 
 
+	def findRepo(self, repoName):
+		return #TODO
+
+
+	def findBranch(self, repoName, branchName):
+		return #TODO
+
+
+	def findFile(self, repoName, branchName, fileRelPath, startChangeset=None):
+		
+		#prendo il branch corrente
+		branch = self.getRepo(repoName).getBranch(branchName)
+		
+		#se non diversamente specificato, la ricerca parte dall'ultimo changeset
+		if (startChangeset == None):
+			startChangeset = branch.getLastChangesetNum()
+
+		#scorro tutti i changeset presenti nella cartella del branch a partire da quello specificato
+		for changesetID in range(startChangeset, -1, -1):
+			changeset = branch.getChangeset(changesetID)
+
+			#prendo il changeset precedente (più recente) e verifico se è un changeset di backup
+			prevChangeset = branch.getChangeset(changesetID + 1) 
+
+			#se il changeset precedente era un changeset di backup e non ho ancora trovato il file
+		    #vuol dire che il file non è presente sul server
+			if (prevChangeset.isBackup()):
+				raise Exception("File non trovato")
+
+			#ricavo il path del file sul server
+			serverFile = path.join(changeset.changesetDir, fileRelPath)
+				
+			#se il file esiste in questo branch interrompo la ricerca
+			if (path.isfile(serverFile)):
+				break
+
+		return serverFile
+
+
 	#funzione di test per il server standalone
 	def runTest(self):
 
