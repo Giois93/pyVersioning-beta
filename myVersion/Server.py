@@ -85,14 +85,6 @@ class Server:
 			shutil.rmtree(path.join(self.myRoot, repoName))
 
 
-	def findRepo(self, repoName):
-		return #TODO
-
-
-	def findBranch(self, repoName, branchName):
-		return #TODO
-
-
 	def findFile(self, repoName, branchName, fileRelPath, startChangeset=None):
 		
 		#prendo il branch corrente

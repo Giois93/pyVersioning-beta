@@ -486,11 +486,7 @@ class Client:
 						#(cerco sempre a partire dall'ultima versione così da segnalare anche file vecchi)
 						serverFile = self.findFileOnServer(localFile, serverBranch)
 				
-						#confronto le date di ultima modifica dei file
 						#se il file locale è stato modificato va aggiunto ai pending
-						localDate = path.getmtime(localFile)
-						serverDate = path.getmtime(serverFile)
-
 						if (int(path.getmtime(localFile)) > int(path.getmtime(serverFile))):
 							if (filecmp.cmp(localFile, serverFile) == False):
 								self.addPendingFile(localFile)
@@ -537,7 +533,7 @@ class Client:
 		
 		#prendo il file corrente dai pending
 		try:
-			file = self.findFileInPending(fileName)
+			file = self.findFileInPendings(fileName)
 		except:
 			raise
 		
@@ -611,7 +607,7 @@ class Client:
 		if (uti.askQuestion("Questo comando annullerà le modifiche sul file {}, sei sicuro?".format(file))):
 			#prendo il file corrispondente dal server e lo sovrascrivo al file locale
 			try:
-				filePath = self.findFileInPending(file)
+				filePath = self.findFileInPendings(file)
 				try:
 					originalChangeset = int(uti.readFileByTag("last_changeset", self.getPendingFile())[0])
 					serverFile = self.findFileOnServer(filePath, self.getCurrBranchOnServer().branchDir, originalChangeset)
@@ -635,7 +631,7 @@ class Client:
 	#effettua il merge del file in pending con il file sul server
 	def compare(self, localFile):
 		try:
-			pendingFile = self.findFileInPending(localFile)
+			pendingFile = self.findFileInPendings(localFile)
 			try:
 				serverFile = self.findFileOnServer(pendingFile, self.getCurrBranchOnServer().branchDir)
 				print ("".join(uti.diff(serverFile, pendingFile)))
@@ -717,13 +713,13 @@ class Client:
 
 
 	#ritorna il repository del server corrispondente a quello corrente
-		"""TODO: DA SPOSTARE NEL SERVER - usare oggetti del server"""
+		"""TODO: SISTEMARE"""
 	def getCurrRepoOnServer(self):
 		return self.server.getRepo(self.getCurrRepo())
 
 
 	#ritorna il branch del server corrispondente a quello corrente
-		"""TODO: DA SPOSTARE NEL SERVER - usare oggetti del server"""
+		"""TODO: SISTEMARE"""
 	def getCurrBranchOnServer(self):
 		return self.server.getRepo(self.getCurrRepo()).getBranch(self.getCurrBranch())
 
@@ -736,7 +732,7 @@ class Client:
 	
 	"""NOTA: non ammette 2 file con lo stesso nome"""
 	#cerca il file "fileName" frai pending
-	def findFileInPending(self, fileName):
+	def findFileInPendings(self, fileName):
 		for pendingFile in self.getPendingChanges():
 			if (path.basename(pendingFile) == fileName):
 				return pendingFile
