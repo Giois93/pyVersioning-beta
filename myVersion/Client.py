@@ -97,6 +97,18 @@ class Client:
 					raise Exception("Nessun repository settato")
 				self.createBranch(commandList.pop()) 
 
+			elif (command == "removerepo"):
+				if (len(commandList) != 1):
+					raise Exception("Parametri errati")
+				self.removeRepo(commandList.pop()) 
+				
+			elif (command == "removebranch"):
+				if (len(commandList) != 1):
+					raise Exception("Parametri errati")
+				elif(not self.getCurrRepo()):
+					raise Exception("Nessun repository settato")
+				self.removeBranch(commandList.pop()) 
+
 			elif (command == "repolist"): 
 				if (len(commandList) != 0):
 					raise Exception("Parametri errati")
@@ -121,12 +133,12 @@ class Client:
 					raise Exception("Nessun repository settato")
 				self.mapBranch(commandList.pop())
 
-			elif (command == "delrepo"): 
+			elif (command == "droprepo"): 
 				if (len(commandList) != 1):
 					raise Exception("Parametri errati")
 				self.removeRepositoryMap(commandList.pop())
 
-			elif (command == "delbranch"):
+			elif (command == "dropbranch"):
 				if (len(commandList) != 1):
 					raise Exception("Parametri errati")
 				elif(not self.getCurrRepo()):
@@ -253,6 +265,27 @@ class Client:
 	def createBranch(self, branchName):
 		self.server.getRepo(self.getCurrRepo()).addBranch(branchName)
 		print("Branch {} creato con successo.".format(branchName), end="\n\n")	
+
+
+	#rimuove il repository dal server
+	def removeRepo(self, repoName):
+		try:
+			uti.askQuestion("Questa operazione rimuoverà permanentemente il repository {} dal server. Continuare?".format(repoName))
+			self.server.removeRepo(repoName)
+			print("Il repository {} è stato rimosso dal server".format(repoName))
+		except:
+			raise Exception("Impossibile effettuare l'operazione.")
+
+
+	#rimuove il branch dal server
+	def removeBranch(self, branchName):
+		try:
+			uti.askQuestion("Questa operazione rimuoverà permanentemente il branch {} dal server. Continuare?".format(branchName))
+			self.server.getRepo(self.getCurrRepo()).removeBranch(branchName)
+			print("Il branch {} è stato rimosso dal server".format(branchName))
+		except:
+			raise Exception("Impossibile effettuare l'operazione.")
+
 
 	#mostra la lista dei repository presenti sul server
 	def showRepos(self):
@@ -620,10 +653,12 @@ class Client:
 			  "> branchlist - stampa una lista dei branchs presenti sul repository corrente sul server",
 			  "> createrepo [repoName] - crea il repository \"repoName\" nel server",
 			  "> createbranch [branchName] - crea il branch \"branchName\" nel server",
+			  "> removerepo [repoName] - rimuove il repository \"repoName\" dal server",
+			  "> removebranch [branchName] - rimuove il branch \"branchName\" dal server",
 			  "> maprepo [repoName] - mappa il repository \"repoName\" nella macchina locale",
 			  "> mapbranch [branchName] - mappa il branch \"branchName\" nella macchina locale",
-			  "> delrepo [repoName] - elimina il repository \"repoName\" dalla macchina locale",
-			  "> delbranch [branchName] - elimina il branch \"branchName\" dalla macchina locale",
+			  "> droprepo [repoName] - elimina il repository \"repoName\" dalla macchina locale",
+			  "> dropbranch [branchName] - elimina il branch \"branchName\" dalla macchina locale",
 			  "> setrepo [repoName] - imposta il repository \"repoName\" come repository corrente",
 			  "> setbranch [branchName] - imposta il branch \"branchName\" come branch corrente",
 			  "> history - stampa la lista dei changeset del branch corrente",

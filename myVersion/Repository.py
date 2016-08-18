@@ -94,7 +94,7 @@ class Repository:
 		return branch
 
 
-	#rimuove il branc "branchName"
+	#rimuove il branch "branchName"
 	def removeBranch(self, branchName):
 		if (self.existsBranch(branchName)):
 			shutil.rmtree(path.join(self.repoDir, branchName))
