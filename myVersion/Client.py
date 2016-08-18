@@ -538,7 +538,6 @@ class Client:
 		if (path.isdir(sourceDir)):
 			shutil.rmtree(sourceDir)
 		
-		"""TODO: NON HA FUNZIONATO"""
 		uti.writeFileByTag("last_changeset", changesetNum, self.getPendingFile())
 
 
