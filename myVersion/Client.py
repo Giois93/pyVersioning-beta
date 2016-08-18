@@ -62,7 +62,6 @@ class Client:
 
 		#eseguo il comando
 		try:
-			
 			try:
 				command = commandList.pop()
 			except:
@@ -169,7 +168,6 @@ class Client:
 					raise Exception("Nessun branch settato")
 				self.printPendingChanges()
 
-				#TO TEST
 			elif (command == "commit"): 
 				if (len(commandList) != 2):
 					raise Exception("Parametri errati")
@@ -276,7 +274,7 @@ class Client:
 			try:
 				#se il repository esiste sul server, creo una cartella sul client
 				#altrimenti viene generata un'eccezione
-				self.server.getRepo(repoName)
+				self.server.existsRepo(repoName)
 				os.makedirs(clientDir)
 				print("Repository mappato in:", clientDir, end = "\n\n")
 				
@@ -335,7 +333,7 @@ class Client:
 	def setRepo(self, repoName):
 		try:
 			#verifico se esiste il repository altrimenti viene generata un'eccezione
-			self.server.getRepo(repoName)
+			#self.server.getRepo(repoName)
 			
 			#ottengo la cartella del repository
 			repoDir = path.join(self.myRoot, repoName)
@@ -356,7 +354,7 @@ class Client:
 	def setBranch(self, branchName):
 		try:
 			#verifico se esiste il branch altrimenti viene generata un'eccezione
-			self.getCurrRepoOnServer().getBranch(branchName)
+			#self.getCurrRepoOnServer().getBranch(branchName)
 			
 			#ottengo la cartella del branch
 			branchDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
