@@ -14,12 +14,13 @@ class Server(rpyc.Service):
 	myRoot = "C:\my\myServer"
 
 	### Client-Server ###
+
 	def on_connect(self):
-		pass
+		print("\nClient connesso.")
 
 
 	def on_disconnect(self):
-		pass
+		print("\nClient disconnesso.")
 
 
 	#metodi di interfaccia
