@@ -4,6 +4,7 @@ import time
 import datetime
 import shutil
 import filecmp
+import rpyc
 import uti
 from uti import PENDING_FILE
 from uti import CHANGESET_FILE
@@ -18,7 +19,7 @@ class Client:
 	currBranch = ""
 	server = None
 
-	def __init__(self, server):
+	def __init__(self, server = None):
 		self.myRoot = "C:\my\myclient"
 		self.server = server
 
@@ -242,6 +243,12 @@ class Client:
 				if (len(commandList) != 0):
 					raise Exception("Parametri errati")
 				self.printHelp()
+
+			elif (command == "test"):
+				if (len(commandList) != 0):
+					raise Exception("Parametri errati")
+				connection = rpyc.connect("localhost", 18812)
+				print(connection.root.echo("Hello"))
 
 			else: 
 				print("Valore non ammesso", end="\n\n")

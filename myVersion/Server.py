@@ -1,17 +1,41 @@
 import os
 import os.path as path
 import shutil
+import rpyc
+from rpyc.utils.server import ThreadedServer
 from Repository import Repository
 
 
 ###################################
 
-class Server:
+class Server(rpyc.Service):
 
-	myRoot = ""
+	myRoot = "C:\my\myServer"
 
-	def __init__(self):
-		self.myRoot = "C:\my\myServer"	#cartella di default dei repository creati
+	#def __init__(self):
+	#	self.myRoot = "C:\my\myServer"	#cartella di default dei repository creati
+
+	### esempi rpyc ###
+	####
+	def exposed_echo(self, text): # this is an exposed method
+		return text
+
+	def echo(self, text): # this is an not exposed method
+		return text
+
+	def on_connect(self):
+        # code that runs when a connection is created
+        # (to init the serivce, if needed)
+		pass
+
+	def on_disconnect(self):
+        # code that runs when the connection has already closed
+        # (to finalize the service, if needed)
+		pass
+
+	####
+
+
 
 
 	#copia la cartella del branch nella cartella di destinazione
@@ -159,4 +183,10 @@ class Server:
 		sourceDir = "C:\my\projB"
 		self.addRepo(sourceDir, "progetto_2")
 	"""
-		
+
+
+### Main ###
+if __name__ == "__main__":
+	server = ThreadedServer(Server, port = 18812)
+	print("server started")	
+	server.start()
