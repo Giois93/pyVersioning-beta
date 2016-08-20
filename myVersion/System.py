@@ -1,10 +1,10 @@
 #from Server import Server
-from Client import Client
+#from Client import Client
 
 ### MAIN ###
 #Server()
 
-Client().runMenu()
+#Client().runMenu()
 
 ### Server stand-alone ###
 #Server().runTest()

@@ -6,7 +6,7 @@
     <ProjectGuid>7f2d7c49-d422-4e02-9f29-44945d9081c7</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>Server.py</StartupFile>
+    <StartupFile>Client.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>

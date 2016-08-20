@@ -39,7 +39,7 @@ class Server(rpyc.Service):
 
 
 	#copia la cartella del branch nella cartella di destinazione
-	def mapBranch(self, repoName, branchName, destDir):
+	def exposed_mapBranch(self, repoName, branchName, destDir):
 		#prendo la cartella del repository e al suo interno quella del branch 
 		#quindi prendo la LatestVersion del branch e la copio nella cartella di destinazione
 		try:	
@@ -49,17 +49,17 @@ class Server(rpyc.Service):
 
 
 	#ritorna la lista di repository sul server
-	def showRepos(self):
+	def exposed_showRepos(self):
 		return self.getRepoList()
 
 
 	#ritorna la lista di branch nel repository "repoName"
-	def showBranches(self, repoName):
+	def exposed_showBranches(self, repoName):
 		return self.getRepo(repoName).getBranchList()
 
 
 	#ritorna True se il repository è presente sul disco, False altrimenti
-	def existsRepo(self, repoName):
+	def exposed_existsRepo(self, repoName):
 		if (path.isdir(path.join(self.myRoot, repoName))):
 			return True;
 
@@ -67,7 +67,7 @@ class Server(rpyc.Service):
 
 
 	#ritorna il repository "repoName", se non esiste solleva un'eccezione
-	def getRepo(self, repoName):
+	def exposed_getRepo(self, repoName):
 		if (self.existsRepo(repoName)):
 			return Repository(path.join(self.myRoot, repoName))
 
@@ -84,7 +84,7 @@ class Server(rpyc.Service):
 
 	#se il repository esiste già viene ritornato e viene sollevata un'eccezione, 
 	#altrimenti viene creato un nuovo repository copiando il contenuto della sourceDir
-	def addRepo(self, sourceDir, repoName = None):
+	def exposed_addRepo(self, sourceDir, repoName = None):
 		#se non viene specificato, il nome del repository viene impostato 
 		#a quello della sourceDir
 		if (repoName == None):
@@ -104,12 +104,12 @@ class Server(rpyc.Service):
 
 
 	#rimuove un repository
-	def removeRepo(self, repoName):
+	def exposed_removeRepo(self, repoName):
 		if (self.existsRepo(repoName)):
 			shutil.rmtree(path.join(self.myRoot, repoName))
 
 
-	def findFile(self, repoName, branchName, fileRelPath, startChangeset=None):
+	def exposed_findFile(self, repoName, branchName, fileRelPath, startChangeset=None):
 		
 		#prendo il branch corrente
 		branch = self.getRepo(repoName).getBranch(branchName)

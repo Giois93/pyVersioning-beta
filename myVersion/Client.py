@@ -17,11 +17,14 @@ class Client:
 	currPath = ""
 	currRepo = ""
 	currBranch = ""
-	server = None
+	#server = None
 
-	def __init__(self, server = None):
+	def __init__(self, connection):
+		#setto il path della cartella root
 		self.myRoot = "C:\my\myclient"
-		self.server = server
+
+		print(connection.root.echo("Hello"))
+		self.server = connection.root
 
 		#chiedo all'utente se desidera impostare l'ultimo percorso usato
 		if (uti.askQuestion("Impostare l'ultimo percorso aperto?")):
@@ -243,12 +246,6 @@ class Client:
 				if (len(commandList) != 0):
 					raise Exception("Parametri errati")
 				self.printHelp()
-
-			elif (command == "test"):
-				if (len(commandList) != 0):
-					raise Exception("Parametri errati")
-				connection = rpyc.connect("localhost", 18812)
-				print(connection.root.echo("Hello"))
 
 			else: 
 				print("Valore non ammesso", end="\n\n")
@@ -745,3 +742,18 @@ class Client:
 				return pendingFile
 
 		raise Exception("File non trovato in pending")
+
+
+### Main ###
+
+#connetto client e server
+try:
+	print("Benvenuto in MyVersion", "Connessione al server...", sep="\n")
+	connection = rpyc.connect("localhost", 18812)
+	print("Connessione stabilita.", end="\n\n")
+	
+	#lancio il client
+	Client(connection).runMenu()
+
+except Exception as ex:
+	print("Si è verificato un errore: {}.".format(ex), "Il programma verrà terminato.", sep="\n", end="\n\n")
