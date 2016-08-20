@@ -17,13 +17,13 @@ class Client:
 	currPath = ""
 	currRepo = ""
 	currBranch = ""
-	#server = None
+	server = None
 
 	def __init__(self, connection):
 		#setto il path della cartella root
 		self.myRoot = "C:\my\myclient"
 
-		print(connection.root.echo("Hello"))
+		#setto il riferimento alla connesione con il server
 		self.server = connection.root
 
 		#chiedo all'utente se desidera impostare l'ultimo percorso usato
@@ -87,7 +87,7 @@ class Client:
 			elif (command == "currdir"):
 				if (len(commandList) != 0):
 					raise Exception("Parametri errati")
-				print("> {}".format(uti.getPathForPrint(self.getCurrPath())))
+				self.printCurrPath()
 
 			elif (command == "createrepo"):
 				if (len(commandList) != 1):
@@ -128,7 +128,7 @@ class Client:
 			elif (command == "maprepo"): 
 				if (len(commandList) != 1):
 					raise Exception("Parametri errati")
-				self.mapRepository(commandList.pop()) 
+				self.mapRepo(commandList.pop()) 
 
 			elif (command == "mapbranch"): 
 				if (len(commandList) != 1):
@@ -140,7 +140,7 @@ class Client:
 			elif (command == "droprepo"): 
 				if (len(commandList) != 1):
 					raise Exception("Parametri errati")
-				self.removeRepositoryMap(commandList.pop())
+				self.removeRepoMap(commandList.pop())
 
 			elif (command == "dropbranch"):
 				if (len(commandList) != 1):
@@ -251,8 +251,26 @@ class Client:
 				print("Valore non ammesso", end="\n\n")
 
 		except Exception as ex:
-			print(ex, end="\n\n")
+			print(ex, end="\n\n")#TODO: rimuovere questa print in release
 
+
+	def existsRepo(self, repoName):
+		#ottengo la cartella del repository
+		repoDir = path.join(self.myRoot, repoName)
+		#verifico che la cartella esista
+		return path.isdir(repoDir)
+		
+
+	def existsBranch(self, branchName):
+		#ottengo la cartella del branch
+		branchDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
+		#verifico che la cartella esista
+		return path.isdir(branchDir)
+
+
+	#stampa il path corrente
+	def printCurrPath(self):
+		print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
 
 	#crea un nuovo repository sul server
 	def createRepo(self, repoName):
@@ -263,73 +281,85 @@ class Client:
 
 		self.server.addRepo(sourceDir, repoName)
 		print("Repository {} creato con successo.".format(repoName), end="\n\n")
+		self.mapRepo(repoName)
 
 	
 	#crea un nuovo branch sul server
 	def createBranch(self, branchName):
-		self.server.getRepo(self.getCurrRepo()).addBranch(branchName)
+		self.server.getRepo(self.getCurrRepo()).addBranch(branchName) #TODO non funziona, chiamata di secondo livello sul server
 		print("Branch {} creato con successo.".format(branchName), end="\n\n")	
+		self.mapBranch(branchName)
 
 
 	#rimuove il repository dal server
 	def removeRepo(self, repoName):
-		try:
-			uti.askQuestion("Questa operazione rimuoverà permanentemente il repository {} dal server. Continuare?".format(repoName))
-			self.server.removeRepo(repoName)
-			print("Il repository {} è stato rimosso dal server".format(repoName))
-		except:
-			raise Exception("Impossibile effettuare l'operazione.")
+		#verifico che la cartella esista
+		if (self.server.existsRepo(repoName) == False):
+			raise Exception("Repository {} non presente".format(repoName))
+		else:
+			try:
+				if (uti.askQuestion("Questa operazione rimuoverà permanentemente il repository {} dal server. Continuare?".format(repoName))):
+					self.server.removeRepo(repoName)
+					print("Il repository {} è stato rimosso dal server".format(repoName))
+
+					if (uti.askQuestion("Eliminare anche la copia locale?")):
+						self.removeRepoMap(repoName)
+			except:
+				raise Exception("Impossibile effettuare l'operazione.")
 
 
 	#rimuove il branch dal server
 	def removeBranch(self, branchName):
-		try:
-			uti.askQuestion("Questa operazione rimuoverà permanentemente il branch {} dal server. Continuare?".format(branchName))
-			self.server.getRepo(self.getCurrRepo()).removeBranch(branchName)
-			print("Il branch {} è stato rimosso dal server".format(branchName))
-		except:
-			raise Exception("Impossibile effettuare l'operazione.")
+		#verifico che la cartella esista
+		if (self.server.existsBranch(branchName) == False):
+			raise Exception("Branch {} non presente".format(branchName))
+		else:
+			try:
+				uti.askQuestion("Questa operazione rimuoverà permanentemente il branch {} dal server. Continuare?".format(branchName))
+				self.server.getRepo(self.getCurrRepo()).removeBranch(branchName)#chiamata su un sotto-oggetto del server, non funziona
+				print("Il branch {} è stato rimosso dal server".format(branchName))
+
+				if (uti.askQuestion("Eliminare anche la copia locale?")):
+					self.removeBranchMap(repoName)
+			except:
+				raise Exception("Impossibile effettuare l'operazione.")
 
 
 	#mostra la lista dei repository presenti sul server
 	def showRepos(self):
 		print("\nRepositories sul server di MyVersion")
 	
-		for repo in self.server.showRepos():
-			#ottengo la cartella del repository
-			repoDir = path.join(self.myRoot, repo)
+		for repoName in self.server.showRepos():
 			#verifico che la cartella esista in locale
-			if (path.isdir(repoDir)):
-				print("- {} ({})".format(repo, "mapped"))
+			if (self.existsRepo(repoName)):
+				print("- {} ({})".format(repoName, "mapped"))
 			else:
-				print("- {}".format(repo))
+				print("- {}".format(repoName))
 		print()
 
 
 	#mostra la lista dei branch presenti sul server
 	def showBranches(self):
 		print("\nBranches sul repository {}:".format(self.getCurrRepo()))
-		for branch in self.server.showBranches(self.getCurrRepo()):
-			#ottengo la cartella del branch
-			branchdir = path.join(self.myRoot, self.getCurrRepo(), branch)
+		for branchName in self.server.showBranches(self.getCurrRepo()):
 			#verifico che la cartella esista in locale
-			if (path.isdir(branchdir)):
-				print("- {} ({})".format(branch, "mapped"))
+			if (self.existsBranch(branchName)):
+				print("- {} ({})".format(branchName, "mapped"))
 			else:
-				print("- {}".format(branch))
+				print("- {}".format(branchName))
 		print()
 
 
 	#mostra la lista dei changeset presenti in questo branch
 	def showHistory(self):
 		print("\nChangeset del branch {}:".format(self.getCurrBranch()))
-		for changeSet in self.getCurrBranchOnServer().getChangesetList():
+		for changeSet in self.getCurrBranchOnServer().getChangesetList(): #TODO: non funziona chiamata di secondo livello sul server
 			print("- {}".format(changeSet))
 		print()
 
 
 	#mappa il repository nella cartella del client
-	def mapRepository(self, repoName):
+	def mapRepo(self, repoName):
 
 		#ottengo il path del repository
 		clientDir = path.join(self.myRoot, repoName)
@@ -347,7 +377,7 @@ class Client:
 				#setto anche il repository mappato come repository corrente di default
 				self.setRepo(repoName)
 			except:
-				raise Exception("Repository non trovato", end = "\n\n")
+				raise Exception("Repository {} non presente".format(repoName))
 
 
 	#mappa il branch nella cartella del client
@@ -369,39 +399,39 @@ class Client:
 				#setto anche il branch mappato come branch corrente di default
 				self.setBranch(branchName)
 			except:
-				raise Exception("Branch non trovato")
+				raise Exception("Branch {} non presente".format(branchName))
 
 
 	#rimuove la cartella del repo sul client
-	def removeRepositoryMap(self, repoName):
-		repodir = path.join(self.myRoot, repoName)
-		if (path.isdir(repodir)):
+	def removeRepoMap(self, repoName):
+		if (self.existsRepo(repoName)):
+			repodir = path.join(self.myRoot, repoName)
 			uti.askAndRemoveDir(repodir)
 			if (self.getCurrRepo() == repoName):
-				self.setCurrRepo("")
 				self.setCurrBranch("")
+				self.setCurrRepo("")
+				self.printCurrPath()
 		else:
 			raise Exception("Repository {} non presente".format(repoName))
 
 
 	#rimuove la cartella del branch sul client
 	def removeBranchMap(self, branchName):
-		branchdir = path.join(self.myRoot, self.getCurrRepo(), branchName)
-		if (path.isdir(branchdir)):
+		if (self.existsBranch(branchName)):
+			branchdir = path.join(self.myRoot, self.getCurrRepo(), branchName)
 			uti.askAndRemoveDir(branchdir)
 			if (self.getCurrBranch() == branchName):
 				self.setCurrBranch("")
+				self.printCurrPath()
 		else:
 			raise Exception("Branch {} non presente".format(branchName))
 
 
 	#setta il repository corrente
 	def setRepo(self, repoName):
-		#ottengo la cartella del repository
-		repoDir = path.join(self.myRoot, repoName)
-		#verifico che la cartella esista
-		if (path.isdir(repoDir) == False):
-			raise Exception("Il repository", repoName, "non esiste o non è stato mappato")
+		#verifico che il repository locale esista
+		if (self.existsRepo(repoName) == False):
+			raise Exception("Il repository {} non esiste o non è stato mappato".format(repoName))
 
 		#aggiorno il repository corrente
 		self.setCurrRepo(repoName)
@@ -412,11 +442,9 @@ class Client:
 
 	#setta il branch corrente
 	def setBranch(self, branchName):
-		#ottengo la cartella del branch
-		branchDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
-		#verifico che la cartella locale esista
-		if (path.isdir(branchDir) == False):
-			raise Exception("Il branch", branchName, "non esiste o non è stato mappato", end="\n\n")
+		#verifico che il branch locale esista
+		if (self.existsBranch(branchName) == False):
+			raise Exception("Il branch {} non esiste o non è stato mappato".format(branchName))
 			
 		#aggiorno il branch corrente
 		self.setCurrBranch(branchName)
@@ -661,6 +689,7 @@ class Client:
 			  "> dropbranch [branchName] - elimina il branch \"branchName\" dalla macchina locale",
 			  "> setrepo [repoName] - imposta il repository \"repoName\" come repository corrente",
 			  "> setbranch [branchName] - imposta il branch \"branchName\" come branch corrente",
+			  "> currdir - stampa il percorso di esecuzione corrente",
 			  "> history - stampa la lista dei changeset del branch corrente",
 			  "> getlatest - scarica la versione più recente del branch corrente",
 			  "> getspecific [changeset] - scarica la versione specificata in \"changeset\" del branch corrente",
@@ -677,7 +706,6 @@ class Client:
 	#setta il path di esecuzione
 	def setCurrPath(self, path):
 		self.currPath = path
-
 
 	#setta il repository selezionato
 	def setCurrRepo(self, repoName):

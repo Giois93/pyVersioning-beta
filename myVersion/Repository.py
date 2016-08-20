@@ -97,4 +97,6 @@ class Repository:
 	#rimuove il branch "branchName"
 	def removeBranch(self, branchName):
 		if (self.existsBranch(branchName)):
+			if (branchName == "trunk"):
+				raise Exception("Impossibile eliminare il ramo \"trunk\"")
 			shutil.rmtree(path.join(self.repoDir, branchName))

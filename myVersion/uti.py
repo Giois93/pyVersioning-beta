@@ -104,12 +104,16 @@ def askAndRemoveDir(dir, ask=True, askOverride=False):
 #"s": ritorna True - "n": ritorna False - altrimenti ripete la domanda
 def askQuestion(question):
 	while True:
-		print(question, "(s/n)")
-		userInput = input()
-		if ((userInput == "s") | (userInput == "S")):
-			return True
-		elif ((userInput == "n") | (userInput == "N")):
-			return False
+		try:
+			print(question, "(s/n)")
+			userInput = input()
+			if ((userInput == "s") | (userInput == "S")):
+				return True
+			elif ((userInput == "n") | (userInput == "N")):
+				return False
+		finally:
+			print()
+
 
 #formatta un path per la stampa a video
 def getPathForPrint(path):
