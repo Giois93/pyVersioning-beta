@@ -15,47 +15,55 @@ class Repository:
 		self.repoDir = repoDir
 		self.trunkDir = path.join(self.repoDir, "trunk")
 
-	#crea un nuovo repository sul disco e crea il ramo trunk
-	#se esiste già solleva un'eccezione
+
 	def createNew(self, sourceDir):
+		"""crea un nuovo repository sul disco e crea il ramo trunk
+		se esiste già solleva un'eccezione"""
+
 		if (path.isdir(self.repoDir)):
 			raise Exception
 
 		self.addTrunk(sourceDir)
 
 
-	#ritorna True se il branch è presente sul disco, False altrimenti
 	def existsBranch(self, branchName):
+		"""ritorna True se il branch è presente sul disco, False altrimenti"""
+
 		if (path.isdir(path.join(self.repoDir, branchName))):
 			return True;
 
 		return False;
 
 
-	#ritorna il Branch "branchName", se non esiste solleva un'eccezione
 	def getBranch(self, branchName):
+		"""ritorna il Branch "branchName", se non esiste solleva un'eccezione"""
+
 		if (self.existsBranch(branchName)):
 			return Branch(path.join(self.repoDir, branchName))
 
 		raise Exception("Il branch non esiste.");
 
 
-	#ritorna il trunk (il nome della cartella è fisso a "trunk")
 	def getTrunk(self):
+		"""ritorna il trunk (il nome della cartella è fisso a "trunk")"""
+
 		return self.getBranch("trunk")
 
 
-	#ritorna la lista di branch presenti
 	def getBranchList(self):
+		"""ritorna la lista di branch presenti"""
+
 		#prendo il contenuto della root
 		#seleziono solo le cartelle (i branch)
 		return [name for name in os.listdir(self.repoDir) 
 						if path.isdir(path.join(self.repoDir, name))]
 
 
-	#crea un nuovo branch copiando il contenuto della sourceDir
-	#se il branch esiste già viene sollevata un'eccezione
+
 	def addTrunk(self, sourceDir):
+		"""crea un nuovo branch copiando il contenuto della sourceDir
+		se il branch esiste già viene sollevata un'eccezione"""
+
 		#creo un'oggetto Branch per il ramo trunk
 		branch = Branch(self.trunkDir)
 		
@@ -69,9 +77,11 @@ class Repository:
 		return branch
 
 
-	#crea un nuovo branch copiando il contenuto del trunk
-	#se il branch esiste già viene sollevata un'eccezione
+
 	def addBranch(self, branchName):
+		"""crea un nuovo branch copiando il contenuto del trunk
+		se il branch esiste già viene sollevata un'eccezione"""
+
 		#creo il percorso del nuovo branch
 		branchDir = self.trunkDir.replace("trunk", branchName)
 		#creo il branch
@@ -94,8 +104,9 @@ class Repository:
 		return branch
 
 
-	#rimuove il branch "branchName"
 	def removeBranch(self, branchName):
+		"""rimuove il branch "branchName" """
+
 		if (self.existsBranch(branchName)):
 			if (branchName == "trunk"):
 				raise Exception("Impossibile eliminare il ramo \"trunk\"")

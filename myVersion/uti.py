@@ -11,8 +11,9 @@ CHANGESET_FILE	= "changeset.txt"
 LAST_RUN_FILE	= "lastrun.txt"
 
 
-#legge l'intero file in una stringa
 def readFile(filePath):
+	"""legge l'intero file in una stringa"""
+
 	try:
 		file = open(filePath, "r")
 		fileStr = str(file.read())
@@ -23,8 +24,9 @@ def readFile(filePath):
 	return fileStr
 
 	
-#ritorna il valore del tag passato, letto da file
 def readFileByTag(tag, filePath):
+	"""ritorna il valore del tag passato, letto da file"""
+
 	#se ho trovato il tag lo restituisco
 	try:
 		return re.findall("{}=(.*)".format(tag), readFile(filePath))
@@ -32,8 +34,9 @@ def readFileByTag(tag, filePath):
 		raise	
 
 
-#scrive il file in append o in sovrascrittura
 def writeFile(string, filePath, append = True):
+	"""scrive sul file in append o in sovrascrittura"""
+
 	#apro il file
 	if (append): 
 		file = open(filePath, "a")
@@ -47,8 +50,8 @@ def writeFile(string, filePath, append = True):
 	file.close()
 
 
-#cambia il valore al tag passato, scritto su file
 def writeFileByTag(tag, value, filePath):
+	"""cambia il valore al tag passato, scritto su file"""
 
 	#apro il file
 	try:
@@ -72,8 +75,8 @@ def writeFileByTag(tag, value, filePath):
 		writeFile("{}={}".format(tag, str(value)), filePath)
 
 
-#chiede all'utente se rimuovere/sovrascrivere la cartella "dir" ed eventualmente la rimuove
 def askAndRemoveDir(dir, ask=True, askOverride=False):
+	"""chiede all'utente se rimuovere/sovrascrivere la cartella "dir" ed eventualmente la rimuove"""
 
 	#verifico se la cartella esiste
 	if (path.isdir(dir)):
@@ -100,9 +103,11 @@ def askAndRemoveDir(dir, ask=True, askOverride=False):
 	return True
 
 
-#rivolge la domanda "question" all'utente, attende una risposta 
-#"s": ritorna True - "n": ritorna False - altrimenti ripete la domanda
+
 def askQuestion(question):
+	"""rivolge la domanda "question" all'utente, attende una risposta 
+	"s": ritorna True - "n": ritorna False - altrimenti ripete la domanda"""
+
 	while True:
 		try:
 			print(question, "(s/n)")
@@ -115,13 +120,15 @@ def askQuestion(question):
 			print()
 
 
-#formatta un path per la stampa a video
 def getPathForPrint(path):
+	"""formatta un path per la stampa a video"""
+
 	return path.replace("/", "\\")
 
 
-#effettua un diff di due file
 def diff(file1, file2):
+	"""effettua un diff di due file"""
+
 	#ottengo le differenze frai due file
 	diff = difflib.ndiff(open(file1).readlines(), open(file2).readlines())
 	
@@ -136,7 +143,8 @@ def diff(file1, file2):
 	return changes
 
 
-#ritorna un oggetto data da una stringa "dd/mm/YY HH:MM:SS"
 def getDate(dateStr):
+	"""ritorna un oggetto data da una stringa "dd/mm/YY HH:MM:SS" """
+
 	[day,month,year] = map(int, dateStr.split()[0].split('/'))
 	return datetime.date(year, month, day)

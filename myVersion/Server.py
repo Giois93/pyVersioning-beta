@@ -48,43 +48,50 @@ class Server(rpyc.Service):
 		self.mapBranch(repoName, branchName, destDir)
 
 	
-	#ritorna la lista di repository sul server
 	def exposed_showRepos(self):
+		"""ritorna la lista di repository sul server"""
+
 		return self.getRepoList()
 
 
-	#ritorna la lista di branch nel repository "repoName"
 	def exposed_showBranches(self, repoName):
+		"""ritorna la lista di branch nel repository "repoName" """
+
 		return self.getRepo(repoName).getBranchList()
 
 
-	#ritorna la lista di repository presenti
 	def getRepoList(self):
+		"""ritorna la lista di repository presenti"""
+
 		#prendo il contenuto della root
 		#seleziono solo le cartelle (i repository)
 		return [name for name in os.listdir(self.myRoot) 
 						if path.isdir(path.join(self.myRoot, name))]
 
 
-	#ritorna True se il repository è presente sul disco, False altrimenti
 	def existsRepo(self, repoName):
+		"""ritorna True se il repository è presente sul disco, False altrimenti"""
+
 		if (path.isdir(path.join(self.myRoot, repoName))):
 			return True;
 
 		return False;
 
 
-	#ritorna il repository "repoName", se non esiste solleva un'eccezione
 	def getRepo(self, repoName):
+		"""ritorna il repository "repoName", se non esiste solleva un'eccezione"""
+		
 		if (self.existsRepo(repoName)):
 			return Repository(path.join(self.myRoot, repoName))
 
 		raise Exception("Il repository non esiste.");
 
 
-	#se il repository esiste già viene ritornato e viene sollevata un'eccezione, 
-	#altrimenti viene creato un nuovo repository copiando il contenuto della sourceDir
+
 	def addRepo(self, sourceDir, repoName = None):
+		"""viene creato un nuovo repository copiando il contenuto della sourceDir, 
+		se il repository esiste già viene sollevata un'eccezione"""
+
 		#se non viene specificato, il nome del repository viene impostato 
 		#a quello della sourceDir
 		if (repoName == None):
@@ -103,14 +110,16 @@ class Server(rpyc.Service):
 		return repo
 
 
-	#rimuove un repository
 	def removeRepo(self, repoName):
+		"""rimuove un repository"""
+
 		if (self.existsRepo(repoName)):
 			shutil.rmtree(path.join(self.myRoot, repoName))
 
 
-	#copia la cartella del branch nella cartella di destinazione
 	def mapBranch(self, repoName, branchName, destDir):
+		"""copia la cartella del branch nella cartella di destinazione"""
+
 		#prendo la cartella del repository e al suo interno quella del branch 
 		#quindi prendo la LatestVersion del branch e la copio nella cartella di destinazione
 		try:	
@@ -119,8 +128,8 @@ class Server(rpyc.Service):
 			raise
 
 
-	#prende in input il path relativo di un file e restituisce il path del file corrispondente sul server
 	def findFile(self, repoName, branchName, fileRelPath, startChangeset=None):
+		"""prende in input il path relativo di un file e restituisce il path del file corrispondente sul server"""
 		
 		#prendo il branch corrente
 		branch = self.getRepo(repoName).getBranch(branchName)

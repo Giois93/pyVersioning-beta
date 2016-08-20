@@ -13,24 +13,23 @@ class Branch:
 	branchTxt = ""		#path del file branch.txt
 
 
-	#sourceDir: path della cartella con il changeset di backup del trunk - verrà spostata nella ./branchRoot/0
-	#branchRoot: path del branch
 	def __init__(self, branchDir):
 		self.branchDir = branchDir
 		self.branchTxt = path.join(self.branchDir, BRANCH_FILE)
 
-
-	#crea un nuovo branch sul disco, aggiunge il changeset_0 e il file branch.txt
-	#se esiste già solleva un'eccezione
+	
 	def createNew(self, sourceDir, originalChangeset = 0):
+		"""crea un nuovo branch sul disco, aggiunge il changeset_0 e il file branch.txt
+		se esiste già solleva un'eccezione"""
+
 		if (path.isdir(self.branchDir)):
 			raise Exception
 
 		self.addChangeset(sourceDir, "changeset_0", originalChangeset, True)
 
 
-	#crea il prossimo changeset copiandoci la cartella sourceDir
 	def addChangeset(self, sourceDir, comment, changesetNum = None, isBackup = False):
+		"""crea il prossimo changeset copiandoci la cartella sourceDir"""
 		
 		#controllo se è necessario creare un changeset di backup (ne viene fatto uno ogni giorno)
 		#cerco l'ultimo changeset di backup
@@ -77,31 +76,36 @@ class Branch:
 		return changesetNum
 
 
-	#ritorna il changeset associato al "changesetNum"
 	def getChangeset(self, changesetNum):
+		"""ritorna il changeset associato al "changesetNum" """
+
 		return Changeset(path.join(self.branchDir, str(changesetNum)))
 
 
-	#ritorna l'ultimo changeset del branch
 	def getLastChangeset(self):
+		"""ritorna l'ultimo changeset del branch"""
+
 		return getChangeset(self.getLastChangesetNum())
 
 
-	#ritorna il numero del last_changeset se il brach esiste, -1 per un nuovo branch
 	def getLastChangesetNum(self):
+		"""ritorna il numero del last_changeset se il brach esiste, -1 per un nuovo branch"""
+
 		try:
 			return int(uti.readFileByTag("last_changeset", self.branchTxt)[0])
 		except:
 			return -1
 
 
-	#ritorna il numero del last_changeset + 1
 	def getNextChangesetNum(self):
+		"""ritorna il numero del last_changeset + 1"""
+		
 		return self.getLastChangesetNum() + 1
 
 
-	#ritorna la lista dei changeset
 	def getChangesetList(self):
+		"""ritorna la lista dei changeset"""
+
 		#prendo tutte le cartelle all'interno del branch (i changeset)
 		dirs = [ dirName for dirName in os.listdir(self.branchDir) if (path.isdir(path.join(self.branchDir, dirName))) ]
 		
@@ -125,8 +129,8 @@ class Branch:
 		return results
 
 	
-	#copia l'ultima versione completa nella cartella destDir
 	def getLatestVersion(self, destDir):
+		"""copia l'ultima versione completa nella cartella destDir"""
 		
 		#prendo l'ultimo changeset
 		lastChangeset = self.getLastChangesetNum()
@@ -135,8 +139,8 @@ class Branch:
 		self.getSpecificVersion(lastChangeset, destDir)
 
 	
-	#copia la versione completa fino al "changesetNum" nella cartella destDir
 	def getSpecificVersion(self, changesetNum, destDir):
+		"""copia la versione completa fino al changeset "changesetNum" nella cartella destDir"""
 		
 		#scorro tutti i changeset all'indietro fino al primo changeset di backup
 		currChangeset = self.getLastBackupChangeset(changesetNum)
@@ -156,8 +160,9 @@ class Branch:
 		os.remove(path.join(destDir, CHANGESET_FILE))
 
 	
-	#ritorna l'ultimo changeset di backup
 	def getLastBackupChangeset(self, startChangeset):
+		"""ritorna l'ultimo changeset di backup"""
+
 		#scorro tutti i changeset all'indietro fino al primo changeset di backup
 		for changesetID in range(startChangeset, -1, -1):
 			currChangeset = Changeset(path.join(self.branchDir, str(changesetID)))

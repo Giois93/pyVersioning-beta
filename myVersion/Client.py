@@ -20,6 +20,7 @@ class Client:
 	server = None
 
 	def __init__(self, connection):
+
 		#setto il path della cartella root
 		self.myRoot = "C:\my\myclient"
 
@@ -44,8 +45,9 @@ class Client:
 			self.setCurrPath(self.myRoot)
 
 
-	#esegue i comandi dell'utente fino al comando "exit"
 	def runMenu(self):
+		"""esegue i comandi dell'utente fino al comando "exit" """
+
 		#eseguo i comandi dell'utente
 		while True:
 			print("> ", end="")
@@ -57,8 +59,8 @@ class Client:
 				break
 
 
-	#esegue il comando "userInput"
 	def menu(self, userInput):
+		"""esegue il comando "userInput" """
 
 		#costruisco una lista di comando e argomenti
 		commandList = userInput.split()
@@ -181,8 +183,9 @@ class Client:
 			print(ex, end="\n\n")
 
 
-	#controlla i parametri e il path corrente
 	def checkCommand(self, commandList, paramNum=0, checkRepo=False, checkBranch=False):
+		"""controlla che i parametri e il path corrente siano compatibili con il comando"""
+
 		if (len(commandList) != paramNum):
 			raise Exception("Parametri errati")
 		elif ((checkRepo) & (not self.getCurrRepo())):
@@ -191,29 +194,33 @@ class Client:
 			raise Exception("Nessun branch settato")
 
 
-	#ritorna True se esiste il repository "repoName"
 	def existsRepo(self, repoName):
+		"""ritorna True se esiste il repository "repoName" """
+
 		#ottengo la cartella del repository
 		repoDir = path.join(self.myRoot, repoName)
 		#verifico che la cartella esista
 		return path.isdir(repoDir)
 		
 
-	#ritorna True se esiste il branch "branchName"
 	def existsBranch(self, branchName):
+		"""ritorna True se esiste il branch "branchName" """
+
 		#ottengo la cartella del branch
 		branchDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
 		#verifico che la cartella esista
 		return path.isdir(branchDir)
 
 
-	#stampa il path corrente
 	def printCurrPath(self):
+		"""stampa il path corrente"""
+
 		print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
 
 
-	#crea un nuovo repository sul server
 	def createRepo(self, repoName):
+		"""crea un nuovo repository sul server"""
+
 		print("Inserire il path della cartella da caricare sul server:")
 		sourceDir = input()
 		if (path.isdir(sourceDir) == False):
@@ -224,15 +231,17 @@ class Client:
 		self.mapRepo(repoName)
 
 	
-	#crea un nuovo branch sul server
 	def createBranch(self, branchName):
+		"""crea un nuovo branch sul server"""
+
 		self.server.getRepo(self.getCurrRepo()).addBranch(branchName) #TODO non funziona, chiamata di secondo livello sul server
 		print("Branch {} creato con successo.".format(branchName), end="\n\n")	
 		self.mapBranch(branchName)
 
 
-	#rimuove il repository dal server
 	def removeRepo(self, repoName):
+		"""rimuove il repository dal server"""
+
 		#verifico che la cartella esista
 		if (self.server.existsRepo(repoName) == False):
 			raise Exception("Repository {} non presente".format(repoName))
@@ -248,8 +257,9 @@ class Client:
 				raise Exception("Impossibile effettuare l'operazione.")
 
 
-	#rimuove il branch dal server
 	def removeBranch(self, branchName):
+		"""rimuove il branch dal server"""
+
 		#verifico che la cartella esista
 		if (self.server.existsBranch(branchName) == False):
 			raise Exception("Branch {} non presente".format(branchName))
@@ -265,8 +275,9 @@ class Client:
 				raise Exception("Impossibile effettuare l'operazione.")
 
 
-	#mostra la lista dei repository presenti sul server
 	def showRepos(self):
+		"""mostra la lista dei repository presenti sul server"""
+
 		print("\nRepositories sul server di MyVersion")
 	
 		for repoName in self.server.showRepos():
@@ -278,8 +289,9 @@ class Client:
 		print()
 
 
-	#mostra la lista dei branch presenti sul server
 	def showBranches(self):
+		"""mostra la lista dei branch presenti sul server"""
+
 		print("\nBranches sul repository {}:".format(self.getCurrRepo()))
 		for branchName in self.server.showBranches(self.getCurrRepo()):
 			#verifico che la cartella esista in locale
@@ -290,16 +302,17 @@ class Client:
 		print()
 
 
-	#mostra la lista dei changeset presenti in questo branch
 	def showHistory(self):
+		"""mostra la lista dei changeset presenti nel branch corrente"""
+
 		print("\nChangeset del branch {}:".format(self.getCurrBranch()))
 		for changeSet in self.getCurrBranchOnServer().getChangesetList(): #TODO: non funziona chiamata di secondo livello sul server
 			print("- {}".format(changeSet))
 		print()
 
 
-	#mappa il repository nella cartella del client
 	def mapRepo(self, repoName):
+		"""mappa il repository nella cartella del client"""
 
 		#ottengo il path del repository
 		clientDir = path.join(self.myRoot, repoName)
@@ -320,8 +333,8 @@ class Client:
 				raise Exception("Repository {} non presente".format(repoName))
 
 
-	#mappa il branch nella cartella del client
 	def mapBranch(self, branchName):
+		"""mappa il branch nella cartella del client"""
 
 		#ottengo il path del branch
 		clientDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
@@ -342,8 +355,9 @@ class Client:
 				raise Exception("Branch {} non presente".format(branchName))
 
 
-	#rimuove la cartella del repo sul client
 	def removeRepoMap(self, repoName):
+		"""rimuove la cartella del repo sul client"""
+
 		if (self.existsRepo(repoName)):
 			repodir = path.join(self.myRoot, repoName)
 			uti.askAndRemoveDir(repodir)
@@ -355,8 +369,9 @@ class Client:
 			raise Exception("Repository {} non presente".format(repoName))
 
 
-	#rimuove la cartella del branch sul client
 	def removeBranchMap(self, branchName):
+		"""rimuove la cartella del branch sul client"""
+
 		if (self.existsBranch(branchName)):
 			branchdir = path.join(self.myRoot, self.getCurrRepo(), branchName)
 			uti.askAndRemoveDir(branchdir)
@@ -367,8 +382,9 @@ class Client:
 			raise Exception("Branch {} non presente".format(branchName))
 
 
-	#setta il repository corrente
 	def setRepo(self, repoName):
+		"""setta il repository corrente"""
+
 		#verifico che il repository locale esista
 		if (self.existsRepo(repoName) == False):
 			raise Exception("Il repository {} non esiste o non è stato mappato".format(repoName))
@@ -380,8 +396,9 @@ class Client:
 		print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
 
 
-	#setta il branch corrente
 	def setBranch(self, branchName):
+		"""setta il branch corrente"""
+
 		#verifico che il branch locale esista
 		if (self.existsBranch(branchName) == False):
 			raise Exception("Il branch {} non esiste o non è stato mappato".format(branchName))
@@ -392,8 +409,9 @@ class Client:
 		print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
 
 
-	#scarica l'ultima versione e la copia nella cartella del branch
 	def getLatestVersion(self):
+		"""scarica l'ultima versione e la copia nella cartella del branch"""
+
 		#chiedo all'utente se sovrascrivere la cartella
 		if (uti.askAndRemoveDir(self.getCurrPath(), ask=False)):
 			#prendo la latestVersion da Repository e Branch corrente
@@ -402,8 +420,10 @@ class Client:
 			print("Versione locale aggiornata con successo", end="\n\n")
 
 	
-	#scarica una versione specifica (identificata dal numero di changeset) e la copia nella cartella del branch
+	
 	def getSpecificVersion(self, changesetNum):
+		"""scarica una versione specifica e la copia nella cartella del branch"""
+
 		#chiedo all'utente se sovrascrivere la cartella
 		if (uti.askAndRemoveDir(self.getCurrPath(), ask=False)):
 			#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
@@ -412,8 +432,9 @@ class Client:
 			print("Versione locale aggiornata con successo", end="\n\n")
 
 
-	#stampa una lista dei file modificati in locale con data di ultima modifica
 	def printPendingChanges(self):
+		"""stampa una lista dei file modificati in locale con data di ultima modifica"""
+
 		#scorro tutti i file nella lista dei pending
 		pendingList = self.getPendingChanges()
 		if (len(pendingList) == 0):
@@ -428,8 +449,9 @@ class Client:
 			print()
 
 	
-	#ritorna una lista dei file modificati in locale
 	def getPendingChanges(self):
+		"""ritorna una lista dei file modificati in locale"""
+
 		#rimuovo il file dei pending vecchio
 		if (path.isfile(self.getPendingFile())):
 			try:
@@ -474,13 +496,15 @@ class Client:
 		return self.getPendingList()
 
 
-	#aggiunge il file alla lista dei pending
 	def addPendingFile(self, file):
+		"""aggiunge il file alla lista dei pending"""
+
 		uti.writeFile("file={}".format(file), self.getPendingFile())
 
 
-	#rimuove il file alla lista dei pending
 	def delPendingFile(self, file):
+		"""rimuove il file dalla lista dei pending"""
+
 		#prendo la stringa di tutto il file
 		fileStr = uti.readFile(self.getPendingFile())
 		#rimuovo il file dalla lista dei pending
@@ -489,16 +513,17 @@ class Client:
 		uti.writeFile(fileStr, self.getPendingFile(), True)
 
 
-	#legge il file dei pending e ritorna una lista 
 	def getPendingList(self):
+		"""legge il file dei pending e ritorna una lista dei file modificati"""
+
 		try:
 			return uti.readFileByTag("file", self.getPendingFile())
 		except:
 			return ()
 
 
-	#crea un nuovo changeset con le modifiche del solo file in input
 	def commitOne(self, fileName):
+		"""crea un nuovo changeset con le modifiche del solo file "fileName" """
 
 		#creo una cartella temporanea
 		tmpDir = path.join(self.getCurrPath(), "tmp")
@@ -520,8 +545,8 @@ class Client:
 		print("File: {} aggiornato con successo.".format(fileName), end="\n\n")
 
 
-	#crea un nuovo changeset con le modifiche dei file in pending
 	def commitAll(self):
+		"""crea un nuovo changeset con le modifiche dei file in pending"""
 
 		#creo una cartella temporanea
 		tmpDir = path.join(self.getCurrPath(), "tmp")
@@ -549,8 +574,9 @@ class Client:
 			self.getLatestVersion()
 
 
-	#aggiunge un file alla cartella temporanea dei file da committare
 	def addForCommit(self, file, tmpDir):
+		"""aggiunge un file alla cartella temporanea dei file da committare"""
+
 		#copio il file nella cartella temporanea (creo le cartelle se non presenti)
 		#prendo il path del file da copiare
 		tmpFileDir = path.dirname(file.replace(self.getCurrPath(), tmpDir))
@@ -562,8 +588,9 @@ class Client:
 		shutil.copy2(file, tmpFileDir)
 		
 
-	#effettua il commit dei file contenuti in "sourceDir" su un nuovo changeset
 	def doCommit(self, sourceDir, comment):
+		"""effettua il commit dei file contenuti in "sourceDir" su un nuovo changeset"""
+
 		#creo un nuovo changeset in cui copiare la cartella temporanea
 		changesetNum = self.getCurrBranchOnServer().addChangeset(sourceDir, comment)
 
@@ -574,8 +601,9 @@ class Client:
 		uti.writeFileByTag("last_changeset", changesetNum, self.getPendingFile())
 
 
-	#annulla le modifiche sul file e riporta la versione a quella del server
 	def undoFile(self, file):
+		"""annulla le modifiche sul file e riporta la versione a quella originale"""
+
 		if (uti.askQuestion("Questo comando annullerà le modifiche sul file {}, sei sicuro?".format(file))):
 			#prendo il file corrispondente dal server e lo sovrascrivo al file locale
 			try:
@@ -593,15 +621,17 @@ class Client:
 				self.printPendingChanges()
 
 
-	#annulla tutte le modifiche e riporta la versione a quella del server
 	def undoAll(self):
+		"""annulla tutte le modifiche e riporta la versione a quella originale"""
+
 		if (uti.askQuestion("Questo comando cancellerà tutti i pending, sei sicuro?")):
 			print("Modifiche annullate.", end="\n\n")
 			self.getSpecificVersion(int(uti.readFileByTag("last_changeset", self.getPendingFile())[0]))
 		
 
-	#effettua il merge del file in pending con il file sul server
 	def compare(self, localFile):
+		"""effettua il diff del file in pending con il file sul server"""
+
 		try:
 			pendingFile = self.findFileInPendings(localFile)
 			try:
@@ -614,8 +644,10 @@ class Client:
 			self.printPendingChanges()
 
 
-	#stampa una lista di comandi con descrizione
 	def printHelp(self):
+		"""stampa una lista di comandi con descrizione"""
+
+
 		print("> exit - chiude il programma",
 			  "> repolist - stampa la lista dei repositories presenti sul server",
 			  "> branchlist - stampa una lista dei branchs presenti sul repository corrente sul server",
@@ -643,69 +675,81 @@ class Client:
 			  "> help - stampa la guida", sep="\n", end="\n\n")
 
 
-	#setta il path di esecuzione
 	def setCurrPath(self, path):
+		"""setta il path di esecuzione"""
+
 		self.currPath = path
 
 
-	#setta il repository selezionato
 	def setCurrRepo(self, repoName):
+		"""setta il repository selezionato"""
+
 		self.currRepo = repoName
 		self.setCurrPath(path.join(self.myRoot, repoName))
 
 
-	#setta il branch selezionato
 	def setCurrBranch(self, branchName):
+		"""setta il branch selezionato"""
+
 		self.currBranch = branchName
 		self.setCurrPath(path.join(self.myRoot, self.getCurrRepo(), branchName))
 
 
-	#ritorna il path di esecuzione
 	def getCurrPath(self):
+		"""ritorna il path di esecuzione"""
+
 		return self.currPath
 
 
-	#ritorna il repository selezionato
 	def getCurrRepo(self):
+		"""ritorna il repository selezionato"""
+
 		return self.currRepo
 
 
-	#ritorna il branch selezionato
 	def getCurrBranch(self):
+		"""ritorna il branch selezionato"""
+
 		return self.currBranch
 
 
-	#ritorna il file dei pending nel branch corrente
 	def getPendingFile(self):
+		"""ritorna il file dei pending nel branch corrente"""
+
 		return path.join(self.getCurrPath(), PENDING_FILE)
 
 	
-	#ritorna il file dell'ultimo run
 	def getLastRunFile(self):
+		"""ritorna il file dell'ultimo run"""
+
 		return path.join(self.myRoot, LAST_RUN_FILE)
 
 
-	#ritorna il repository del server corrispondente a quello corrente
-		"""TODO: SISTEMARE"""
+	"""TODO: SISTEMARE"""
 	def getCurrRepoOnServer(self):
+		"""ritorna il repository del server corrispondente a quello corrente"""
+
 		return self.server.getRepo(self.getCurrRepo())
 
 
-	#ritorna il branch del server corrispondente a quello corrente
-		"""TODO: SISTEMARE"""
+	"""TODO: SISTEMARE"""
 	def getCurrBranchOnServer(self):
+		"""ritorna il branch del server corrispondente a quello corrente"""
+
 		return self.server.getRepo(self.getCurrRepo()).getBranch(self.getCurrBranch())
 
 
-	#ritorna il percorso del file sul server, il file viene cercato a partire da branchDir
 	def findFileOnServer(self, localFile, branchDir, startChangeset=None): 
+		"""ritorna il percorso del file sul server, il file viene cercato a partire da branchDir"""
+
 		#TODO: dovrei fare una copia locale del file e ritornare il suo path per il confronto
 		return self.server.findFile(self.getCurrRepo(), self.getCurrBranch(), localFile.replace("{}\\".format(self.getCurrPath()), ""), startChangeset)
 
 	
 	"""NOTA: non ammette 2 file con lo stesso nome"""
-	#cerca il file "fileName" frai pending
 	def findFileInPendings(self, fileName):
+		"""cerca il file "fileName" frai pending"""
+		
 		for pendingFile in self.getPendingChanges():
 			if (path.basename(pendingFile) == fileName):
 				return pendingFile

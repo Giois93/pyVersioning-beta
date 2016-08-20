@@ -16,8 +16,8 @@ class Changeset:
 		self.changesetTxt = path.join(self.changesetDir, CHANGESET_FILE)
 
 
-	#crea un nuovo changeset sul disco
 	def createNew(self, sourceDir, isBackup=False):
+		"""crea un nuovo changeset sul disco"""
 
 		#copio il contenuto della sourceDir nella cartella del nuovo changeset
 		dir_uti.copy_tree(sourceDir, self.changesetDir)
@@ -38,8 +38,9 @@ class Changeset:
 		uti.writeFileByTag("date", "{} {}".format(time.strftime("%d/%m/%Y"), time.strftime("%H:%M:%S")), self.changesetTxt)
 
 
-	#ritorna True se il changeset è un changeset di backup
 	def isBackup(self):
+		"""ritorna True se il changeset è un changeset di backup"""
+
 		try:
 			#leggo il tag is_backup del file
 			if (int(uti.readFileByTag("is_backup", self.changesetTxt)[0]) == 1):

@@ -36,9 +36,6 @@
     <Compile Include="Server.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="System.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="uti.py" />
   </ItemGroup>
   <PropertyGroup>
