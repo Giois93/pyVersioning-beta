@@ -69,7 +69,7 @@ class Client:
 			try:
 				command = commandList.pop()
 			except:
-				print("Valore non ammesso", end="\n\n")
+				raise Exception("Valore non ammesso")
 
 			if (command == "exit"): 
 				if (len(commandList) != 0):
@@ -251,7 +251,7 @@ class Client:
 				print("Valore non ammesso", end="\n\n")
 
 		except Exception as ex:
-			print(ex, end="\n\n")#TODO: rimuovere questa print in release
+			print(ex, end="\n\n")
 
 
 	def existsRepo(self, repoName):
@@ -271,6 +271,7 @@ class Client:
 	#stampa il path corrente
 	def printCurrPath(self):
 		print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
+
 
 	#crea un nuovo repository sul server
 	def createRepo(self, repoName):
