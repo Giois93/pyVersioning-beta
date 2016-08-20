@@ -72,179 +72,106 @@ class Client:
 				raise Exception("Valore non ammesso")
 
 			if (command == "exit"): 
-				if (len(commandList) != 0):
-					raise Exception("Parametri errati")
+				self.checkCommand(commandList)
 				#memorizzo gli ultimi repo/branch settati
 				uti.writeFileByTag("last_repo", self.getCurrRepo(), self.getLastRunFile())
 				uti.writeFileByTag("last_branch", self.getCurrBranch(), self.getLastRunFile())
 				print("Programma terminato.", end="\n\n")
 			
 			elif (command == "clear"):
-				if (len(commandList) != 0):
-					raise Exception("Parametri errati")
+				self.checkCommand(commandList)
 				os.system("cls")
 
 			elif (command == "currdir"):
-				if (len(commandList) != 0):
-					raise Exception("Parametri errati")
+				self.checkCommand(commandList)
 				self.printCurrPath()
 
 			elif (command == "createrepo"):
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
+				self.checkCommand(commandList, paramNum=1)
 				self.createRepo(commandList.pop()) 
 				
 			elif (command == "createbranch"):
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
+				self.checkCommand(commandList, paramNum=1, checkRepo=True)
 				self.createBranch(commandList.pop()) 
 
 			elif (command == "removerepo"):
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
+				self.checkCommand(commandList, paramNum=1)
 				self.removeRepo(commandList.pop()) 
 				
 			elif (command == "removebranch"):
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
+				self.checkCommand(commandList, paramNum=1, checkRepo=True)
 				self.removeBranch(commandList.pop()) 
 
 			elif (command == "repolist"): 
-				if (len(commandList) != 0):
-					raise Exception("Parametri errati")
+				self.checkCommand(commandList)
 				self.showRepos() 
 			
 			elif (command == "branchlist"): 
-				if (len(commandList) != 0):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
+				self.checkCommand(commandList, checkRepo=True)
 				self.showBranches()
 
 			elif (command == "maprepo"): 
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
+				self.checkCommand(commandList, paramNum=1)
 				self.mapRepo(commandList.pop()) 
 
 			elif (command == "mapbranch"): 
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
+				self.checkCommand(commandList, paramNum=1, checkRepo=True)
 				self.mapBranch(commandList.pop())
 
 			elif (command == "droprepo"): 
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
+				self.checkCommand(commandList, paramNum=1)
 				self.removeRepoMap(commandList.pop())
 
 			elif (command == "dropbranch"):
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
+				self.checkCommand(commandList, paramNum=1, checkRepo=True)
 				self.removeBranchMap(commandList.pop())
 
 			elif (command == "setrepo"):
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
+				self.checkCommand(commandList, paramNum=1)
 				self.setRepo(commandList.pop())
 
 			elif (command == "setbranch"): 
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
+				self.checkCommand(commandList, paramNum=1, checkRepo=True)
 				self.setBranch(commandList.pop())
 
 			elif (command == "history"): 
-				if (len(commandList) != 0):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
-				elif(not self.getCurrBranch()):
-					raise Exception("Nessun branch settato")
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
 				self.showHistory()
 
 			elif (command == "getlatest"): 
-				if (len(commandList) != 0):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
-				elif(not self.getCurrBranch()):
-					raise Exception("Nessun branch settato")
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
 				self.getLatestVersion() 
 
 			elif (command == "getspecific"):
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
-				elif(not self.getCurrBranch()):
-					raise Exception("Nessun branch settato")
+				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
 				self.getSpecificVersion(int(commandList.pop()))
 
 			elif (command == "pending"): 
-				if (len(commandList) != 0):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
-				elif(not self.getCurrBranch()):
-					raise Exception("Nessun branch settato")
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
 				self.printPendingChanges()
 
 			elif (command == "commit"): 
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
-				elif(not self.getCurrBranch()):
-					raise Exception("Nessun branch settato")
+				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
 				self.commitOne(commandList.pop())
 
 			elif (command == "commitall"): 
-				if (len(commandList) != 0):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
-				elif(not self.getCurrBranch()):
-					raise Exception("Nessun branch settato")
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
 				self.commitAll()
 
 			elif (command == "undo"): 
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
-				elif(not self.getCurrBranch()):
-					raise Exception("Nessun branch settato")
+				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
 				self.undoFile(commandList.pop())
 
 			elif (command == "undoall"): 
-				if (len(commandList) != 0):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
-				elif(not self.getCurrBranch()):
-					raise Exception("Nessun branch settato")
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
 				self.undoAll()
 			
 			elif (command == "compare"):
-				if (len(commandList) != 1):
-					raise Exception("Parametri errati")
-				elif(not self.getCurrRepo()):
-					raise Exception("Nessun repository settato")
-				elif(not self.getCurrBranch()):
-					raise Exception("Nessun branch settato")
+				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
 				self.compare(commandList.pop())
 			
 			elif (command == "help"): 
-				if (len(commandList) != 0):
-					raise Exception("Parametri errati")
+				self.checkCommand(commandList)
 				self.printHelp()
 
 			else: 
@@ -254,6 +181,17 @@ class Client:
 			print(ex, end="\n\n")
 
 
+	#controlla i parametri e il path corrente
+	def checkCommand(self, commandList, paramNum=0, checkRepo=False, checkBranch=False):
+		if (len(commandList) != paramNum):
+			raise Exception("Parametri errati")
+		elif ((checkRepo) & (not self.getCurrRepo())):
+			raise Exception("Nessun repository settato")
+		elif ((checkBranch) & (not self.getCurrBranch())):
+			raise Exception("Nessun branch settato")
+
+
+	#ritorna True se esiste il repository "repoName"
 	def existsRepo(self, repoName):
 		#ottengo la cartella del repository
 		repoDir = path.join(self.myRoot, repoName)
@@ -261,6 +199,7 @@ class Client:
 		return path.isdir(repoDir)
 		
 
+	#ritorna True se esiste il branch "branchName"
 	def existsBranch(self, branchName):
 		#ottengo la cartella del branch
 		branchDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
@@ -708,6 +647,7 @@ class Client:
 	def setCurrPath(self, path):
 		self.currPath = path
 
+
 	#setta il repository selezionato
 	def setCurrRepo(self, repoName):
 		self.currRepo = repoName
@@ -775,8 +715,8 @@ class Client:
 
 ### Main ###
 
-#connetto client e server
 try:
+	#connetto client e server
 	print("Benvenuto in MyVersion", "Connessione al server...", sep="\n")
 	connection = rpyc.connect("localhost", 18812)
 	print("Connessione stabilita.", end="\n\n")
