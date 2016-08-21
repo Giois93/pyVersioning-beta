@@ -23,9 +23,10 @@ class Server(rpyc.Service):
 		print("\nClient disconnesso.")
 
 
-	#metodi di interfaccia
+	### metodi di interfaccia Client-Server rpyc ###
+
 	def exposed_findFile(self, repoName, branchName, fileRelPath, startChangeset=None):
-		return findFile(repoName, branchName, fileRelPath, startChangeset)
+		return self.findFile(repoName, branchName, fileRelPath, startChangeset)
 	
 
 	def exposed_existsRepo(self, repoName):
@@ -39,15 +40,31 @@ class Server(rpyc.Service):
 	def exposed_addRepo(self, sourceDir, repoName = None):
 		self.addRepo(sourceDir, repoName)
 
-
+	
 	def exposed_removeRepo(self, repoName):
 		self.removeRepo(repoName)
+
+
+	def exposed_existsBranch(self, repoName, branchName):
+		return self.getRepo(repoName).existsBranch(branchName)
+
+	
+	def exposed_addBranch(self, repoName, branchName):
+		"""crea un nuovo branch"""
+
+		self.getRepo(repoName).addBranch(branchName)
+
+
+	def exposed_removeBranch(self, repoName, branchName):
+		"""rimuove il branch"""
+		
+		self.getRepo(repoName).removeBranch(branchName)
 
 
 	def exposed_mapBranch(self, repoName, branchName, destDir):
 		self.mapBranch(repoName, branchName, destDir)
 
-	
+
 	def exposed_showRepos(self):
 		"""ritorna la lista di repository sul server"""
 
@@ -58,6 +75,31 @@ class Server(rpyc.Service):
 		"""ritorna la lista di branch nel repository "repoName" """
 
 		return self.getRepo(repoName).getBranchList()
+
+
+	def exposed_showChangesets(self, repoName, branchName):
+		"""ritorna la lista di changeset nel branch "branchName" """
+		
+		return self.getRepo(repoName).getBranch(branchName).getChangesetList()
+
+
+	def exposed_getLatestVersion(self, repoName, branchName, destDir):
+		"""scarica l'ultima versione del branch "branchName" nella cartella "destDir" """
+
+		return self.getRepo(repoName).getBranch(branchName).getLatestVersion(destDir) 
+
+
+	def exposed_getSpecificVersion(self, repoName, branchName, changesetNum, destDir):
+		"""scarica la versiona aggiornata al changeset "changesetNum" del branch "branchName" nella cartella "destDir" """
+
+		return self.getRepo(repoName).getBranch(branchName).getSpecificVersion(changesetNum, destDir)
+
+
+	def exposed_addChangeset(self, repoName, branchName, sourceDir, comment):
+		"""aggiunge un changeset copiandoci il contenuto della sourceDir"""
+
+		self.getRepo(repoName).getBranch(branchName).addChangeset(sourceDir, comment)
+		
 
 
 	def getRepoList(self):

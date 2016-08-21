@@ -5,6 +5,7 @@ import datetime
 import shutil
 import filecmp
 import rpyc
+import inspect
 import uti
 from uti import PENDING_FILE
 from uti import CHANGESET_FILE
@@ -172,6 +173,10 @@ class Client:
 				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
 				self.compare(commandList.pop())
 			
+			elif (command == "winmerge"):
+				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
+				self.merge(commandList.pop())
+
 			elif (command == "help"): 
 				self.checkCommand(commandList)
 				self.printHelp()
@@ -234,7 +239,7 @@ class Client:
 	def createBranch(self, branchName):
 		"""crea un nuovo branch sul server"""
 
-		self.server.getRepo(self.getCurrRepo()).addBranch(branchName) #TODO non funziona, chiamata di secondo livello sul server
+		self.server.addBranch(self.getCurrRepo(), branchName)
 		print("Branch {} creato con successo.".format(branchName), end="\n\n")	
 		self.mapBranch(branchName)
 
@@ -261,16 +266,17 @@ class Client:
 		"""rimuove il branch dal server"""
 
 		#verifico che la cartella esista
-		if (self.server.existsBranch(branchName) == False):
+		if (self.server.existsBranch(self.getCurrRepo(), branchName) == False):
 			raise Exception("Branch {} non presente".format(branchName))
 		else:
 			try:
 				uti.askQuestion("Questa operazione rimuoverà permanentemente il branch {} dal server. Continuare?".format(branchName))
-				self.server.getRepo(self.getCurrRepo()).removeBranch(branchName)#chiamata su un sotto-oggetto del server, non funziona
+				self.server.removeBranch(self.getCurrRepo(), branchName)
+
 				print("Il branch {} è stato rimosso dal server".format(branchName))
 
 				if (uti.askQuestion("Eliminare anche la copia locale?")):
-					self.removeBranchMap(repoName)
+					self.removeBranchMap(branchName)
 			except:
 				raise Exception("Impossibile effettuare l'operazione.")
 
@@ -306,7 +312,7 @@ class Client:
 		"""mostra la lista dei changeset presenti nel branch corrente"""
 
 		print("\nChangeset del branch {}:".format(self.getCurrBranch()))
-		for changeSet in self.getCurrBranchOnServer().getChangesetList(): #TODO: non funziona chiamata di secondo livello sul server
+		for changeSet in self.server.showChangesets(self.getCurrRepo(), self.getCurrBranch()):
 			print("- {}".format(changeSet))
 		print()
 
@@ -415,8 +421,8 @@ class Client:
 		#chiedo all'utente se sovrascrivere la cartella
 		if (uti.askAndRemoveDir(self.getCurrPath(), ask=False)):
 			#prendo la latestVersion da Repository e Branch corrente
-			self.getCurrBranchOnServer().getLatestVersion(self.getCurrPath())
-			uti.writeFileByTag("last_changeset", self.getCurrBranchOnServer().getLastChangesetNum(), self.getPendingFile())
+			lastChangesetNum = self.server.getLatestVersion(self.getCurrRepo(), self.getCurrBranch(), self.getCurrPath())
+			uti.writeFileByTag("last_changeset", lastChangesetNum, self.getPendingFile())
 			print("Versione locale aggiornata con successo", end="\n\n")
 
 	
@@ -427,7 +433,7 @@ class Client:
 		#chiedo all'utente se sovrascrivere la cartella
 		if (uti.askAndRemoveDir(self.getCurrPath(), ask=False)):
 			#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
-			self.getCurrBranchOnServer().getSpecificVersion(changesetNum, self.getCurrPath())
+			self.server.getSpecificVersion(self.getCurrRepo(), self.getCurrBranch(), changesetNum, self.getCurrPath())
 			uti.writeFileByTag("last_changeset", changesetNum, self.getPendingFile())
 			print("Versione locale aggiornata con successo", end="\n\n")
 
@@ -467,9 +473,6 @@ class Client:
 		#prendo la cartella corrente dal client
 		localRoot = self.getCurrPath()
 
-		#prendo la cartella corrente dal server
-		serverBranch = self.getCurrBranchOnServer().branchDir
-
 		#scorro tutti i file della cartella
 		for dirPath, dirNames, files in os.walk(localRoot):
 			for fileName in files:
@@ -478,7 +481,7 @@ class Client:
 					try:
 						#cerco sul server il file corrispondente al localFile 
 						#(cerco sempre a partire dall'ultima versione così da segnalare anche file vecchi)
-						serverFile = self.findFileOnServer(localFile, serverBranch)
+						serverFile = self.findFileOnServer(localFile)
 				
 						#se il file locale è stato modificato va aggiunto ai pending
 						if (int(path.getmtime(localFile)) > int(path.getmtime(serverFile))):
@@ -592,7 +595,7 @@ class Client:
 		"""effettua il commit dei file contenuti in "sourceDir" su un nuovo changeset"""
 
 		#creo un nuovo changeset in cui copiare la cartella temporanea
-		changesetNum = self.getCurrBranchOnServer().addChangeset(sourceDir, comment)
+		changesetNum = self.server.addChangeset(sourceDir, comment)
 
 		#rimuovo la cartella temporanea
 		if (path.isdir(sourceDir)):
@@ -610,7 +613,7 @@ class Client:
 				filePath = self.findFileInPendings(file)
 				try:
 					originalChangeset = int(uti.readFileByTag("last_changeset", self.getPendingFile())[0])
-					serverFile = self.findFileOnServer(filePath, self.getCurrBranchOnServer().branchDir, originalChangeset)
+					serverFile = self.findFileOnServer(filePath, originalChangeset)
 					shutil.copy2(serverFile, path.dirname(filePath))
 				except:
 					#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
@@ -634,14 +637,40 @@ class Client:
 
 		try:
 			pendingFile = self.findFileInPendings(localFile)
-			try:
-				serverFile = self.findFileOnServer(pendingFile, self.getCurrBranchOnServer().branchDir)
-				print ("".join(uti.diff(serverFile, pendingFile)))
-			except Exception as e:
-				print(e)
+			
 		except:
-			print("File non presente in pending", end="\n\n")
+			raise Exception("File non presente in pending")
 			self.printPendingChanges()
+
+		try:
+			serverFile = self.findFileOnServer(pendingFile)
+		except:
+			raise Exception("File non presente sul server")
+
+		print ("".join(uti.diff(serverFile, pendingFile)))
+		
+
+	def merge(self, localFile):
+		"""effettua il diff del file in pending con il file sul server con winmerge"""
+
+		try:
+			#prendo i file da comparare
+			pendingFile = self.findFileInPendings(localFile)
+		except:
+			raise Exception("File non presente in pending")
+			self.printPendingChanges()
+		
+		try:
+			serverFile = self.findFileOnServer(pendingFile)
+		except:
+			raise Exception("File non presente sul server")
+
+		#lancio winmerge
+		exePath = path.dirname(inspect.getsourcefile(lambda:0))
+		winmergepath = path.join(exePath, "WinMerge", "WinMergePortable.exe")
+
+		os.system("{} {} {}".format(winmergepath, pendingFile, serverFile))
+		
 
 
 	def printHelp(self):
@@ -725,22 +754,8 @@ class Client:
 		return path.join(self.myRoot, LAST_RUN_FILE)
 
 
-	"""TODO: SISTEMARE"""
-	def getCurrRepoOnServer(self):
-		"""ritorna il repository del server corrispondente a quello corrente"""
-
-		return self.server.getRepo(self.getCurrRepo())
-
-
-	"""TODO: SISTEMARE"""
-	def getCurrBranchOnServer(self):
-		"""ritorna il branch del server corrispondente a quello corrente"""
-
-		return self.server.getRepo(self.getCurrRepo()).getBranch(self.getCurrBranch())
-
-
-	def findFileOnServer(self, localFile, branchDir, startChangeset=None): 
-		"""ritorna il percorso del file sul server, il file viene cercato a partire da branchDir"""
+	def findFileOnServer(self, localFile, startChangeset=None): 
+		"""ritorna il percorso del file sul server, il file viene cercato a partire dallo "startChangeset" nella cartella del branch corrente"""
 
 		#TODO: dovrei fare una copia locale del file e ritornare il suo path per il confronto
 		return self.server.findFile(self.getCurrRepo(), self.getCurrBranch(), localFile.replace("{}\\".format(self.getCurrPath()), ""), startChangeset)

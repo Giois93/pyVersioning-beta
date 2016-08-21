@@ -138,6 +138,8 @@ class Branch:
 		#prendo la versione associata all'ultimo changeset
 		self.getSpecificVersion(lastChangeset, destDir)
 
+		return lastChangeset
+
 	
 	def getSpecificVersion(self, changesetNum, destDir):
 		"""copia la versione completa fino al changeset "changesetNum" nella cartella destDir"""
