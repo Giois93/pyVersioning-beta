@@ -94,6 +94,10 @@ class Client:
 				self.checkCommand(commandList)
 				self.printCurrPath()
 
+			elif (command == "listdir"):
+				self.checkCommand(commandList)
+				self.listDir()
+
 			elif (command == "createrepo"):
 				self.checkCommand(commandList, paramNum=1)
 				self.createRepo(commandList.pop()) 
@@ -227,6 +231,16 @@ class Client:
 		"""stampa il path corrente"""
 
 		print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
+
+
+	def listDir(self):
+		"""stampa tutti i file e sottocartelle del branch selezionato"""
+
+		list = self.server.listDir(self.getCurrRepo(), self.getCurrBranch())
+		for elem in list:
+			print(uti.getPathForPrint(elem))
+
+		print()
 
 
 	def createRepo(self, repoName):
@@ -621,21 +635,22 @@ class Client:
 	def undoFile(self, file):
 		"""annulla le modifiche sul file e riporta la versione a quella originale"""
 
-		if (uti.askQuestion("Questo comando annullerà le modifiche sul file {}, sei sicuro?".format(file))):
+		try:
 			#prendo il file corrispondente dal server e lo sovrascrivo al file locale
+			filePath = self.findFileInPendings(file)
 			try:
-				filePath = self.findFileInPendings(file)
-				try:
-					originalChangeset = int(uti.readFileByTag("last_changeset", self.getPendingFile())[0])
-					serverFile = self.findFileOnServer(filePath, originalChangeset)
+				originalChangeset = int(uti.readFileByTag("last_changeset", self.getPendingFile())[0])
+				serverFile = self.findFileOnServer(filePath, originalChangeset)
+
+				if (uti.askQuestion("Questo comando annullerà le modifiche sul file {}, sei sicuro?".format(file))):
 					shutil.copy2(serverFile, path.dirname(filePath))
-				except:
-					#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
-					os.remove(file)
-				print("Modifiche annullate.", end="\n\n")
 			except:
-				print("File non trovato.", end="\n\n")
-				self.printPendingChanges()
+				#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
+				os.remove(file)
+			print("Modifiche annullate.", end="\n\n")
+		except:
+			print("File non trovato.", end="\n\n")
+			self.printPendingChanges()
 
 
 	def undoAll(self):
@@ -684,7 +699,7 @@ class Client:
 		winmergepath = path.join(exePath, "WinMerge", "WinMergePortable.exe")
 
 		os.system("{} {} {}".format(winmergepath, pendingFile, serverFile))
-		
+		print()
 
 
 	def printHelp(self):
@@ -705,6 +720,7 @@ class Client:
 			  "> setrepo [repoName] - imposta il repository \"repoName\" come repository corrente",
 			  "> setbranch [branchName] - imposta il branch \"branchName\" come branch corrente",
 			  "> currdir - stampa il percorso di esecuzione corrente",
+			  "> listdir - stampa una lista di file e sottocartelle per il progetto selezionato",
 			  "> history - stampa la lista dei changeset del branch corrente",
 			  "> getlatest - scarica la versione più recente del branch corrente",
 			  "> getspecific [changeset] - scarica la versione specificata in \"changeset\" del branch corrente",

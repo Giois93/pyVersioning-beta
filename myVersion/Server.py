@@ -81,6 +81,29 @@ class Server(rpyc.Service):
 			return False
 
 
+	def exposed_listDir(self, repoName, branchName):
+		"""ritorna tutti i file e sottocartelle del branch selezionato"""
+
+		branch = self.getRepo(repoName).getBranch(branchName)
+		tmpDir = path.join(branch.branchDir, "tmp")
+
+		#scarico l'ultima versione in una cartella temporanea
+		branch.getLatestVersion(tmpDir)
+
+		#creo la lista di tutti i file e sottocartelle
+		list = ()
+		for root, dirs, files in os.walk(tmpDir):
+			for name in files:
+				list += (path.join(root, name).replace(tmpDir, ""), )
+			for name in dirs:
+				list += (path.join(root, name).replace(tmpDir, ""), )
+		
+		#rimuovo la cartella temporanea
+		shutil.rmtree(tmpDir)
+
+		return list
+
+
 	def exposed_showRepos(self):
 		"""ritorna la lista di repository sul server"""
 
@@ -194,13 +217,16 @@ class Server(rpyc.Service):
 		for changesetID in range(startChangeset, -1, -1):
 			changeset = branch.getChangeset(changesetID)
 
-			#prendo il changeset precedente (più recente) e verifico se è un changeset di backup
-			prevChangeset = branch.getChangeset(changesetID + 1) 
+			try:
+				#prendo il changeset precedente (più recente) e verifico se è un changeset di backup
+				prevChangeset = branch.getChangeset(changesetID + 1) 
 
-			#se il changeset precedente era un changeset di backup e non ho ancora trovato il file
-		    #vuol dire che il file non è presente sul server
-			if (prevChangeset.isBackup()):
-				raise Exception("File non trovato")
+				#se il changeset precedente era un changeset di backup e non ho ancora trovato il file
+				#vuol dire che il file non è presente sul server
+				if (prevChangeset.isBackup()):
+					raise Exception("File non trovato")
+			except:
+				pass
 
 			#ricavo il path del file sul server
 			serverFile = path.join(changeset.changesetDir, fileRelPath)

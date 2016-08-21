@@ -126,6 +126,13 @@ def getPathForPrint(path):
 	return path.replace("/", "\\")
 
 
+def getDate(dateStr):
+	"""ritorna un oggetto data da una stringa "dd/mm/YY HH:MM:SS" """
+
+	[day,month,year] = map(int, dateStr.split()[0].split('/'))
+	return datetime.date(year, month, day)
+
+
 def diff(file1, file2):
 	"""effettua un diff di due file"""
 
@@ -144,9 +151,3 @@ def diff(file1, file2):
 	#
 	#return changes
 
-
-def getDate(dateStr):
-	"""ritorna un oggetto data da una stringa "dd/mm/YY HH:MM:SS" """
-
-	[day,month,year] = map(int, dateStr.split()[0].split('/'))
-	return datetime.date(year, month, day)
