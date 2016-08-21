@@ -85,6 +85,11 @@ class Client:
 				self.checkCommand(commandList)
 				os.system("cls")
 
+			elif (command == "opendir"):
+				self.checkCommand(commandList)
+				os.system("explorer {}".format(self.getCurrPath()))
+				print()
+
 			elif (command == "currdir"):
 				self.checkCommand(commandList)
 				self.printCurrPath()
@@ -176,6 +181,7 @@ class Client:
 			elif (command == "winmerge"):
 				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
 				self.merge(commandList.pop())
+				print()
 
 			elif (command == "help"): 
 				self.checkCommand(commandList)
@@ -430,6 +436,9 @@ class Client:
 	def getSpecificVersion(self, changesetNum):
 		"""scarica una versione specifica e la copia nella cartella del branch"""
 
+		if (self.server.existsChangeset(self.getCurrRepo(), self.getCurrBranch(), changesetNum) == False):
+			raise Exception("Changeset non presente")
+
 		#chiedo all'utente se sovrascrivere la cartella
 		if (uti.askAndRemoveDir(self.getCurrPath(), ask=False)):
 			#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
@@ -449,9 +458,14 @@ class Client:
 			print("Lista dei file in modifica:")
 			for file in pendingList:
 				#prendo la data di ultima modifica del file
-				date = datetime.datetime.fromtimestamp(path.getmtime(file)).strftime("%Y-%m-%d %H:%M:%S")
+				localFileDate = datetime.datetime.fromtimestamp(path.getmtime(file)).strftime("%Y-%m-%d %H:%M:%S")
+
+				#prendo la data di ultima modifica del file sul server
+				serverFile = self.findFileOnServer(file)
+				serverFileDate = datetime.datetime.fromtimestamp(path.getmtime(serverFile)).strftime("%Y-%m-%d %H:%M:%S")
+
 				#stampo file e data ultima modifica
-				print("{} - {}".format(file.replace(self.getCurrPath(), ""), date))
+				print("{} - locale: {} - server: {}".format(file.replace(self.getCurrPath(), ""), localFileDate, serverFileDate))
 			print()
 
 	
@@ -545,7 +559,7 @@ class Client:
 		comment = input()
 		self.doCommit(tmpDir, comment)
 		self.delPendingFile(file)
-		print("File: {} aggiornato con successo.".format(fileName), end="\n\n")
+		print("File {} aggiornato con successo.".format(fileName), end="\n\n")
 
 
 	def commitAll(self):
@@ -595,7 +609,7 @@ class Client:
 		"""effettua il commit dei file contenuti in "sourceDir" su un nuovo changeset"""
 
 		#creo un nuovo changeset in cui copiare la cartella temporanea
-		changesetNum = self.server.addChangeset(sourceDir, comment)
+		changesetNum = self.server.addChangeset(self.getCurrRepo(), self.getCurrBranch(), sourceDir, comment)
 
 		#rimuovo la cartella temporanea
 		if (path.isdir(sourceDir)):
@@ -700,6 +714,7 @@ class Client:
 			  "> undo [file] - annulla le modifiche sul file \"file\"",
 			  "> undoall - annulla le modifiche su tutti i file in pending e scarica l'ultima versione",
 			  "> compare [file] - effettua un confronto fra il file \"file\" e la versione del server",
+			  "> opendir - apre la cartella corrente",
 			  "> clear - pulisce il terminale",
 			  "> help - stampa la guida", sep="\n", end="\n\n")
 
@@ -782,6 +797,9 @@ try:
 	
 	#lancio il client
 	Client(connection).runMenu()
+	
+	#chiudo la connesione
+	connection.close()
 
 except Exception as ex:
 	print("Si è verificato un errore: {}.".format(ex), "Il programma verrà terminato.", sep="\n", end="\n\n")

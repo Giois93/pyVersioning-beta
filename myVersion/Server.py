@@ -65,6 +65,22 @@ class Server(rpyc.Service):
 		self.mapBranch(repoName, branchName, destDir)
 
 
+	def exposed_addChangeset(self, repoName, branchName, sourceDir, comment):
+		"""aggiunge un changeset copiandoci il contenuto della sourceDir"""
+
+		return self.getRepo(repoName).getBranch(branchName).addChangeset(sourceDir, comment)
+		
+
+	def exposed_existsChangeset(self, repoName, branchName, changesetNum):
+		"""ritorna True se esiste il changeset "changesetNum" nel branch "branchName" """
+
+		try:
+			self.getRepo(repoName).getBranch(branchName).getChangeset(changesetNum)
+			return True
+		except:
+			return False
+
+
 	def exposed_showRepos(self):
 		"""ritorna la lista di repository sul server"""
 
@@ -94,12 +110,6 @@ class Server(rpyc.Service):
 
 		return self.getRepo(repoName).getBranch(branchName).getSpecificVersion(changesetNum, destDir)
 
-
-	def exposed_addChangeset(self, repoName, branchName, sourceDir, comment):
-		"""aggiunge un changeset copiandoci il contenuto della sourceDir"""
-
-		self.getRepo(repoName).getBranch(branchName).addChangeset(sourceDir, comment)
-		
 
 
 	def getRepoList(self):

@@ -28,7 +28,7 @@ class Branch:
 		self.addChangeset(sourceDir, "changeset_0", originalChangeset, True)
 
 
-	def addChangeset(self, sourceDir, comment, changesetNum = None, isBackup = False):
+	def addChangeset(self, sourceDir, comment, changesetNum=None, isBackup=False):
 		"""crea il prossimo changeset copiandoci la cartella sourceDir"""
 		
 		#controllo se è necessario creare un changeset di backup (ne viene fatto uno ogni giorno)
@@ -78,6 +78,9 @@ class Branch:
 
 	def getChangeset(self, changesetNum):
 		"""ritorna il changeset associato al "changesetNum" """
+
+		if (path.isdir(path.join(self.branchDir, str(changesetNum))) == False):
+			raise Exception("Changeset non presente")
 
 		return Changeset(path.join(self.branchDir, str(changesetNum)))
 
