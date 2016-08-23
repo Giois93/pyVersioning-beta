@@ -6,10 +6,10 @@ import difflib
 import datetime
 
 #costanti
-PENDING_FILE	= "pending.txt"
-BRANCH_FILE		= "branch.txt"
-CHANGESET_FILE	= "changeset.txt"
-LAST_RUN_FILE	= "lastrun.txt"
+LOCAL_VERSION_FILE	= "local.txt"
+BRANCH_FILE			= "branch.txt"
+CHANGESET_FILE		= "changeset.txt"
+LAST_RUN_FILE		= "lastrun.txt"
 
 
 def readFile(filePath):

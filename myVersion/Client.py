@@ -7,7 +7,7 @@ import filecmp
 import rpyc
 import inspect
 import uti
-from uti import PENDING_FILE
+from uti import LOCAL_VERSION_FILE
 from uti import CHANGESET_FILE
 from uti import LAST_RUN_FILE
 from Server import Server
@@ -34,7 +34,7 @@ class Client:
 				#setto il repository se memorizzato nel file
 				self.setCurrRepo(uti.readFileByTag("last_repo", self.getLastRunFile())[0])
 			except:
-				print("Impossibile effettuare l'operazione richiesta")
+				print("Impossibile effettuare l'operazione richiesta", end="\n\n")
 				self.setCurrPath(self.root)
 
 			try:
@@ -414,12 +414,17 @@ class Client:
 			try:
 				#se il branch esiste sul server, creo il branch sul client
 				#altrimenti viene generata un'eccezione
-				#scarico anche la LatestVersion di default
-				self.server.mapBranch(self.getCurrRepo(), branchName, clientDir)
+				branchDir = path.join(self.root, self.getCurrRepo(), branchName)
+				os.makedirs(branchDir)
+				
+				#setto il branch mappato come branch corrente di default
+				self.setBranch(branchName)
+
 				print("Branch mappato in:", clientDir, end = "\n\n")
 				
-				#setto anche il branch mappato come branch corrente di default
-				self.setBranch(branchName)
+				if (uti.askQuestion("Scaricare l'ultima versione?")):
+					self.getLatestVersion()
+				
 			except:
 				raise Exception("Branch {} non presente".format(branchName))
 
@@ -429,11 +434,11 @@ class Client:
 
 		if (self.existsRepo(repoName)):
 			repodir = path.join(self.root, repoName)
-			uti.askAndRemoveDir(repodir)
-			if (self.getCurrRepo() == repoName):
-				self.setCurrBranch("")
-				self.setCurrRepo("")
-				self.printCurrPath()
+			if (uti.askAndRemoveDir(repodir)):
+				if (self.getCurrRepo() == repoName):
+					self.setCurrBranch("")
+					self.setCurrRepo("")
+					self.printCurrPath()
 		else:
 			raise Exception("Repository {} non presente".format(repoName))
 
@@ -443,10 +448,10 @@ class Client:
 
 		if (self.existsBranch(branchName)):
 			branchdir = path.join(self.root, self.getCurrRepo(), branchName)
-			uti.askAndRemoveDir(branchdir)
-			if (self.getCurrBranch() == branchName):
-				self.setCurrBranch("")
-				self.printCurrPath()
+			if (uti.askAndRemoveDir(branchdir)):
+				if (self.getCurrBranch() == branchName):
+					self.setCurrBranch("")
+					self.printCurrPath()
 		else:
 			raise Exception("Branch {} non presente".format(branchName))
 
@@ -485,7 +490,7 @@ class Client:
 		if (uti.askAndRemoveDir(self.getCurrPath(), ask=False)):
 			#prendo la latestVersion da Repository e Branch corrente
 			lastChangesetNum = self.server.getLatestVersion(self.getCurrRepo(), self.getCurrBranch(), self.getCurrPath())
-			uti.writeFileByTag("last_changeset", lastChangesetNum, self.getPendingFile())
+			uti.writeFileByTag("last_changeset", lastChangesetNum, self.getLocalVersionFile())
 			print("Versione locale aggiornata con successo", end="\n\n")
 	
 	
@@ -499,7 +504,7 @@ class Client:
 		if (uti.askAndRemoveDir(self.getCurrPath(), ask=False)):
 			#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
 			self.server.getSpecificVersion(self.getCurrRepo(), self.getCurrBranch(), changesetNum, self.getCurrPath())
-			uti.writeFileByTag("last_changeset", changesetNum, self.getPendingFile())
+			uti.writeFileByTag("last_changeset", changesetNum, self.getLocalVersionFile())
 			print("Versione locale aggiornata con successo", end="\n\n")
 
 
@@ -521,24 +526,22 @@ class Client:
 				serverFileDate = datetime.datetime.fromtimestamp(path.getmtime(serverFile)).strftime("%Y-%m-%d %H:%M:%S")
 
 				#stampo file e data ultima modifica
-				print("{} - locale: {} - server: {}".format(file.replace(self.getCurrPath(), ""), localFileDate, serverFileDate))
+				print("{} ({}) - locale: {} - server: {}".format(file.replace(self.getCurrPath(), ""), pendingList[file], localFileDate, serverFileDate))
 			print()
 
 	
 	def getPendingChanges(self):
 		"""ritorna una lista dei file modificati in locale"""
 
-		#rimuovo i vecchi pending
-		if (path.isfile(self.getPendingFile())):
-			uti.removeByTag("file", self.getPendingFile())
-
 		#prendo la cartella corrente dal client
 		localRoot = self.getCurrPath()
 
 		#scorro tutti i file della cartella
+		#pendings = ()
+		pendings = {}
 		for dirPath, dirNames, files in os.walk(localRoot):
 			for fileName in files:
-				if (fileName != PENDING_FILE):
+				if (fileName != LOCAL_VERSION_FILE):
 					localFile = path.join(dirPath, fileName)
 					try:
 						#verifico se il file è fra quelli da escludere
@@ -552,47 +555,24 @@ class Client:
 						#se il file locale è stato modificato va aggiunto ai pending
 						if (int(path.getmtime(localFile)) > int(path.getmtime(serverFile))):
 							if (filecmp.cmp(localFile, serverFile) == False):
-								self.addPendingFile(localFile) #new
+								#pendings += (localFile,) #new
+								pendings[localFile] = "new"
 						elif(int(path.getmtime(localFile)) < int(path.getmtime(serverFile))):
 							if (filecmp.cmp(localFile, serverFile) == False):
-								self.addPendingFile(localFile) #old
+								#pendings += (localFile,) #old
+								pendings[localFile] = "old"
 
 					except:		
 						#se il file non viene trovato nel server vuol dire che è stato aggiunto in locale
-						self.addPendingFile(localFile) #add
+						#pendings += (localFile,) #add
+						pendings[localFile] = "add"
 
 					#TODO: manca #removed
 
 		#ritorno la lista dei pendig
-		return self.getPendingList()
+		return pendings
 
 
-	def addPendingFile(self, file):
-		"""aggiunge il file alla lista dei pending"""
-
-		uti.writeFile("file={}".format(file), self.getPendingFile())
-
-
-	def delPendingFile(self, file):
-		"""rimuove il file dalla lista dei pending"""
-
-		#prendo la stringa di tutto il file
-		fileStr = uti.readFile(self.getPendingFile())
-		#rimuovo il file dalla lista dei pending
-		fileStr.replace("file={}\n".format(file), "")
-		#sovrascrivo il file
-		uti.writeFile(fileStr, self.getPendingFile(), True)
-
-
-	def getPendingList(self):
-		"""legge il file dei pending e ritorna una lista dei file modificati"""
-
-		try:
-			return uti.readFileByTag("file", self.getPendingFile())
-		except:
-			return ()
-
-	
 	def isExcluded(self, file):
 		"""ritorna True se il file è da escludere dai pending"""
 
@@ -600,7 +580,7 @@ class Client:
 
 		#leggo le estensioni escluse
 		try:
-			excludedExt = uti.readFileByTag("ext_ignore", self.getPendingFile())
+			excludedExt = uti.readFileByTag("ext_ignore", self.getLocalVersionFile())
 		except:
 			excludedExt = ()
 
@@ -611,7 +591,7 @@ class Client:
 
 		#leggo la lista dei file da escludere
 		try:
-			excludedFiles = uti.readFileByTag("file_ignore", self.getPendingFile())
+			excludedFiles = uti.readFileByTag("file_ignore", self.getLocalVersionFile())
 		except:
 			excludedFiles = ()
 
@@ -626,7 +606,7 @@ class Client:
 	def excludeExtension(self, ext):
 		"""aggiunge l'estensione "ext" alla lista delle estensioni da escludere """
 
-		uti.writeFileByTag("ext_ignore", ".{}".format(ext), self.getPendingFile())
+		uti.writeFileByTag("ext_ignore", ".{}".format(ext), self.getLocalVersionFile())
 		print("Estensione *.{} esclusa.".format(ext), end="\n\n")
 		self.printPendingChanges()
 
@@ -634,7 +614,7 @@ class Client:
 	def includeExtension(self, ext):
 		"""rimuove l'esclusione sull'estensione "ext" """
 
-		uti.removeByTagAndVal("ext_ignore", ".{}".format(ext), self.getPendingFile())
+		uti.removeByTagAndVal("ext_ignore", ".{}".format(ext), self.getLocalVersionFile())
 		print("Estensione *.{} inclusa.".format(ext), end="\n\n")
 		self.printPendingChanges()
 
@@ -642,7 +622,7 @@ class Client:
 	def includeAllExtension(self):
 		"""rimuove tutte le esclusioni su estensioni"""
 
-		uti.removeByTag("ext_ignore", self.getPendingFile())
+		uti.removeByTag("ext_ignore", self.getLocalVersionFile())
 		print("Tutte le estensioni sono state incluse.", end="\n\n")
 		self.printPendingChanges()
 
@@ -651,7 +631,7 @@ class Client:
 		"""aggiunge il file alla lista dei file da escludere"""
 
 		file = self.findFileInPendings(fileName)
-		uti.writeFileByTag("file_ignore", file, self.getPendingFile())
+		uti.writeFileByTag("file_ignore", file, self.getLocalVersionFile())
 		print("File {} escluso.".format(fileName), end="\n\n")
 		self.printPendingChanges()
 
@@ -660,7 +640,7 @@ class Client:
 		"""rimuove l'esclusione sul file """
 		
 		#file = self.findFileInPendings(fileName)
-		uti.removeByTagAndVal("file_ignore", fileName, self.getPendingFile())
+		uti.removeByTagAndVal("file_ignore", fileName, self.getLocalVersionFile())
 		print("File {} incluso".format(fileName), end="\n\n")
 		self.printPendingChanges()
 
@@ -668,15 +648,15 @@ class Client:
 	def includeAllFile(self):
 		"""rimuove tutte le esclusioni su files"""
 
-		uti.removeByTag("file_ignore", self.getPendingFile())
+		uti.removeByTag("file_ignore", self.getLocalVersionFile())
 		print("Tutti i file sono stati inclusi.", end="\n\n")
 		self.printPendingChanges()
 
 	
 	def printExcluded(self):
 		"""stampa a video tutte le estensioni e file esclusi"""
-		excludedExt = uti.readFileByTag("ext_ignore", self.getPendingFile())
-		excludedFiles = uti.readFileByTag("file_ignore", self.getPendingFile())
+		excludedExt = uti.readFileByTag("ext_ignore", self.getLocalVersionFile())
+		excludedFiles = uti.readFileByTag("file_ignore", self.getLocalVersionFile())
 
 		if ((len(excludedExt) == 0) & (len(excludedFiles) == 0)):
 			raise Exception("Nessun file o estensione esclusi")
@@ -708,7 +688,6 @@ class Client:
 		print("Inserire un commento: ")
 		comment = input()
 		self.doCommit(tmpDir, comment)
-		#self.delPendingFile(file)
 		print("File {} aggiornato con successo.".format(fileName), end="\n\n")
 
 
@@ -765,7 +744,7 @@ class Client:
 		if (path.isdir(sourceDir)):
 			shutil.rmtree(sourceDir)
 		
-		uti.writeFileByTag("last_changeset", changesetNum, self.getPendingFile())
+		uti.writeFileByTag("last_changeset", changesetNum, self.getLocalVersionFile())
 
 
 	def undoFile(self, file):
@@ -775,7 +754,7 @@ class Client:
 			#prendo il file corrispondente dal server e lo sovrascrivo al file locale
 			filePath = self.findFileInPendings(file)
 			try:
-				originalChangeset = int(uti.readFileByTag("last_changeset", self.getPendingFile())[0])
+				originalChangeset = int(uti.readFileByTag("last_changeset", self.getLocalVersionFile())[0])
 				serverFile = self.findFileOnServer(filePath, originalChangeset)
 
 				if (uti.askQuestion("Questo comando annullerà le modifiche sul file {}, sei sicuro?".format(file))):
@@ -793,7 +772,7 @@ class Client:
 
 		if (uti.askQuestion("Questo comando cancellerà tutti i pending, sei sicuro?")):
 			print("Modifiche annullate.", end="\n\n")
-			self.getSpecificVersion(int(uti.readFileByTag("last_changeset", self.getPendingFile())[0]))
+			self.getSpecificVersion(int(uti.readFileByTag("last_changeset", self.getLocalVersionFile())[0]))
 		
 
 	def compare(self, localFile):
@@ -911,10 +890,10 @@ class Client:
 		return self.currBranch
 
 
-	def getPendingFile(self):
+	def getLocalVersionFile(self):
 		"""ritorna il file dei pending nel branch corrente"""
 
-		return path.join(self.getCurrPath(), PENDING_FILE)
+		return path.join(self.getCurrPath(), LOCAL_VERSION_FILE)
 
 	
 	def getLastRunFile(self):
