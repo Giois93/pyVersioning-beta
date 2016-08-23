@@ -126,8 +126,16 @@ class Branch:
 			except:
 				comment = ""
 
+			#prendo una lista di tutti i file modificati in questo changeset
+			changes = ""
+			for elem in uti.listDir(dirPath):
+				if (path.basename(elem) == "changeset.txt"):
+					continue
+				changes += "{}\n".format(uti.getPathForPrint(elem))
+
+
 			#aggiungo il changeset e le sue statistiche
-			results += ("{} - {} - {} ".format(dir, str(date), comment), )
+			results += ("{} - {} - {} \n{}".format(dir, str(date), comment, changes), )
 
 		return results
 

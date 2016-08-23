@@ -2,6 +2,7 @@ import os
 import os.path as path
 import shutil
 import rpyc
+import uti
 from rpyc.utils.server import ThreadedServer
 from Repository import Repository
 
@@ -11,7 +12,7 @@ from Repository import Repository
 class Server(rpyc.Service):
 
 	#attributi
-	myRoot = "C:\my\myServer"
+	root = "C:\pyV\pyVServer"
 
 	### Client-Server ###
 
@@ -90,14 +91,8 @@ class Server(rpyc.Service):
 		#scarico l'ultima versione in una cartella temporanea
 		branch.getLatestVersion(tmpDir)
 
-		#creo la lista di tutti i file e sottocartelle
-		list = ()
-		for root, dirs, files in os.walk(tmpDir):
-			for name in files:
-				list += (path.join(root, name).replace(tmpDir, ""), )
-			for name in dirs:
-				list += (path.join(root, name).replace(tmpDir, ""), )
-		
+		list = uti.listDir(tmpDir)
+				
 		#rimuovo la cartella temporanea
 		shutil.rmtree(tmpDir)
 
@@ -140,14 +135,14 @@ class Server(rpyc.Service):
 
 		#prendo il contenuto della root
 		#seleziono solo le cartelle (i repository)
-		return [name for name in os.listdir(self.myRoot) 
-						if path.isdir(path.join(self.myRoot, name))]
+		return [name for name in os.listdir(self.root) 
+						if path.isdir(path.join(self.root, name))]
 
 
 	def existsRepo(self, repoName):
 		"""ritorna True se il repository è presente sul disco, False altrimenti"""
 
-		if (path.isdir(path.join(self.myRoot, repoName))):
+		if (path.isdir(path.join(self.root, repoName))):
 			return True;
 
 		return False;
@@ -157,7 +152,7 @@ class Server(rpyc.Service):
 		"""ritorna il repository "repoName", se non esiste solleva un'eccezione"""
 		
 		if (self.existsRepo(repoName)):
-			return Repository(path.join(self.myRoot, repoName))
+			return Repository(path.join(self.root, repoName))
 
 		raise Exception("Il repository non esiste.");
 
@@ -173,7 +168,7 @@ class Server(rpyc.Service):
 			repoName = path.basename(sourceDir)
 
 		#creo un oggetto repository
-		repo = Repository(path.join(self.myRoot, repoName))
+		repo = Repository(path.join(self.root, repoName))
 
 		#creo un repository sul disco
 		#se già presente sollevo un'eccezione
@@ -189,7 +184,7 @@ class Server(rpyc.Service):
 		"""rimuove un repository"""
 
 		if (self.existsRepo(repoName)):
-			shutil.rmtree(path.join(self.myRoot, repoName))
+			shutil.rmtree(path.join(self.root, repoName))
 
 
 	def mapBranch(self, repoName, branchName, destDir):
@@ -240,7 +235,7 @@ class Server(rpyc.Service):
 
 ### Main ###
 if __name__ == "__main__":
-	print("Benvenuto su MyVersion (Server)")
+	print("Benvenuto su pyVersioning (Server) - Beta")
 	print("Avvio servizio in corso...")
 	server = ThreadedServer(Server, port = 18812)
 	print("Server attivo.")	

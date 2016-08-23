@@ -14,7 +14,7 @@ from Server import Server
 
 class Client:
 	
-	myRoot = ""
+	root = ""
 	currPath = ""
 	currRepo = ""
 	currBranch = ""
@@ -23,7 +23,7 @@ class Client:
 	def __init__(self, connection):
 
 		#setto il path della cartella root
-		self.myRoot = "C:\my\myclient"
+		self.root = "C:\pyV\pyVclient"
 
 		#setto il riferimento alla connesione con il server
 		self.server = connection.root
@@ -35,7 +35,7 @@ class Client:
 				self.setCurrRepo(uti.readFileByTag("last_repo", self.getLastRunFile())[0])
 			except:
 				print("Impossibile effettuare l'operazione richiesta")
-				self.setCurrPath(self.myRoot)
+				self.setCurrPath(self.root)
 
 			try:
 				#setto il branch se memorizzato nel file
@@ -43,7 +43,7 @@ class Client:
 			except:
 				pass
 		else:
-			self.setCurrPath(self.myRoot)
+			self.setCurrPath(self.root)
 
 
 	def runMenu(self):
@@ -161,6 +161,34 @@ class Client:
 			elif (command == "pending"): 
 				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
 				self.printPendingChanges()
+				
+			elif (command == "excludeextension"): 
+				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
+				self.excludeExtension(commandList.pop())
+				
+			elif (command == "excludefile"): 
+				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
+				self.excludeFile(commandList.pop())
+
+			elif (command == "includeextension"):
+				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
+				self.includeExtension(commandList.pop())
+
+			elif (command == "includeallextensions"):
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				self.includeAllExtension()
+
+			elif (command == "includefile"):
+				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
+				self.includeFile(commandList.pop())
+
+			elif (command == "includeallfiles"):
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				self.includeAllFile()
+
+			elif (command == "printexcluded"):
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				self.printExcluded()
 
 			elif (command == "commit"): 
 				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
@@ -172,7 +200,10 @@ class Client:
 
 			elif (command == "undo"): 
 				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
-				self.undoFile(commandList.pop())
+				try:
+					self.undoFile(commandList.pop())
+				except:
+					self.printPendingChanges()
 
 			elif (command == "undoall"): 
 				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
@@ -180,11 +211,17 @@ class Client:
 			
 			elif (command == "compare"):
 				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
-				self.compare(commandList.pop())
+				try:
+					self.compare(commandList.pop())
+				except:
+					self.printPendingChanges()
 			
 			elif (command == "winmerge"):
 				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
-				self.merge(commandList.pop())
+				try:
+					self.merge(commandList.pop())
+				except:
+					self.printPendingChanges()
 				print()
 
 			elif (command == "help"): 
@@ -213,7 +250,7 @@ class Client:
 		"""ritorna True se esiste il repository "repoName" """
 
 		#ottengo la cartella del repository
-		repoDir = path.join(self.myRoot, repoName)
+		repoDir = path.join(self.root, repoName)
 		#verifico che la cartella esista
 		return path.isdir(repoDir)
 		
@@ -222,7 +259,7 @@ class Client:
 		"""ritorna True se esiste il branch "branchName" """
 
 		#ottengo la cartella del branch
-		branchDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
+		branchDir = path.join(self.root, self.getCurrRepo(), branchName)
 		#verifico che la cartella esista
 		return path.isdir(branchDir)
 
@@ -304,7 +341,7 @@ class Client:
 	def showRepos(self):
 		"""mostra la lista dei repository presenti sul server"""
 
-		print("\nRepositories sul server di MyVersion")
+		print("\nRepositories sul server di pyVersioning")
 	
 		for repoName in self.server.showRepos():
 			#verifico che la cartella esista in locale
@@ -334,14 +371,13 @@ class Client:
 		print("\nChangeset del branch {}:".format(self.getCurrBranch()))
 		for changeSet in self.server.showChangesets(self.getCurrRepo(), self.getCurrBranch()):
 			print("- {}".format(changeSet))
-		print()
 
 
 	def mapRepo(self, repoName):
 		"""mappa il repository nella cartella del client"""
 
 		#ottengo il path del repository
-		clientDir = path.join(self.myRoot, repoName)
+		clientDir = path.join(self.root, repoName)
 
 		#chiedo all'utente se sovrascrivere la cartella
 		if (uti.askAndRemoveDir(clientDir, askOverride=True)):
@@ -363,7 +399,7 @@ class Client:
 		"""mappa il branch nella cartella del client"""
 
 		#ottengo il path del branch
-		clientDir = path.join(self.myRoot, self.getCurrRepo(), branchName)
+		clientDir = path.join(self.root, self.getCurrRepo(), branchName)
 
 		#chiedo all'utente se sovrascrivere la cartella
 		if (uti.askAndRemoveDir(clientDir, askOverride=True)):
@@ -385,7 +421,7 @@ class Client:
 		"""rimuove la cartella del repo sul client"""
 
 		if (self.existsRepo(repoName)):
-			repodir = path.join(self.myRoot, repoName)
+			repodir = path.join(self.root, repoName)
 			uti.askAndRemoveDir(repodir)
 			if (self.getCurrRepo() == repoName):
 				self.setCurrBranch("")
@@ -399,7 +435,7 @@ class Client:
 		"""rimuove la cartella del branch sul client"""
 
 		if (self.existsBranch(branchName)):
-			branchdir = path.join(self.myRoot, self.getCurrRepo(), branchName)
+			branchdir = path.join(self.root, self.getCurrRepo(), branchName)
 			uti.askAndRemoveDir(branchdir)
 			if (self.getCurrBranch() == branchName):
 				self.setCurrBranch("")
@@ -486,17 +522,9 @@ class Client:
 	def getPendingChanges(self):
 		"""ritorna una lista dei file modificati in locale"""
 
-		#rimuovo il file dei pending vecchio
+		#rimuovo i vecchi pending
 		if (path.isfile(self.getPendingFile())):
-			try:
-				#memorizzo il changeset originale
-				originalChangeset = int(uti.readFileByTag("last_changeset", self.getPendingFile())[0])
-				#rimuovo il file
-				os.remove(self.getPendingFile())
-				#scrivo il file e ci copio il changeset originale
-				uti.writeFileByTag("last_changeset", originalChangeset, self.getPendingFile())
-			except:
-				raise Exception("Errore: file {} corrotto o non presente".format(PENDING_FILE))
+			uti.removeByTag("file", self.getPendingFile())
 
 		#prendo la cartella corrente dal client
 		localRoot = self.getCurrPath()
@@ -507,6 +535,10 @@ class Client:
 				if (fileName != PENDING_FILE):
 					localFile = path.join(dirPath, fileName)
 					try:
+						#verifico se il file è fra quelli da escludere
+						if (self.isExcluded(localFile)):
+							continue
+
 						#cerco sul server il file corrispondente al localFile 
 						#(cerco sempre a partire dall'ultima versione così da segnalare anche file vecchi)
 						serverFile = self.findFileOnServer(localFile)
@@ -514,15 +546,17 @@ class Client:
 						#se il file locale è stato modificato va aggiunto ai pending
 						if (int(path.getmtime(localFile)) > int(path.getmtime(serverFile))):
 							if (filecmp.cmp(localFile, serverFile) == False):
-								self.addPendingFile(localFile)
+								self.addPendingFile(localFile) #new
 						elif(int(path.getmtime(localFile)) < int(path.getmtime(serverFile))):
 							if (filecmp.cmp(localFile, serverFile) == False):
-								self.addPendingFile(localFile)
+								self.addPendingFile(localFile) #old
 
 					except:		
 						#se il file non viene trovato nel server vuol dire che è stato aggiunto in locale
-						self.addPendingFile(localFile)
-		
+						self.addPendingFile(localFile) #add
+
+					#TODO: manca #removed
+
 		#ritorno la lista dei pendig
 		return self.getPendingList()
 
@@ -552,6 +586,102 @@ class Client:
 		except:
 			return ()
 
+	
+	def isExcluded(self, file):
+		"""ritorna True se il file è da escludere dai pending"""
+
+		fileName, fileExtension = path.splitext(file)
+
+		#leggo le estensioni escluse
+		try:
+			excludedExt = uti.readFileByTag("ext_ignore", self.getPendingFile())
+		except:
+			excludedExt = ()
+
+		#se l'estensione del file è fra quelle da escludere ritorno True
+		for ext in excludedExt:
+			if (fileExtension == ext):
+				return True
+
+		#leggo la lista dei file da escludere
+		try:
+			excludedFiles = uti.readFileByTag("file_ignore", self.getPendingFile())
+		except:
+			excludedFiles = ()
+
+		#se il file è fra quellei da escludere ritorno True
+		for exludedFile in excludedFiles:
+			if (file == exludedFile):
+				return True
+
+		return False
+	
+
+	def excludeExtension(self, ext):
+		"""aggiunge l'estensione "ext" alla lista delle estensioni da escludere """
+
+		uti.writeFileByTag("ext_ignore", ".{}".format(ext), self.getPendingFile())
+		print("Estensione *.{} esclusa.".format(ext), end="\n\n")
+		self.printPendingChanges()
+
+
+	def includeExtension(self, ext):
+		"""rimuove l'esclusione sull'estensione "ext" """
+
+		uti.removeByTagAndVal("ext_ignore", ".{}".format(ext), self.getPendingFile())
+		print("Estensione *.{} inclusa.".format(ext), end="\n\n")
+		self.printPendingChanges()
+
+
+	def includeAllExtension(self):
+		"""rimuove tutte le esclusioni su estensioni"""
+
+		uti.removeByTag("ext_ignore", self.getPendingFile())
+		print("Tutte le estensioni sono state incluse.", end="\n\n")
+		self.printPendingChanges()
+
+
+	def excludeFile(self, fileName):
+		"""aggiunge il file alla lista dei file da escludere"""
+
+		file = self.findFileInPendings(fileName)
+		uti.writeFileByTag("file_ignore", file, self.getPendingFile())
+		print("File {} escluso.".format(fileName), end="\n\n")
+		self.printPendingChanges()
+
+
+	def includeFile(self, fileName):
+		"""rimuove l'esclusione sul file """
+		
+		#file = self.findFileInPendings(fileName)
+		uti.removeByTagAndVal("file_ignore", fileName, self.getPendingFile())
+		print("File {} incluso".format(fileName), end="\n\n")
+		self.printPendingChanges()
+
+
+	def includeAllFile(self):
+		"""rimuove tutte le esclusioni su files"""
+
+		uti.removeByTag("file_ignore", self.getPendingFile())
+		print("Tutti i file sono stati inclusi.", end="\n\n")
+		self.printPendingChanges()
+
+	
+	def printExcluded(self):
+		"""stampa a video tutte le estensioni e file esclusi"""
+		excludedExt = uti.readFileByTag("ext_ignore", self.getPendingFile())
+		excludedFiles = uti.readFileByTag("file_ignore", self.getPendingFile())
+
+		if ((len(excludedExt) == 0) & (len(excludedFiles) == 0)):
+			raise Exception("Nessun file o estensione esclusi")
+
+		for ext in excludedExt:
+			print("*{}".format(ext))
+
+		for file in	excludedFiles:
+			print(file)
+		print()
+
 
 	def commitOne(self, fileName):
 		"""crea un nuovo changeset con le modifiche del solo file "fileName" """
@@ -572,7 +702,7 @@ class Client:
 		print("Inserire un commento: ")
 		comment = input()
 		self.doCommit(tmpDir, comment)
-		self.delPendingFile(file)
+		#self.delPendingFile(file)
 		print("File {} aggiornato con successo.".format(fileName), end="\n\n")
 
 
@@ -649,8 +779,7 @@ class Client:
 				os.remove(file)
 			print("Modifiche annullate.", end="\n\n")
 		except:
-			print("File non trovato.", end="\n\n")
-			self.printPendingChanges()
+			raise Exception("File non presente in pending.")
 
 
 	def undoAll(self):
@@ -669,7 +798,6 @@ class Client:
 			
 		except:
 			raise Exception("File non presente in pending")
-			self.printPendingChanges()
 
 		try:
 			serverFile = self.findFileOnServer(pendingFile)
@@ -687,7 +815,6 @@ class Client:
 			pendingFile = self.findFileInPendings(localFile)
 		except:
 			raise Exception("File non presente in pending")
-			self.printPendingChanges()
 		
 		try:
 			serverFile = self.findFileOnServer(pendingFile)
@@ -704,8 +831,6 @@ class Client:
 
 	def printHelp(self):
 		"""stampa una lista di comandi con descrizione"""
-
-
 		print("> exit - chiude il programma",
 			  "> repolist - stampa la lista dei repositories presenti sul server",
 			  "> branchlist - stampa una lista dei branchs presenti sul repository corrente sul server",
@@ -725,6 +850,13 @@ class Client:
 			  "> getlatest - scarica la versione più recente del branch corrente",
 			  "> getspecific [changeset] - scarica la versione specificata in \"changeset\" del branch corrente",
 			  "> pending - stampa una lista dei file modificati in locale",
+			  "> excludeExtension [ext] - esclude tutti i file .[ext] dai file in modifica",
+			  "> excludeFile [file] - esclude il file \"file\" dai file in modifica", 
+			  "> includeExtension [ext] - include l'estensione se precedentemente esclusa",
+			  "> includeAllExtensions - include tutte le estensioni precedentemente escluse",
+			  "> includeFile [file] - include il file se precedentemente escluso",
+			  "> includeAllFiles - include tutti i file precedentemente esclusi",
+			  "> printExcluded - stampa la lista di estensioni file esclusi",
 			  "> commit [file] [comment] - effettua il commit del file \"file\" associando il commento \"comment\"",
 			  "> commitall [comment] - effettua il commit di tutti i file in pending associando il commento \"comment\"",
 			  "> undo [file] - annulla le modifiche sul file \"file\"",
@@ -745,14 +877,14 @@ class Client:
 		"""setta il repository selezionato"""
 
 		self.currRepo = repoName
-		self.setCurrPath(path.join(self.myRoot, repoName))
+		self.setCurrPath(path.join(self.root, repoName))
 
 
 	def setCurrBranch(self, branchName):
 		"""setta il branch selezionato"""
 
 		self.currBranch = branchName
-		self.setCurrPath(path.join(self.myRoot, self.getCurrRepo(), branchName))
+		self.setCurrPath(path.join(self.root, self.getCurrRepo(), branchName))
 
 
 	def getCurrPath(self):
@@ -782,7 +914,7 @@ class Client:
 	def getLastRunFile(self):
 		"""ritorna il file dell'ultimo run"""
 
-		return path.join(self.myRoot, LAST_RUN_FILE)
+		return path.join(self.root, LAST_RUN_FILE)
 
 
 	def findFileOnServer(self, localFile, startChangeset=None): 
@@ -807,7 +939,7 @@ class Client:
 
 try:
 	#connetto client e server
-	print("Benvenuto in MyVersion", "Connessione al server...", sep="\n")
+	print("Benvenuto in pyVersioning - Beta", "Connessione al server...", sep="\n")
 	connection = rpyc.connect("localhost", 18812)
 	print("Connessione stabilita.", end="\n\n")
 	

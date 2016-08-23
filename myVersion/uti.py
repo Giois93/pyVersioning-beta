@@ -1,3 +1,4 @@
+import os
 import os.path as path
 import shutil
 import re
@@ -34,17 +35,20 @@ def readFileByTag(tag, filePath):
 		raise	
 
 
-def writeFile(string, filePath, append = True):
+def writeFile(string, filePath, append=True):
 	"""scrive sul file in append o in sovrascrittura"""
 
 	#apro il file
 	if (append): 
 		file = open(filePath, "a")
+		
+		#scrivo la stringa nel file (cancello righe bianche)
+		print(string, file=file)
+		#elimino le righe bianche
+		writeFile(readFile(filePath).replace("\n", ""), filePath, False)
 	else: 
 		file = open(filePath, "w")
-		
-	#scrivo la stringa nel file
-	print(string, file=file)
+		print(string, file=file)
 
 	#chiudo il file
 	file.close()
@@ -73,6 +77,21 @@ def writeFileByTag(tag, value, filePath):
 	except:
 		#se non ho trovato il tag lo aggiungo
 		writeFile("{}={}".format(tag, str(value)), filePath)
+
+
+
+def removeByTag(tag, filePath):
+	"""cancella la riga contenente il tag dal file filePath"""
+
+	newFileStr = re.sub("{}=(.*)".format(tag), "", readFile(filePath))
+	writeFile(newFileStr, filePath, False)
+
+
+def removeByTagAndVal(tag, value, filePath):
+	"""cancella la riga dal file "filePath" """
+	
+	newFileStr = re.sub("{}=(.*){}(.*)\n".format(tag, value), "", readFile(filePath))
+	writeFile(newFileStr, filePath, False)
 
 
 def askAndRemoveDir(dir, ask=True, askOverride=False):
@@ -118,6 +137,20 @@ def askQuestion(question):
 				return False
 		finally:
 			print()
+
+
+def listDir(dir):
+	"""ritorna tutti i file e sottocartelle della dir selezionata"""
+		
+	#creo la lista di tutti i file e sottocartelle
+	list = ()
+	for root, dirs, files in os.walk(dir):
+		for fileName in files:
+			list += (path.join(root, fileName).replace(dir, ""), )
+		for dirName in dirs:
+			list += (path.join(root, dirName).replace(dir, ""), )
+		
+	return list
 
 
 def getPathForPrint(path):
