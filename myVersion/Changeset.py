@@ -21,11 +21,13 @@ class Changeset:
 
 		#copio il contenuto della sourceDir nella cartella del nuovo changeset
 		dir_uti.copy_tree(sourceDir, self.changesetDir)
+
 		#elimino il vecchio file se sto facendo una copia del changeset
-		try:
-			os.remove(self.changesetTxt)
-		except: 
-			pass
+		if (isBackup):
+			try:
+				os.remove(self.changesetTxt)
+			except: 
+				pass
 
 		#scrivo il file del nuovo changeset
 		#scrivo se il changeset è un backup

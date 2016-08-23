@@ -41,14 +41,11 @@ def writeFile(string, filePath, append=True):
 	#apro il file
 	if (append): 
 		file = open(filePath, "a")
-		
-		#scrivo la stringa nel file (cancello righe bianche)
-		print(string, file=file)
-		#elimino le righe bianche
-		writeFile(readFile(filePath).replace("\n", ""), filePath, False)
 	else: 
 		file = open(filePath, "w")
-		print(string, file=file)
+
+	#scrivo la stringa nel file (cancello righe bianche)
+	print(string, file=file)
 
 	#chiudo il file
 	file.close()

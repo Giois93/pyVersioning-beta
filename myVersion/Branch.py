@@ -116,24 +116,30 @@ class Branch:
 		#ritorno una tupla di "chageset - data creazione - commento"
 		results = ()
 		for dir in natsort.natsorted(dirs):
+			changeset = self.getChangeset(int(dir))
 			#prendo il path della cartella del changeset
 			dirPath = path.join(self.branchDir, dir)
 			#prendo la data di creazione del changeset
-			date = datetime.datetime.fromtimestamp(path.getctime(dirPath)).strftime("%Y-%m-%d %H:%M:%S")
+			date = datetime.datetime.fromtimestamp(path.getctime(changeset.changesetDir)).strftime("%Y-%m-%d %H:%M:%S")
 			
 			try:
 				#prendo il commento dal file del changeset
-				comment = uti.readFileByTag("comment", self.getChangeset(int(dir)).changesetTxt)[0]
+				comment = uti.readFileByTag("comment", changeset.changesetTxt)[0]
 			except:
 				comment = ""
 
 			#prendo una lista di tutti i file modificati in questo changeset
 			changes = ""
-			for elem in uti.listDir(dirPath):
+			for elem in uti.listDir(changeset.changesetDir):
 				if (path.basename(elem) == "changeset.txt"):
 					continue
-				changes += "{}\n".format(uti.getPathForPrint(elem))
-
+				
+				#scrivo il file modificato in questo changeset
+				try:
+					tag = uti.readFileByTag("file_{}".format(elem.replace("\\", "")), changeset.changesetTxt)[0]
+					changes += "{} ({})\n".format(uti.getPathForPrint(elem), tag)
+				except:
+					changes += "{}\n".format(uti.getPathForPrint(elem))
 
 			#aggiungo il changeset e le sue statistiche
 			results += ("{} - {} - {} \n{}".format(dir, str(date), comment, changes), )

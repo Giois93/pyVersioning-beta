@@ -298,6 +298,7 @@ class Client:
 		self.server.addRepo(sourceDir, repoName)
 		print("Repository {} creato con successo.".format(repoName), end="\n\n")
 		self.mapRepo(repoName)
+		self.mapBranch("trunk")
 
 	
 	def createBranch(self, branchName):
@@ -556,7 +557,7 @@ class Client:
 						if (int(path.getmtime(localFile)) > int(path.getmtime(serverFile))):
 							if (filecmp.cmp(localFile, serverFile) == False):
 								#pendings += (localFile,) #new
-								pendings[localFile] = "new"
+								pendings[localFile] = "edit"
 						elif(int(path.getmtime(localFile)) < int(path.getmtime(serverFile))):
 							if (filecmp.cmp(localFile, serverFile) == False):
 								#pendings += (localFile,) #old
@@ -706,7 +707,7 @@ class Client:
 
 		#aggiungo ai pending tutti i file diversi dalla versione del server
 		for file in pendingList:
-			self.addForCommit(file, tmpDir)
+			self.addForCommit(file, pendingList[file], tmpDir)
 
 		#effettuo il commit
 		print("Inserire un commento: ")
@@ -720,7 +721,7 @@ class Client:
 			self.getLatestVersion()
 
 
-	def addForCommit(self, file, tmpDir):
+	def addForCommit(self, file, tag, tmpDir):
 		"""aggiunge un file alla cartella temporanea dei file da committare"""
 
 		#copio il file nella cartella temporanea (creo le cartelle se non presenti)
@@ -732,7 +733,10 @@ class Client:
 
 		#copio il file
 		shutil.copy2(file, tmpFileDir)
-		
+
+		#inserisco il tag nel file changeset.txt
+		uti.writeFileByTag("file_{}".format(file.replace(self.getCurrPath()+"\\", "")), tag, path.join(tmpDir, "changeset.txt"))
+
 
 	def doCommit(self, sourceDir, comment):
 		"""effettua il commit dei file contenuti in "sourceDir" su un nuovo changeset"""
