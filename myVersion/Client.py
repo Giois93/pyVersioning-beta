@@ -158,6 +158,11 @@ class Client:
 				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
 				self.getSpecificVersion(int(commandList.pop()))
 
+			elif (command == "rollback"):
+				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
+				self.getSpecificVersion(int(commandList.pop()))
+				self.commitAll()
+
 			elif (command == "pending"): 
 				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
 				self.printPendingChanges()
@@ -223,6 +228,8 @@ class Client:
 				except:
 					self.printPendingChanges()
 				print()
+
+
 
 			elif (command == "help"): 
 				self.checkCommand(commandList)
@@ -480,7 +487,6 @@ class Client:
 			lastChangesetNum = self.server.getLatestVersion(self.getCurrRepo(), self.getCurrBranch(), self.getCurrPath())
 			uti.writeFileByTag("last_changeset", lastChangesetNum, self.getPendingFile())
 			print("Versione locale aggiornata con successo", end="\n\n")
-
 	
 	
 	def getSpecificVersion(self, changesetNum):

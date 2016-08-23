@@ -3,6 +3,7 @@ import os.path as path
 import shutil
 import distutils.dir_util as dir_uti
 import datetime
+import natsort
 import uti
 from uti import BRANCH_FILE
 from uti import CHANGESET_FILE
@@ -114,7 +115,7 @@ class Branch:
 		
 		#ritorno una tupla di "chageset - data creazione - commento"
 		results = ()
-		for dir in dirs:
+		for dir in natsort.natsorted(dirs):
 			#prendo il path della cartella del changeset
 			dirPath = path.join(self.branchDir, dir)
 			#prendo la data di creazione del changeset
@@ -159,10 +160,7 @@ class Branch:
 		currChangeset = self.getLastBackupChangeset(changesetNum)
 
 		#copio tutto il changeset di backup nella cartella provvisoria
-		try:
-			shutil.copytree(currChangeset.changesetDir, destDir)
-		except Exception as ex:
-			print(ex)
+		shutil.copytree(currChangeset.changesetDir, destDir)
 
 		#scorro tutti i changeset successivi e copio i file presenti nella cartella temporanea
 		for changesetID in range(int(path.basename(currChangeset.changesetDir)) + 1, changesetNum + 1):
