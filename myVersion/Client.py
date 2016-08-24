@@ -95,7 +95,7 @@ class Client:
 				self.printCurrPath()
 
 			elif (command == "listdir"):
-				self.checkCommand(commandList)
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
 				self.listDir()
 
 			elif (command == "createrepo"):
