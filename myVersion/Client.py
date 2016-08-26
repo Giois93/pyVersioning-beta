@@ -10,7 +10,6 @@ import uti
 from uti import LOCAL_VERSION_FILE
 from uti import CHANGESET_FILE
 from uti import LAST_RUN_FILE
-from Server import Server
 
 class Client:
 	
@@ -928,8 +927,11 @@ class Client:
 
 try:
 	#connetto client e server
-	print("Benvenuto in pyVersioning - Beta", "Connessione al server...", sep="\n")
-	connection = rpyc.connect("localhost", 18812)
+	print("Benvenuto in pyVersioning - Beta")
+	print("Digitare l'ip del server (\"localhost\" per un server locale):")
+	host = input()
+	print("Connessione al server...", sep="\n")
+	connection = rpyc.connect(host, 18812)
 	print("Connessione stabilita.", end="\n\n")
 	
 	#lancio il client
