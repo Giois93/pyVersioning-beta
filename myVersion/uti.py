@@ -4,6 +4,7 @@ import shutil
 import re
 import difflib
 import datetime
+import socket               
 
 #costanti
 LOCAL_VERSION_FILE	= "local.txt"
@@ -11,6 +12,7 @@ BRANCH_FILE			= "branch.txt"
 CHANGESET_FILE		= "changeset.txt"
 LAST_RUN_FILE		= "lastrun.txt"
 
+###utilities lettura e scrittura su file###
 
 def readFile(filePath):
 	"""legge l'intero file in una stringa"""
@@ -76,7 +78,6 @@ def writeFileByTag(tag, value, filePath):
 		writeFile("{}={}".format(tag, str(value)), filePath)
 
 
-
 def removeByTag(tag, filePath):
 	"""cancella la riga contenente il tag dal file filePath"""
 
@@ -90,6 +91,97 @@ def removeByTagAndVal(tag, value, filePath):
 	newFileStr = re.sub("{}=(.*){}(.*)\n".format(tag, value), "", readFile(filePath))
 	writeFile(newFileStr, filePath, False)
 
+
+###utilities lettura e scrittura tramite socket###
+
+def sendBySocket(dest, port, toSendPath):
+	""" invia tramite socket il file "toSendPath" o i file contenuti nella directory se "toSendPath" è una directory"""
+	
+	#creo una socket con il ricevente
+	sock = socket.socket() 
+	sock.connect(dest, port)
+
+	#invio il file o directory
+	if (path.isdir(toSendPath)):
+		sendDirBySocket(sock, toSendPath)
+	elif (path.isfile(toSendPath)):
+		sendFileBySocket(sock, toSendPath)
+	else:
+		raise Exception("Path non valido")
+
+	#chiudo la socket
+	sock.send("pyVCLOSE")
+	sock.shutdown(socket.SHUT_WR)
+	sock.close()
+
+
+def sendDirBySocket(sock, dirPath):
+	"""invia tutti i file in una directory via socket """
+
+	for dir, dirNames, files in os.walk(dirPath):
+		for fileName in files:
+			sendFileBySocket(sock, path.join(dir, fileName))
+
+
+def sendFileBySocket(sock, filePath):#TODO: il path non può essere assoluto, deve essere relativo
+	"""invia il file "filePath" tramite la socket "sock" """
+	
+	#invio il path del file da scrivere
+	sock.send(filePath)
+	#apro il file da copiare
+	file = open(filePath,"rb")
+
+	#invio il file
+	while (True):
+		line = file.read(1024)
+		if (not line): 
+			break
+		sock.send(line)
+
+	file.close()
+
+
+def receiveBySocket(sender, port):
+	"""riceve e scrive il file "filePath" tramite la socket "sock" """
+
+	#creo una socket con il mittente e attedo
+	sock = socket.socket()
+	sock.bind(sender, port)
+	sock.listen(5)
+
+	#creo la connesione
+	connection, addr = sock.accept()
+
+	while (True):
+
+		#acquisisco lo stream 
+		msg = connection.recv(1024)
+		
+		#se ricevo un comando di chiusura interrompo la scrittura
+		if (data == "pyVCLOSE"):
+			break
+		else:
+			filePath = msg #TODO: il path non può essere assoluto, deve essere relativo
+
+		#apro il file da scrivere
+		file = open(filePath, "wb") #TODO prima devo assicurarmi che esista il basepath delle cartelle
+
+		#scrivo il file
+		while (True):
+			line = connection.recv(1024)
+			if not line:
+				break
+
+			file.write(line)
+
+		file.close()
+
+	sock.shutdown(socket.SHUT_RD)
+	sock.close()
+	connection.close()
+
+
+###utilities per formulare richieste###
 
 def askAndRemoveDir(dir, ask=True, askOverride=False):
 	"""chiede all'utente se rimuovere/sovrascrivere la cartella "dir" ed eventualmente la rimuove"""
@@ -135,6 +227,8 @@ def askQuestion(question):
 		finally:
 			print()
 
+
+###utilies varie###
 
 def listDir(dir):
 	"""ritorna tutti i file e sottocartelle della dir selezionata"""
