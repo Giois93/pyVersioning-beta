@@ -7,6 +7,11 @@ import natsort
 import uti
 from uti import BRANCH_FILE
 from uti import CHANGESET_FILE
+from uti import TMP_DIR
+from uti import EDIT
+from uti import OLD
+from uti import ADD
+from uti import REMOVED
 from Changeset import Changeset
 
 class Branch:
@@ -48,7 +53,7 @@ class Branch:
 				diff = abs(today - date)
 				if(diff.days > 0):
 					#creo una cartella temporanea e ci copio una ultima versione completa
-					tmpDir = path.join(self.branchDir, "tmp")
+					tmpDir = path.join(self.branchDir, TMP_DIR)
 					self.getLatestVersion(tmpDir)
 					#creo un changeset di backup con l'ultima versione
 					self.addChangeset(tmpDir, comment = "backup {}".format(dateStr), isBackup = True)
@@ -111,7 +116,7 @@ class Branch:
 		"""ritorna la lista dei changeset"""
 
 		#prendo tutte le cartelle all'interno del branch (i changeset)
-		dirs = [ dirName for dirName in os.listdir(self.branchDir) if (path.isdir(path.join(self.branchDir, dirName))) ]
+		dirs = [ dirName for dirName in os.listdir(self.branchDir) if ((path.isdir(path.join(self.branchDir, dirName))) & (dirName.isdigit())) ]
 		
 		#ritorno una tupla di "chageset - data creazione - commento"
 		results = ()
@@ -130,16 +135,17 @@ class Branch:
 
 			#prendo una lista di tutti i file modificati in questo changeset
 			changes = ""
-			for elem in uti.listDir(changeset.changesetDir):
-				if (path.basename(elem) == "changeset.txt"):
-					continue
+			for file in uti.readFileByTag(EDIT, changeset.changesetTxt):
+				changes += "{} ({})\n".format(file, EDIT)
 				
-				#scrivo il file modificato in questo changeset
-				try:
-					tag = uti.readFileByTag("file_{}".format(elem.replace("\\", "")), changeset.changesetTxt)[0]
-					changes += "{} ({})\n".format(uti.getPathForPrint(elem), tag)
-				except:
-					changes += "{}\n".format(uti.getPathForPrint(elem))
+			for file in uti.readFileByTag(OLD, changeset.changesetTxt):
+				changes += "{} ({})\n".format(file, OLD)
+				
+			for file in uti.readFileByTag(ADD, changeset.changesetTxt):
+				changes += "{} ({})\n".format(file, ADD)
+				
+			for file in uti.readFileByTag(REMOVED, changeset.changesetTxt):
+				changes += "{} ({})\n".format(file, REMOVED)
 
 			#aggiungo il changeset e le sue statistiche
 			results += ("{} - {} - {} \n{}".format(dir, str(date), comment, changes), )
@@ -173,7 +179,9 @@ class Branch:
 			currChangeset = Changeset(path.join(self.branchDir, str(changesetID)))
 			#copia di tutti i file e sottocartelle contenute nella cartella sourceDir dentro la cartella destDir
 			dir_uti.copy_tree(currChangeset.changesetDir, destDir)
-
+			#rimuove tutti i file cancellati con questo changeset
+			for fileToRemove in uti.readFileByTag("removed", currChangeset.changesetTxt):
+				os.remove(path.join(destDir, fileToRemove))
 		os.remove(path.join(destDir, CHANGESET_FILE))
 
 	

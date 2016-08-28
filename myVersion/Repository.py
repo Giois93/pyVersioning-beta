@@ -1,6 +1,7 @@
 import os 
 import os.path as path
 import shutil
+from uti import TMP_DIR
 from Branch import Branch
 
 class Repository:
@@ -91,7 +92,7 @@ class Repository:
 			#prendo il trunk
 			trunk = Branch(self.trunkDir)
 			#creo il percorso di una cartella temporanea
-			tmpDir = path.join(self.repoDir, "tmp")
+			tmpDir = path.join(self.repoDir, TMP_DIR)
 			#ottengo la LatestVersion e la copio nella cartella temporanea
 			trunk.getLatestVersion(tmpDir)
 			#creo il branch sul disco e ci copio il contenuto della cartella temporanea

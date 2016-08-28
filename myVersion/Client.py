@@ -7,9 +7,17 @@ import filecmp
 import rpyc
 import inspect
 import uti
+
 from uti import LOCAL_VERSION_FILE
 from uti import CHANGESET_FILE
 from uti import LAST_RUN_FILE
+from uti import TMP_DIR
+from uti import TO_COMMIT_DIR
+from uti import EDIT
+from uti import OLD
+from uti import ADD
+from uti import REMOVED
+
 
 class Client:
 	
@@ -43,6 +51,57 @@ class Client:
 				pass
 		else:
 			self.setCurrPath(self.root)
+
+
+	def copyDirToClient(self, dirFrom, dirTo):
+		"""copia la cartella "dirFrom" nella cartella "dirTo" """
+		
+		#sovrascrivo la cartella
+		if (path.isdir(dirTo)):
+			shutil.rmtree(dirTo)
+		os.makedirs(dirTo)
+
+		#copio tutti i file contenuti
+		for file in self.server.listDir(dirFrom):
+			self.copyFileToClient(file, file.replace(dirFrom, dirTo))
+
+
+	def copyFileToClient(self, fileFrom, fileTo):
+		"""copia il file "fileFrom" del server nel path "fileTo" """
+
+		remoteFile = self.server.File()
+		remoteFile.open(fileFrom)
+
+		#copio il file del server nella cartella temporanea
+		localFilePath = fileTo
+		try:
+			localFile = open(localFilePath, "w")
+		except Exception as ex:
+			print(ex)
+
+		shutil.copyfileobj(remoteFile, localFile)
+
+		remoteFile.close()
+		localFile.close()
+
+		#copio la data di ultima modifica dal file del server
+		editTime = remoteFile.getmtime()
+		os.utime(localFilePath, (int(editTime), int(editTime)))
+
+		return localFilePath
+
+
+	def copyFileToServer(self, fileFrom):
+		"""copia il file "fileFrom" del client nel path "fileTo" sul server"""
+
+		localFile = open(file)
+		#remoteFile = self.server.open(path.join("/tmp", file), "w")
+		remoteFile = self.server.File()
+		remoteFile.open(file, "w")
+		shutil.copyfileobj(localFile, remoteFile)
+		#TODO: settare il mtime del file sul server con una exposed_
+		remoteFile.close()
+		localFile.close() 
 
 
 	def runMenu(self):
@@ -217,18 +276,18 @@ class Client:
 				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
 				try:
 					self.compare(commandList.pop())
-				except:
+				except Exception as ex:
+					print(ex, end="\n\n")
 					self.printPendingChanges()
 			
 			elif (command == "winmerge"):
 				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
 				try:
 					self.merge(commandList.pop())
-				except:
+				except Exception as ex:
+					print(ex, end="\n\n")
 					self.printPendingChanges()
 				print()
-
-
 
 			elif (command == "help"): 
 				self.checkCommand(commandList)
@@ -279,7 +338,7 @@ class Client:
 	def listDir(self):
 		"""stampa tutti i file e sottocartelle del branch selezionato"""
 
-		list = self.server.listDir(self.getCurrRepo(), self.getCurrBranch())
+		list = self.server.listBranch(self.getCurrRepo(), self.getCurrBranch())
 		for elem in list:
 			print(uti.getPathForPrint(elem))
 
@@ -383,37 +442,40 @@ class Client:
 	def mapRepo(self, repoName):
 		"""mappa il repository nella cartella del client"""
 
-		#ottengo il path del repository
-		clientDir = path.join(self.root, repoName)
+		#se il repository esiste sul server, creo una cartella sul client
+		#altrimenti viene generata un'eccezione
+		if (self.server.existsRepo(repoName) == False):
+			raise Exception("Repository {} non presente".format(repoName))
+		else:
+			#ottengo il path del repository
+			clientDir = path.join(self.root, repoName)
 
-		#chiedo all'utente se sovrascrivere la cartella
-		if (uti.askAndRemoveDir(clientDir, askOverride=True)):
-			#mappo il repository nella cartella del client
-			try:
-				#se il repository esiste sul server, creo una cartella sul client
-				#altrimenti viene generata un'eccezione
-				self.server.existsRepo(repoName)
-				os.makedirs(clientDir)
-				print("Repository mappato in:", clientDir, end = "\n\n")
+			#chiedo all'utente se sovrascrivere la cartella
+			if (uti.askAndRemoveDir(clientDir, askOverride=True)):
+				#mappo il repository nella cartella del client
+			
+					os.makedirs(clientDir)
+					print("Repository mappato in:", clientDir, end = "\n\n")
 				
-				#setto anche il repository mappato come repository corrente di default
-				self.setRepo(repoName)
-			except:
-				raise Exception("Repository {} non presente".format(repoName))
+					#setto anche il repository mappato come repository corrente di default
+					self.setRepo(repoName)
+
 
 
 	def mapBranch(self, branchName):
 		"""mappa il branch nella cartella del client"""
 
-		#ottengo il path del branch
-		clientDir = path.join(self.root, self.getCurrRepo(), branchName)
+		#se il branch esiste sul server, creo una cartella sul client
+		#altrimenti viene generata un'eccezione
+		if (self.server.existsBranch(self.getCurrRepo(), branchName) == False):
+			raise Exception("Branch {} non presente".format(branchName))
+		else:
+			#ottengo il path del branch
+			clientDir = path.join(self.root, self.getCurrRepo(), branchName)
 
-		#chiedo all'utente se sovrascrivere la cartella
-		if (uti.askAndRemoveDir(clientDir, askOverride=True)):
-			#mappo il branch nella cartella del client
-			try:
-				#se il branch esiste sul server, creo il branch sul client
-				#altrimenti viene generata un'eccezione
+			#chiedo all'utente se sovrascrivere la cartella
+			if (uti.askAndRemoveDir(clientDir, askOverride=True)):
+				#mappo il branch nella cartella del client
 				branchDir = path.join(self.root, self.getCurrRepo(), branchName)
 				os.makedirs(branchDir)
 				
@@ -424,9 +486,6 @@ class Client:
 				
 				if (uti.askQuestion("Scaricare l'ultima versione?")):
 					self.getLatestVersion()
-				
-			except:
-				raise Exception("Branch {} non presente".format(branchName))
 
 
 	def removeRepoMap(self, repoName):
@@ -486,12 +545,12 @@ class Client:
 	def getLatestVersion(self):
 		"""scarica l'ultima versione e la copia nella cartella del branch"""
 
-		#chiedo all'utente se sovrascrivere la cartella
-		if (uti.askAndRemoveDir(self.getCurrPath(), ask=False)):
-			#prendo la latestVersion da Repository e Branch corrente
-			lastChangesetNum = self.server.getLatestVersion(self.getCurrRepo(), self.getCurrBranch(), self.getCurrPath())
-			uti.writeFileByTag("last_changeset", lastChangesetNum, self.getLocalVersionFile())
-			print("Versione locale aggiornata con successo", end="\n\n")
+		#prendo la latestVersion da Repository e Branch corrente
+		serverDir, lastChangesetNum = self.server.getLatestVersion(self.getCurrRepo(), self.getCurrBranch())
+		self.copyDirToClient(serverDir, self.getCurrPath())
+
+		uti.writeFileByTag("last_changeset", lastChangesetNum, self.getLocalVersionFile())
+		print("Versione locale aggiornata con successo", end="\n\n")
 	
 	
 	def getSpecificVersion(self, changesetNum):
@@ -500,12 +559,12 @@ class Client:
 		if (self.server.existsChangeset(self.getCurrRepo(), self.getCurrBranch(), changesetNum) == False):
 			raise Exception("Changeset non presente")
 
-		#chiedo all'utente se sovrascrivere la cartella
-		if (uti.askAndRemoveDir(self.getCurrPath(), ask=False)):
-			#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
-			self.server.getSpecificVersion(self.getCurrRepo(), self.getCurrBranch(), changesetNum, self.getCurrPath())
-			uti.writeFileByTag("last_changeset", changesetNum, self.getLocalVersionFile())
-			print("Versione locale aggiornata con successo", end="\n\n")
+		#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
+		serverDir = self.server.getSpecificVersion(self.getCurrRepo(), self.getCurrBranch(), changesetNum)
+		self.copyDirToClient(serverDir, self.getCurrPath())
+
+		uti.writeFileByTag("last_changeset", changesetNum, self.getLocalVersionFile())
+		print("Versione locale aggiornata con successo", end="\n\n")
 
 
 	def printPendingChanges(self):
@@ -518,56 +577,81 @@ class Client:
 		else:
 			print("Lista dei file in modifica:")
 			for file in pendingList:
-				#prendo la data di ultima modifica del file
-				localFileDate = datetime.datetime.fromtimestamp(path.getmtime(file)).strftime("%Y-%m-%d %H:%M:%S")
+				if (pendingList[file] == EDIT) | (pendingList[file] == OLD):
+					#prendo la data di ultima modifica del file
+					localFileDate = datetime.datetime.fromtimestamp(path.getmtime(file)).strftime("%Y-%m-%d %H:%M:%S")
+					#prendo la data di ultima modifica del file sul server
+					serverFile = self.getServerFile(file)
+					serverFileDate = datetime.datetime.fromtimestamp(path.getmtime(serverFile)).strftime("%Y-%m-%d %H:%M:%S")
+					
+					#stampo file e data ultima modifica
+					print("{} ({}) - locale: {} - server: {}".format(file.replace(self.getCurrPath(), ""), pendingList[file], localFileDate, serverFileDate))
 
-				#prendo la data di ultima modifica del file sul server
-				serverFile = self.findFileOnServer(file)
-				serverFileDate = datetime.datetime.fromtimestamp(path.getmtime(serverFile)).strftime("%Y-%m-%d %H:%M:%S")
+				elif (pendingList[file] == ADD):
+					#stampo file aggiunti in locale
+					print("{} ({})".format(file.replace(self.getCurrPath(), ""), pendingList[file]))
 
-				#stampo file e data ultima modifica
-				print("{} ({}) - locale: {} - server: {}".format(file.replace(self.getCurrPath(), ""), pendingList[file], localFileDate, serverFileDate))
+				elif (pendingList[file] == REMOVED):
+					#stampo file rimossi in locale
+					print("{} ({})".format(file.replace(self.getCurrPath(), ""), pendingList[file]))
+
 			print()
 
 	
 	def getPendingChanges(self):
 		"""ritorna una lista dei file modificati in locale"""
 
-		#prendo la cartella corrente dal client
-		localRoot = self.getCurrPath()
+		#scarico una latestVersion in una cartella temporanea
+		tmpDir = path.join(self.getCurrPath(), TMP_DIR)
 
-		#scorro tutti i file della cartella
-		#pendings = ()
+		serverDir, lastChangesetNum = self.server.getLatestVersion(self.getCurrRepo(), self.getCurrBranch())
+		self.copyDirToClient(serverDir, tmpDir)
+
+		#scorro tutti i file della cartella locale
 		pendings = {}
-		for dirPath, dirNames, files in os.walk(localRoot):
+		for dirPath, dirNames, files in os.walk(self.getCurrPath()):
+			if (TMP_DIR in dirNames):
+				dirNames.remove(TMP_DIR)
+
 			for fileName in files:
-				if (fileName != LOCAL_VERSION_FILE):
-					localFile = path.join(dirPath, fileName)
-					try:
-						#verifico se il file è fra quelli da escludere
-						if (self.isExcluded(localFile)):
-							continue
-
-						#cerco sul server il file corrispondente al localFile 
-						#(cerco sempre a partire dall'ultima versione così da segnalare anche file vecchi)
-						serverFile = self.findFileOnServer(localFile)
 				
-						#se il file locale è stato modificato va aggiunto ai pending
-						if (int(path.getmtime(localFile)) > int(path.getmtime(serverFile))):
-							if (filecmp.cmp(localFile, serverFile) == False):
-								#pendings += (localFile,) #new
-								pendings[localFile] = "edit"
-						elif(int(path.getmtime(localFile)) < int(path.getmtime(serverFile))):
-							if (filecmp.cmp(localFile, serverFile) == False):
-								#pendings += (localFile,) #old
-								pendings[localFile] = "old"
+				if (fileName == LOCAL_VERSION_FILE):
+					continue
 
-					except:		
-						#se il file non viene trovato nel server vuol dire che è stato aggiunto in locale
-						#pendings += (localFile,) #add
-						pendings[localFile] = "add"
+				localFile = path.join(dirPath, fileName)
+				try:
+					#verifico se il file è fra quelli da escludere
+					if (self.isExcluded(localFile)):
+						continue
 
-					#TODO: manca #removed
+					#cerco sul server il file corrispondente al localFile 
+					#(cerco sempre a partire dall'ultima versione così da segnalare anche file vecchi)
+					serverFile = self.getServerFile(localFile)
+				
+					#se il file locale è stato modificato va aggiunto ai pending
+					if (int(path.getmtime(localFile)) > int(path.getmtime(serverFile))):
+						if (filecmp.cmp(localFile, serverFile) == False):
+							pendings[localFile] = EDIT
+					elif(int(path.getmtime(localFile)) < int(path.getmtime(serverFile))):
+						if (filecmp.cmp(localFile, serverFile) == False):
+							pendings[localFile] = OLD
+
+				except:		
+					#se il file non viene trovato nel server vuol dire che è stato aggiunto in locale
+					pendings[localFile] = ADD
+
+		#scorro tutti i file del server
+		for dirPath, dirNames, files in os.walk(tmpDir):
+			for fileName in files:
+				serverFile = path.join(dirPath, fileName)
+				localFile = serverFile.replace(tmpDir, self.getCurrPath())
+				#verifico se il file è fra quelli da escludere
+				if (self.isExcluded(localFile)):
+					continue
+
+				#i file presenti nel server e non nella versione locale sono stati rimossi
+				if (path.isfile(localFile) == False):
+					pendings[localFile] = REMOVED
 
 		#ritorno la lista dei pendig
 		return pendings
@@ -673,7 +757,7 @@ class Client:
 		"""crea un nuovo changeset con le modifiche del solo file "fileName" """
 
 		#creo una cartella temporanea
-		tmpDir = path.join(self.getCurrPath(), "tmp")
+		tmpDir = path.join(self.getCurrPath(), TMP_DIR)
 		
 		#prendo il file corrente dai pending
 		try:
@@ -695,9 +779,10 @@ class Client:
 		"""crea un nuovo changeset con le modifiche dei file in pending"""
 
 		#creo una cartella temporanea
-		tmpDir = path.join(self.getCurrPath(), "tmp")
+		tmpDir = path.join(self.getCurrPath(), TO_COMMIT_DIR)
 		if (path.isdir(tmpDir)):
 			shutil.rmtree(tmpDir)
+		os.makedirs(tmpDir)
 
 		#scorro tutti i file nella lista dei pending
 		pendingList = self.getPendingChanges()
@@ -723,18 +808,19 @@ class Client:
 	def addForCommit(self, file, tag, tmpDir):
 		"""aggiunge un file alla cartella temporanea dei file da committare"""
 
-		#copio il file nella cartella temporanea (creo le cartelle se non presenti)
-		#prendo il path del file da copiare
-		tmpFileDir = path.dirname(file.replace(self.getCurrPath(), tmpDir))
-		#se non esiste creo il percorso
-		if (path.isdir(tmpFileDir) == False):
-			os.makedirs(tmpFileDir)
+		if (tag != REMOVED):
+			#copio il file nella cartella temporanea (creo le cartelle se non presenti)
+			#prendo il path del file da copiare
+			tmpFileDir = path.dirname(file.replace(self.getCurrPath(), tmpDir)) #TODO: qui si usa la cartella tmp, per INVIARE AL SERVER, deve essere rimossa quella usata dal server per scaricare o fatta una nuova cartella
+			#se non esiste creo il percorso
+			if (path.isdir(tmpFileDir) == False):
+				os.makedirs(tmpFileDir)
 
-		#copio il file
-		shutil.copy2(file, tmpFileDir)
+			#copio il file
+			shutil.copy2(file, tmpFileDir)
 
 		#inserisco il tag nel file changeset.txt
-		uti.writeFileByTag("file_{}".format(file.replace(self.getCurrPath()+"\\", "")), tag, path.join(tmpDir, "changeset.txt"))
+		uti.writeFileByTag(tag, file.replace("{}\\".format(self.getCurrPath()), ""), path.join(tmpDir, "changeset.txt"))
 
 
 	def doCommit(self, sourceDir, comment):
@@ -758,7 +844,7 @@ class Client:
 			filePath = self.findFileInPendings(file)
 			try:
 				originalChangeset = int(uti.readFileByTag("last_changeset", self.getLocalVersionFile())[0])
-				serverFile = self.findFileOnServer(filePath, originalChangeset)
+				serverFile = self.getServerFile(filePath)
 
 				if (uti.askQuestion("Questo comando annullerà le modifiche sul file {}, sei sicuro?".format(file))):
 					shutil.copy2(serverFile, path.dirname(filePath))
@@ -783,12 +869,14 @@ class Client:
 
 		try:
 			pendingFile = self.findFileInPendings(localFile)
-			
 		except:
 			raise Exception("File non presente in pending")
 
+		if (path.isfile(pendingFile) == False):
+			raise Exception("File non presente sul client")
+
 		try:
-			serverFile = self.findFileOnServer(pendingFile)
+			serverFile = self.getServerFile(pendingFile)
 		except:
 			raise Exception("File non presente sul server")
 
@@ -799,13 +887,15 @@ class Client:
 		"""effettua il diff del file in pending con il file sul server con winmerge"""
 
 		try:
-			#prendo i file da comparare
 			pendingFile = self.findFileInPendings(localFile)
 		except:
 			raise Exception("File non presente in pending")
-		
+
+		if (path.isfile(pendingFile) == False):
+			raise Exception("File non presente sul client")
+
 		try:
-			serverFile = self.findFileOnServer(pendingFile)
+			serverFile = self.getServerFile(pendingFile)
 		except:
 			raise Exception("File non presente sul server")
 
@@ -838,13 +928,13 @@ class Client:
 			  "> getlatest - scarica la versione più recente del branch corrente",
 			  "> getspecific [changeset] - scarica la versione specificata in \"changeset\" del branch corrente",
 			  "> pending - stampa una lista dei file modificati in locale",
-			  "> excludeExtension [ext] - esclude tutti i file .[ext] dai file in modifica",
-			  "> excludeFile [file] - esclude il file \"file\" dai file in modifica", 
-			  "> includeExtension [ext] - include l'estensione se precedentemente esclusa",
-			  "> includeAllExtensions - include tutte le estensioni precedentemente escluse",
-			  "> includeFile [file] - include il file se precedentemente escluso",
-			  "> includeAllFiles - include tutti i file precedentemente esclusi",
-			  "> printExcluded - stampa la lista di estensioni file esclusi",
+			  "> excludeextension [ext] - esclude tutti i file .[ext] dai file in modifica",
+			  "> excludefile [file] - esclude il file \"file\" dai file in modifica", 
+			  "> includeextension [ext] - include l'estensione se precedentemente esclusa",
+			  "> includeallextensions - include tutte le estensioni precedentemente escluse",
+			  "> includefile [file] - include il file se precedentemente escluso",
+			  "> includeallfiles - include tutti i file precedentemente esclusi",
+			  "> printexcluded - stampa la lista di estensioni file esclusi",
 			  "> commit [file] [comment] - effettua il commit del file \"file\" associando il commento \"comment\"",
 			  "> commitall [comment] - effettua il commit di tutti i file in pending associando il commento \"comment\"",
 			  "> undo [file] - annulla le modifiche sul file \"file\"",
@@ -905,13 +995,17 @@ class Client:
 		return path.join(self.root, LAST_RUN_FILE)
 
 
-	def findFileOnServer(self, localFile, startChangeset=None): 
-		"""ritorna il percorso del file sul server, il file viene cercato a partire dallo "startChangeset" nella cartella del branch corrente"""
+	#def findFileOnServer(self, localFile, startChangeset=None): 
+	#	"""ritorna il percorso del file sul server, il file viene cercato a partire dallo "startChangeset" nella cartella del branch corrente"""
 
-		#TODO: dovrei fare una copia locale del file e ritornare il suo path per il confronto
-		return self.server.findFile(self.getCurrRepo(), self.getCurrBranch(), localFile.replace("{}\\".format(self.getCurrPath()), ""), startChangeset)
-
+	#	serverFile = self.server.findFile(self.getCurrRepo(), self.getCurrBranch(), localFile.replace("{}\\".format(self.getCurrPath()), ""), startChangeset)
+		
+	#	try:
+	#		return self.copyFileToClient(serverFile)
+	#	except:
+	#		raise Exception("File non presente.")
 	
+
 	"""NOTA: non ammette 2 file con lo stesso nome"""
 	def findFileInPendings(self, fileName):
 		"""cerca il file "fileName" frai pending"""
@@ -923,6 +1017,13 @@ class Client:
 		raise Exception("File non trovato in pending")
 
 
+	def getServerFile(self, localFile):
+		"""prende il file della versione locale e restituisce il file del server contenuto nella cartella temporanea"""
+
+		tmpDir = path.join(self.getCurrPath(), TMP_DIR)
+		return localFile.replace(self.getCurrPath(), tmpDir)
+
+
 ### Main ###
 
 try:
@@ -931,7 +1032,7 @@ try:
 	print("Digitare l'ip del server (\"localhost\" per un server locale):")
 	host = input()
 	print("Connessione al server...", sep="\n")
-	connection = rpyc.connect(host, 18812)
+	connection = rpyc.connect(host, 18812, config={'allow_all_attrs': True})
 	print("Connessione stabilita.", end="\n\n")
 	
 	#lancio il client

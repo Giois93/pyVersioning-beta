@@ -10,6 +10,12 @@ LOCAL_VERSION_FILE	= "local.txt"
 BRANCH_FILE			= "branch.txt"
 CHANGESET_FILE		= "changeset.txt"
 LAST_RUN_FILE		= "lastrun.txt"
+TMP_DIR				= "tmp"
+TO_COMMIT_DIR		= "to_commit"
+EDIT				= "edit"
+OLD					= "old"
+ADD					= "add"
+REMOVED				= "removed"
 
 
 def readFile(filePath):
@@ -91,31 +97,29 @@ def removeByTagAndVal(tag, value, filePath):
 	writeFile(newFileStr, filePath, False)
 
 
-def askAndRemoveDir(dir, ask=True, askOverride=False):
+def askAndRemoveDir(dir, askOverride=False):
 	"""chiede all'utente se rimuovere/sovrascrivere la cartella "dir" ed eventualmente la rimuove"""
 
 	#verifico se la cartella esiste
 	if (path.isdir(dir)):
-		if (ask == False):
-			shutil.rmtree(dir)
-		else:
-			#chiedo all'utente se procede e sovrascrivere la cartella
-			while True:
-				if (askOverride):
-					msg = "La cartella {} è già presente, sovrascrivere?".format(getPathForPrint(dir))
-				else:
-					msg = "Rimuovere la cartella {}?".format(getPathForPrint(dir))
+		
+		#chiedo all'utente se procede e sovrascrivere la cartella
+		while True:
+			if (askOverride):
+				msg = "La cartella {} è già presente, sovrascrivere?".format(getPathForPrint(dir))
+			else:
+				msg = "Rimuovere la cartella {}?".format(getPathForPrint(dir))
 				
-				if (askQuestion(msg)):
-					#l'utente ha scelto di sovrascrivere
-					#rimuovo la cartella
-					shutil.rmtree(dir)
-					print("Cartella rimossa:", getPathForPrint(dir), end = "\n\n")
-					return True
-				else:
-					#l'utente ha scelto di non sovrascrive
-					print("Operazione annullata", end = "\n\n")
-					return False
+			if (askQuestion(msg)):
+				#l'utente ha scelto di sovrascrivere
+				#rimuovo la cartella
+				shutil.rmtree(dir)
+				print("Cartella rimossa:", getPathForPrint(dir), end = "\n\n")
+				return True
+			else:
+				#l'utente ha scelto di non sovrascrive
+				print("Operazione annullata", end = "\n\n")
+				return False
 	return True
 
 
@@ -140,12 +144,12 @@ def listDir(dir):
 	"""ritorna tutti i file e sottocartelle della dir selezionata"""
 		
 	#creo la lista di tutti i file e sottocartelle
-	list = ()
+	list = []
 	for root, dirs, files in os.walk(dir):
 		for fileName in files:
-			list += (path.join(root, fileName).replace(dir, ""), )
+			list.append(path.join(root, fileName))
 		for dirName in dirs:
-			list += (path.join(root, dirName).replace(dir, ""), )
+			list.append(path.join(root, dirName))
 		
 	return list
 

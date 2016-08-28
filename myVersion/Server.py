@@ -3,6 +3,7 @@ import os.path as path
 import shutil
 import rpyc
 import uti
+from uti import TMP_DIR
 from rpyc.utils.server import ThreadedServer
 from Repository import Repository
 
@@ -25,6 +26,24 @@ class Server(rpyc.Service):
 
 
 	### metodi di interfaccia Client-Server rpyc ###
+	class exposed_File():
+
+		def exposed_open(self, filePath, mode="r"):
+			self.filePath = filePath
+			self.file = open(filePath, mode)
+
+		def exposed_write(self, bytes):
+			return self.file.write(bytes)
+
+		def exposed_read(self, bytes):
+			return self.file.read()
+
+		def exposed_close(self):
+			return self.file.close() 
+
+		def exposed_getmtime(self):
+			return path.getmtime(self.filePath)
+
 
 	def exposed_findFile(self, repoName, branchName, fileRelPath, startChangeset=None):
 		return self.findFile(repoName, branchName, fileRelPath, startChangeset)
@@ -32,6 +51,10 @@ class Server(rpyc.Service):
 
 	def exposed_existsRepo(self, repoName):
 		return self.existsRepo(repoName)
+
+
+	def exposed_existsBranch(self, repoName, branchName):
+		return self.getRepo(repoName).existsBranch(branchName)
 
 
 	def exposed_getRepo(self, repoName):
@@ -82,19 +105,31 @@ class Server(rpyc.Service):
 			return False
 
 
-	def exposed_listDir(self, repoName, branchName):
+	def exposed_listDir(self, dir):
+
+		#scarico l'ultima versione in una cartella temporanea
+		list = uti.listDir(dir)
+		
+		return list
+
+
+	def exposed_listBranch(self, repoName, branchName):
 		"""ritorna tutti i file e sottocartelle del branch selezionato"""
 
 		branch = self.getRepo(repoName).getBranch(branchName)
-		tmpDir = path.join(branch.branchDir, "tmp")
+		tmpDir = path.join(branch.branchDir, TMP_DIR)
+		if (path.isdir(tmpDir)):
+			shutil.rmtree(tmpDir)
+		os.makedirs(tmpDir)
 
-		#scarico l'ultima versione in una cartella temporanea
 		branch.getLatestVersion(tmpDir)
 
-		list = uti.listDir(tmpDir)
-				
+		list = self.exposed_listDir(tmpDir)
 		#rimuovo la cartella temporanea
 		shutil.rmtree(tmpDir)
+
+		for elem in list:
+			elem.replace(tmpDir, "")
 
 		return list
 
@@ -117,17 +152,30 @@ class Server(rpyc.Service):
 		return self.getRepo(repoName).getBranch(branchName).getChangesetList()
 
 
-	def exposed_getLatestVersion(self, repoName, branchName, destDir):
-		"""scarica l'ultima versione del branch "branchName" nella cartella "destDir" """
+	def exposed_getLatestVersion(self, repoName, branchName):
+		"""scarica l'ultima versione del branch "branchName" nella cartella in una cartella temporanea """
 
-		return self.getRepo(repoName).getBranch(branchName).getLatestVersion(destDir) 
+		branch = self.getRepo(repoName).getBranch(branchName)
+		destDir = path.join(branch.branchDir, TMP_DIR)
+		if (path.isdir(destDir)):
+			shutil.rmtree(destDir)
+
+		lastChangesetNum = self.getRepo(repoName).getBranch(branchName).getLatestVersion(destDir)
+
+		return (destDir, lastChangesetNum)
 
 
-	def exposed_getSpecificVersion(self, repoName, branchName, changesetNum, destDir):
-		"""scarica la versiona aggiornata al changeset "changesetNum" del branch "branchName" nella cartella "destDir" """
+	def exposed_getSpecificVersion(self, repoName, branchName, changesetNum):
+		"""scarica la versiona aggiornata al changeset "changesetNum" del branch "branchName" in una cartella temporanea """
 
-		return self.getRepo(repoName).getBranch(branchName).getSpecificVersion(changesetNum, destDir)
-
+		branch = self.getRepo(repoName).getBranch(branchName)
+		destDir = path.join(branch.branchDir, TMP_DIR)
+		if (path.isdir(destDir)):
+			shutil.rmtree(destDir)
+		
+		self.getRepo(repoName).getBranch(branchName).getSpecificVersion(changesetNum, destDir), 
+		
+		return destDir
 
 
 	def getRepoList(self):
