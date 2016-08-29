@@ -14,6 +14,7 @@ from uti import CHANGESET_FILE
 from uti import LAST_RUN_FILE
 from uti import TMP_DIR
 from uti import TO_COMMIT_DIR
+from uti import TRUNK
 from uti import EDIT
 from uti import OLD
 from uti import ADD
@@ -40,16 +41,14 @@ class Client:
 		if (uti.askQuestion("Impostare l'ultimo percorso aperto?")):
 			try:
 				#setto il repository se memorizzato nel file
-				self.setCurrRepo(uti.readFileByTag("last_repo", self.getLastRunFile())[0])
+				self.setRepo(uti.readFileByTag("last_repo", self.getLastRunFile())[0])
+
+				#setto il branch se memorizzato nel file
+				self.setBranch(uti.readFileByTag("last_branch", self.getLastRunFile())[0])
+				self.printCurrPath()
 			except:
 				print("Impossibile effettuare l'operazione richiesta", end="\n\n")
 				self.setCurrPath(self.root)
-
-			try:
-				#setto il branch se memorizzato nel file
-				self.setCurrBranch(uti.readFileByTag("last_branch", self.getLastRunFile())[0])
-			except:
-				pass
 		else:
 			self.setCurrPath(self.root)
 
@@ -74,11 +73,7 @@ class Client:
 		remoteFile.open(fileFrom)
 
 		#copio il file del server nella cartella temporanea
-		localFilePath = fileTo
-		try:
-			localFile = open(localFilePath, "w")
-		except Exception as ex:
-			print(ex)
+		localFile = open(fileTo, "w")
 
 		shutil.copyfileobj(remoteFile, localFile)
 
@@ -87,20 +82,31 @@ class Client:
 
 		#copio la data di ultima modifica dal file del server
 		editTime = remoteFile.getmtime()
-		os.utime(localFilePath, (int(editTime), int(editTime)))
-
-		return localFilePath
+		os.utime(fileTo, (int(editTime), int(editTime)))
 
 
-	def copyFileToServer(self, fileFrom):
+	def copyDirToServer(self, dirFrom, dirTo):
+		"""copia la cartella "dirFrom" nella cartella "dirTo" """
+		
+		#controllo che la cartella dirFrom esista
+		if (path.isdir(dirFrom) == False):
+			raise Exception
+		
+		#copio tutti i file contenuti
+		for file in uti.listDir(dirFrom):
+			self.copyFileToServer(file, file.replace(dirFrom, dirTo))
+
+
+	def copyFileToServer(self, fileFrom, fileTo):
 		"""copia il file "fileFrom" del client nel path "fileTo" sul server"""
 
-		localFile = open(file)
-		#remoteFile = self.server.open(path.join("/tmp", file), "w")
+		localFile = open(fileFrom)
+
 		remoteFile = self.server.File()
-		remoteFile.open(file, "w")
+		remoteFile.open(fileTo, "w")
+
 		shutil.copyfileobj(localFile, remoteFile)
-		#TODO: settare il mtime del file sul server con una exposed_
+
 		remoteFile.close()
 		localFile.close() 
 
@@ -202,6 +208,7 @@ class Client:
 				try:
 					repoName = commandList.pop()
 					self.setRepo(repoName)
+					self.printCurrPath()
 				except Exception as ex:
 					print(ex, end="\n\n")
 					if (uti.askQuestion("Effettuare il map del repository?")):
@@ -212,6 +219,7 @@ class Client:
 				try:
 					branchName = commandList.pop()
 					self.setBranch(branchName)
+					self.printCurrPath()
 				except Exception as ex:
 					print(ex, end="\n\n")
 					if (uti.askQuestion("Effettuare il map del branch?")):
@@ -366,10 +374,12 @@ class Client:
 		if (path.isdir(sourceDir) == False):
 			raise Exception("Percorso errato.")
 
-		self.server.addRepo(sourceDir, repoName)
+		#creo repository e trunk
+		destDir = self.server.addRepo(repoName)
+		self.copyDirToServer(sourceDir, destDir)
 		print("Repository {} creato con successo.".format(repoName), end="\n\n")
 		self.mapRepo(repoName)
-		self.mapBranch("trunk")
+		self.mapBranch(TRUNK)
 
 	
 	def createBranch(self, branchName):
@@ -420,9 +430,13 @@ class Client:
 	def showRepos(self):
 		"""mostra la lista dei repository presenti sul server"""
 
-		print("\nRepositories sul server di pyVersioning")
-	
-		for repoName in self.server.showRepos():
+		repolist = self.server.showRepos()
+		if (len(repolist) == 0):
+			print("\nNessun repository presente sul server di pyVersioning")
+		else:
+			print("\nRepositories sul server di pyVersioning:")
+
+		for repoName in repolist:
 			#verifico che la cartella esista in locale
 			if (self.existsRepo(repoName)):
 				print("- {} ({})".format(repoName, "mapped"))
@@ -434,9 +448,14 @@ class Client:
 	def showBranches(self):
 		"""mostra la lista dei branch presenti sul server"""
 
-		print("\nBranches sul repository {}:".format(self.getCurrRepo()))
-		for branchName in self.server.showBranches(self.getCurrRepo()):
-			#verifico che la cartella esista in locale
+		branchList = self.server.showBranches(self.getCurrRepo())
+		if (len(branchList) == 0):
+			print("\nNessun Branch presente sul repository {}".format(self.getCurrRepo()))
+		else:
+			print("\nBranches sul repository {}:".format(self.getCurrRepo()))
+
+		for branchName in branchList:
+			#verifico se la cartella esiste in locale
 			if (self.existsBranch(branchName)):
 				print("- {} ({})".format(branchName, "mapped"))
 			else:
@@ -538,9 +557,7 @@ class Client:
 		#aggiorno il repository corrente
 		self.setCurrRepo(repoName)
 		self.setCurrBranch("")
-			
-		print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
-
+		
 
 	def setBranch(self, branchName):
 		"""setta il branch corrente"""
@@ -551,8 +568,6 @@ class Client:
 			
 		#aggiorno il branch corrente
 		self.setCurrBranch(branchName)
-			
-		print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
 
 
 	def getLatestVersion(self):
@@ -840,7 +855,9 @@ class Client:
 		"""effettua il commit dei file contenuti in "sourceDir" su un nuovo changeset"""
 
 		#creo un nuovo changeset in cui copiare la cartella temporanea
-		changesetNum = self.server.addChangeset(self.getCurrRepo(), self.getCurrBranch(), sourceDir, comment)
+
+		changesetDir = self.server.addChangeset(self.getCurrRepo(), self.getCurrBranch(), comment)
+		self.copyDirToServer(sourceDir, changesetDir)
 
 		#rimuovo la cartella temporanea
 		if (path.isdir(sourceDir)):

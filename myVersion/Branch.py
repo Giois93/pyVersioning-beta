@@ -3,7 +3,8 @@ import os.path as path
 import shutil
 import distutils.dir_util as dir_uti
 import datetime
-import natsort
+import time
+"""import natsort"""
 import uti
 from uti import BRANCH_FILE
 from uti import CHANGESET_FILE
@@ -20,22 +21,13 @@ class Branch:
 
 
 	def __init__(self, branchDir):
+
 		self.branchDir = branchDir
 		self.branchTxt = path.join(self.branchDir, BRANCH_FILE)
 
-	
-	def createNew(self, sourceDir, originalChangeset = 0):
-		"""crea un nuovo branch sul disco, aggiunge il changeset_0 e il file branch.txt
-		se esiste già solleva un'eccezione"""
 
-		if (path.isdir(self.branchDir)):
-			raise Exception
-
-		self.addChangeset(sourceDir, "changeset_0", originalChangeset, True)
-
-
-	def addChangeset(self, sourceDir, comment, changesetNum=None, isBackup=False):
-		"""crea il prossimo changeset copiandoci la cartella sourceDir"""
+	def addChangeset(self, comment, changesetNum=None, isBackup=False):
+		"""crea il prossimo changeset"""
 		
 		#controllo se è necessario creare un changeset di backup (ne viene fatto uno ogni giorno)
 		#cerco l'ultimo changeset di backup
@@ -53,33 +45,43 @@ class Branch:
 				diff = abs(today - date)
 				if(diff.days > 0):
 					#creo una cartella temporanea e ci copio una ultima versione completa
-					tmpDir = path.join(self.branchDir, TMP_DIR)
-					self.getLatestVersion(tmpDir)
+					tmpDir = self.getLatestVersion()
 					#creo un changeset di backup con l'ultima versione
-					self.addChangeset(tmpDir, comment = "backup {}".format(dateStr), isBackup = True)
-					shutil.rmtree(tmpDir)
+					changeset = self.addChangeset(comment = "backup {}".format(dateStr), isBackup=True)
+					#copio l'ultima versione nella cartella del changeset
+					dir_uti.copy_tree(tmpDir, changeset.changesetDir)
 			except:
 				pass
 
 		#se non è specificato il changeset iniziale prendo l'id dell'ultimo changeset di questo branch
 		if (changesetNum == None):
 			changesetNum = self.getNextChangesetNum() 
-		
-		#creo una cartella per il changeset
-		changesetDir = path.join(self.branchDir, str(self.getNextChangesetNum()))
-		
+
 		#creo il changeset
-		changeset = Changeset(changesetDir)
-		changeset.createNew(sourceDir, isBackup)
+		changeset = Changeset(path.join(self.branchDir, str(changesetNum)))
 
-		#scrivo il suo file
+		if (path.isdir(changeset.changesetDir)):
+			raise Exception
+
+		os.makedirs(changeset.changesetDir)		
+
 		#se sto inserendo il primo changeset nel branch scrivo anche il tag "changeset_0"
-		if (len(os.listdir(self.branchDir)) == 1):
-			uti.writeFileByTag("changeset_0", str(changesetNum), self.branchTxt)
-		uti.writeFileByTag("last_changeset", str(self.getNextChangesetNum()), self.branchTxt)
-		uti.writeFileByTag("comment", comment, changeset.changesetTxt)
+		uti.writeFileByTag("changeset_0", str(changesetNum), self.branchTxt)
 
-		return changesetNum
+		#scrivo il file del nuovo changeset
+		uti.writeFileByTag("last_changeset", str(changesetNum), self.branchTxt)
+		uti.writeFileByTag("comment", comment, changeset.changesetTxt)
+		
+		#scrivo se il changeset è un backup
+		if (isBackup):
+			uti.writeFileByTag("is_backup", 1, changeset.changesetTxt)
+		else:
+			uti.writeFileByTag("is_backup", 0, changeset.changesetTxt);
+
+		#scrivo data e ora di crezione
+		uti.writeFileByTag("date", "{} {}".format(time.strftime("%d/%m/%Y"), time.strftime("%H:%M:%S")), changeset.changesetTxt)
+
+		return changeset
 
 
 	def getChangeset(self, changesetNum):
@@ -120,7 +122,8 @@ class Branch:
 		
 		#ritorno una tupla di "chageset - data creazione - commento"
 		results = []
-		for dir in natsort.natsorted(dirs):
+		"""for dir in natsort.natsorted(dirs):"""
+		for dir in dirs:
 			changeset = self.getChangeset(int(dir))
 			#prendo il path della cartella del changeset
 			dirPath = path.join(self.branchDir, dir)
@@ -153,16 +156,20 @@ class Branch:
 		return results
 
 	
-	def getLatestVersion(self, destDir):
-		"""copia l'ultima versione completa nella cartella destDir"""
-		
+	def getLatestVersion(self):
+		"""copia l'ultima versione completa nella cartella branchDir/tmp """
+
+		destDir = path.join(self.branchDir, TMP_DIR)
+		if (path.isdir(destDir)):
+			shutil.rmtree(destDir)
+
 		#prendo l'ultimo changeset
 		lastChangeset = self.getLastChangesetNum()
 		
 		#prendo la versione associata all'ultimo changeset
 		self.getSpecificVersion(lastChangeset, destDir)
 
-		return lastChangeset
+		return (destDir, lastChangeset)
 
 	
 	def getSpecificVersion(self, changesetNum, destDir):

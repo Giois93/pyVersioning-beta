@@ -4,11 +4,9 @@ import shutil
 import rpyc
 import uti
 from uti import TMP_DIR
+from uti import TRUNK
 from rpyc.utils.server import ThreadedServer
 from Repository import Repository
-
-
-###################################
 
 class Server(rpyc.Service):
 
@@ -61,8 +59,9 @@ class Server(rpyc.Service):
 		return self.getRepo(repoName)
 
 
-	def exposed_addRepo(self, sourceDir, repoName = None):
-		self.addRepo(sourceDir, repoName)
+	def exposed_addRepo(self, repoName):
+		self.addRepo(repoName)
+		return self.getRepo(repoName).getBranch(TRUNK).getChangeset(0).changesetDir
 
 	
 	def exposed_removeRepo(self, repoName):
@@ -89,10 +88,10 @@ class Server(rpyc.Service):
 		self.mapBranch(repoName, branchName, destDir)
 
 
-	def exposed_addChangeset(self, repoName, branchName, sourceDir, comment):
-		"""aggiunge un changeset copiandoci il contenuto della sourceDir"""
+	def exposed_addChangeset(self, repoName, branchName, comment):
+		"""aggiunge un changeset al branch "branchName" """
 
-		return self.getRepo(repoName).getBranch(branchName).addChangeset(sourceDir, comment)
+		return self.getRepo(repoName).getBranch(branchName).addChangeset(comment).changesetDir
 		
 
 	def exposed_existsChangeset(self, repoName, branchName, changesetNum):
@@ -108,21 +107,13 @@ class Server(rpyc.Service):
 	def exposed_listDir(self, dir):
 
 		#scarico l'ultima versione in una cartella temporanea
-		list = uti.listDir(dir)
-		
-		return list
+		return uti.listDir(dir)
 
 
 	def exposed_listBranch(self, repoName, branchName):
 		"""ritorna tutti i file e sottocartelle del branch selezionato"""
 
-		branch = self.getRepo(repoName).getBranch(branchName)
-		tmpDir = path.join(branch.branchDir, TMP_DIR)
-		if (path.isdir(tmpDir)):
-			shutil.rmtree(tmpDir)
-		os.makedirs(tmpDir)
-
-		branch.getLatestVersion(tmpDir)
+		tmpDir = self.getRepo(repoName).getBranch(branchName).getLatestVersion()
 
 		list = self.exposed_listDir(tmpDir)
 		#rimuovo la cartella temporanea
@@ -154,15 +145,8 @@ class Server(rpyc.Service):
 
 	def exposed_getLatestVersion(self, repoName, branchName):
 		"""scarica l'ultima versione del branch "branchName" nella cartella in una cartella temporanea """
-
-		branch = self.getRepo(repoName).getBranch(branchName)
-		destDir = path.join(branch.branchDir, TMP_DIR)
-		if (path.isdir(destDir)):
-			shutil.rmtree(destDir)
-
-		lastChangesetNum = self.getRepo(repoName).getBranch(branchName).getLatestVersion(destDir)
-
-		return (destDir, lastChangesetNum)
+		
+		return self.getRepo(repoName).getBranch(branchName).getLatestVersion()
 
 
 	def exposed_getSpecificVersion(self, repoName, branchName, changesetNum):
@@ -172,7 +156,7 @@ class Server(rpyc.Service):
 		destDir = path.join(branch.branchDir, TMP_DIR)
 		if (path.isdir(destDir)):
 			shutil.rmtree(destDir)
-		
+#TODO: modificare senza destdir come la getlatest
 		self.getRepo(repoName).getBranch(branchName).getSpecificVersion(changesetNum, destDir), 
 		
 		return destDir
@@ -205,27 +189,18 @@ class Server(rpyc.Service):
 		raise Exception("Il repository non esiste.");
 
 
-
-	def addRepo(self, sourceDir, repoName = None):
-		"""viene creato un nuovo repository copiando il contenuto della sourceDir, 
-		se il repository esiste già viene sollevata un'eccezione"""
-
-		#se non viene specificato, il nome del repository viene impostato 
-		#a quello della sourceDir
-		if (repoName == None):
-			repoName = path.basename(sourceDir)
+	def addRepo(self, repoName):
+		"""viene creato un nuovo repository, se il repository esiste già viene sollevata un'eccezione"""
 
 		#creo un oggetto repository
 		repo = Repository(path.join(self.root, repoName))
+		if (path.isdir(repo.repoDir)):
+			raise Exception
 
-		#creo un repository sul disco
-		#se già presente sollevo un'eccezione
-		try:
-			repo.createNew(sourceDir)
-		except:
-			raise 
+		os.makedirs(repo.repoDir)
 
-		return repo
+		#creo il trunk - se già presente sollevo un'eccezione
+		repo.addBranch(TRUNK, isTrunk=True)
 
 
 	def removeRepo(self, repoName):
@@ -233,17 +208,6 @@ class Server(rpyc.Service):
 
 		if (self.existsRepo(repoName)):
 			shutil.rmtree(path.join(self.root, repoName))
-
-
-	def mapBranch(self, repoName, branchName, destDir):
-		"""copia la cartella del branch nella cartella di destinazione"""
-
-		#prendo la cartella del repository e al suo interno quella del branch 
-		#quindi prendo la LatestVersion del branch e la copio nella cartella di destinazione
-		try:	
-			self.getRepo(repoName).getBranch(branchName).getLatestVersion(destDir)
-		except:
-			raise
 
 
 	def findFile(self, repoName, branchName, fileRelPath, startChangeset=None):

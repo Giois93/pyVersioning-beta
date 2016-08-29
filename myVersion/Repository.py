@@ -1,30 +1,21 @@
 import os 
 import os.path as path
 import shutil
+import distutils.dir_util as dir_uti
+import uti
 from uti import TMP_DIR
+from uti import TRUNK
 from Branch import Branch
 
 class Repository:
 	    
 	repoName = ""	#nome del repository
 	repoDir = ""	#path del repository
-	trunkDir = ""	#path del trunk
 
 
 	def __init__(self, repoDir):
 		self.repoName = path.basename(repoDir)
 		self.repoDir = repoDir
-		self.trunkDir = path.join(self.repoDir, "trunk")
-
-
-	def createNew(self, sourceDir):
-		"""crea un nuovo repository sul disco e crea il ramo trunk
-		se esiste già solleva un'eccezione"""
-
-		if (path.isdir(self.repoDir)):
-			raise Exception
-
-		self.addTrunk(sourceDir)
 
 
 	def existsBranch(self, branchName):
@@ -45,12 +36,6 @@ class Repository:
 		raise Exception("Il branch non esiste.");
 
 
-	def getTrunk(self):
-		"""ritorna il trunk (il nome della cartella è fisso a "trunk")"""
-
-		return self.getBranch("trunk")
-
-
 	def getBranchList(self):
 		"""ritorna la lista di branch presenti"""
 
@@ -60,55 +45,43 @@ class Repository:
 						if path.isdir(path.join(self.repoDir, name))]
 
 
-
-	def addTrunk(self, sourceDir):
-		"""crea un nuovo branch copiando il contenuto della sourceDir
-		se il branch esiste già viene sollevata un'eccezione"""
-
-		#creo un'oggetto Branch per il ramo trunk
-		branch = Branch(self.trunkDir)
-		
-		#creo un branch sul disco
-		#se già presente sollevo un'eccezione
-		try:
-			branch.createNew(sourceDir)
-		except:
-			raise 
-
-		return branch
-
-
-
-	def addBranch(self, branchName):
+	def addBranch(self, branchName, isTrunk=False):
 		"""crea un nuovo branch copiando il contenuto del trunk
 		se il branch esiste già viene sollevata un'eccezione"""
 
 		#creo il percorso del nuovo branch
-		branchDir = self.trunkDir.replace("trunk", branchName)
 		#creo il branch
-		branch = Branch(branchDir)
-		
-		try:
-			#prendo il trunk
-			trunk = Branch(self.trunkDir)
-			#creo il percorso di una cartella temporanea
-			tmpDir = path.join(self.repoDir, TMP_DIR)
-			#ottengo la LatestVersion e la copio nella cartella temporanea
-			trunk.getLatestVersion(tmpDir)
-			#creo il branch sul disco e ci copio il contenuto della cartella temporanea
-			branch.createNew(tmpDir, trunk.getLastChangesetNum())
-			#rimuovo la cartella temporanea
-			shutil.rmtree(tmpDir)
-		except:
-			raise
+		branch = Branch(path.join(self.repoDir, branchName))
+		if (path.isdir(branch.branchDir)):
+			raise Exception
 
-		return branch
+		os.makedirs(branch.branchDir)
+
+		#se sto creando il trunk, creo il primo changeset vuoto, il chiamante deve riempirlo
+		if (isTrunk):
+			changeset = branch.addChangeset("branch created")
+
+		#se sto creando un branch, copio l'ultima versione del trunk
+		else:
+			try:
+				#prendo il trunk
+				trunk = Branch(path.join(self.repoDir, TRUNK))
+				#ottengo la LatestVersion e la copio nella cartella temporanea
+				tmpDir = trunk.getLatestVersion()
+				#creo il branch sul disco e ci copio il contenuto della cartella temporanea
+				changeset = branch.addChangeset("branch created", trunk.getLastChangesetNum()) 
+				dir_uti.copy_tree(tmpDir, changeset.changesetDir)
+			except:
+				raise
+
+		#setto il primo changeset come changeset di backup
+		uti.writeFileByTag("is_backup", 1, changeset.changesetTxt)
 
 
 	def removeBranch(self, branchName):
 		"""rimuove il branch "branchName" """
 
 		if (self.existsBranch(branchName)):
-			if (branchName == "trunk"):
+			if (branchName == TRUNK):
 				raise Exception("Impossibile eliminare il ramo \"trunk\"")
 			shutil.rmtree(path.join(self.repoDir, branchName))
