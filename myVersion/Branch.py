@@ -119,7 +119,7 @@ class Branch:
 		dirs = [ dirName for dirName in os.listdir(self.branchDir) if ((path.isdir(path.join(self.branchDir, dirName))) & (dirName.isdigit())) ]
 		
 		#ritorno una tupla di "chageset - data creazione - commento"
-		results = ()
+		results = []
 		for dir in natsort.natsorted(dirs):
 			changeset = self.getChangeset(int(dir))
 			#prendo il path della cartella del changeset
@@ -148,7 +148,7 @@ class Branch:
 				changes += "{} ({})\n".format(file, REMOVED)
 
 			#aggiungo il changeset e le sue statistiche
-			results += ("{} - {} - {} \n{}".format(dir, str(date), comment, changes), )
+			results.append("{} - {} - {} \n{}".format(dir, str(date), comment, changes))
 
 		return results
 

@@ -4,6 +4,7 @@ import time
 import datetime
 import shutil
 import filecmp
+import socket
 import rpyc
 import inspect
 import uti
@@ -198,11 +199,23 @@ class Client:
 
 			elif (command == "setrepo"):
 				self.checkCommand(commandList, paramNum=1)
-				self.setRepo(commandList.pop())
+				try:
+					repoName = commandList.pop()
+					self.setRepo(repoName)
+				except Exception as ex:
+					print(ex, end="\n\n")
+					if (uti.askQuestion("Effettuare il map del repository?")):
+						self.mapRepo(repoName)
 
 			elif (command == "setbranch"): 
 				self.checkCommand(commandList, paramNum=1, checkRepo=True)
-				self.setBranch(commandList.pop())
+				try:
+					branchName = commandList.pop()
+					self.setBranch(branchName)
+				except Exception as ex:
+					print(ex, end="\n\n")
+					if (uti.askQuestion("Effettuare il map del branch?")):
+						self.mapBranch(branchName)
 
 			elif (command == "history"): 
 				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
@@ -995,17 +1008,6 @@ class Client:
 		return path.join(self.root, LAST_RUN_FILE)
 
 
-	#def findFileOnServer(self, localFile, startChangeset=None): 
-	#	"""ritorna il percorso del file sul server, il file viene cercato a partire dallo "startChangeset" nella cartella del branch corrente"""
-
-	#	serverFile = self.server.findFile(self.getCurrRepo(), self.getCurrBranch(), localFile.replace("{}\\".format(self.getCurrPath()), ""), startChangeset)
-		
-	#	try:
-	#		return self.copyFileToClient(serverFile)
-	#	except:
-	#		raise Exception("File non presente.")
-	
-
 	"""NOTA: non ammette 2 file con lo stesso nome"""
 	def findFileInPendings(self, fileName):
 		"""cerca il file "fileName" frai pending"""
@@ -1029,10 +1031,23 @@ class Client:
 try:
 	#connetto client e server
 	print("Benvenuto in pyVersioning - Beta")
-	print("Digitare l'ip del server (\"localhost\" per un server locale):")
-	host = input()
+	
+	#prendo l'indirizzo del server
+	while (True):
+		print("Digitare l'ip del server (\"localhost\" per un server locale):")
+		host = input()
+		if (host == "localhost"):
+			break
+
+		try:
+			socket.inet_aton(host)
+			break
+		except socket.error as er:
+			print("IP non valido", end="\n\n")
+
+	#stabilisco la connessione
 	print("Connessione al server...", sep="\n")
-	connection = rpyc.connect(host, 18812, config={'allow_all_attrs': True})
+	connection = rpyc.connect(host, 18812)
 	print("Connessione stabilita.", end="\n\n")
 	
 	#lancio il client
