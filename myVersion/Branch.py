@@ -157,24 +157,25 @@ class Branch:
 
 	
 	def getLatestVersion(self):
-		"""copia l'ultima versione completa nella cartella branchDir/tmp """
-
-		destDir = path.join(self.branchDir, TMP_DIR)
-		if (path.isdir(destDir)):
-			shutil.rmtree(destDir)
+		"""copia l'ultima versione completa nella cartella"""
 
 		#prendo l'ultimo changeset
 		lastChangeset = self.getLastChangesetNum()
 		
 		#prendo la versione associata all'ultimo changeset
-		self.getSpecificVersion(lastChangeset, destDir)
+		destdir = self.getSpecificVersion(lastChangeset)
 
-		return (destDir, lastChangeset)
+		return destdir
 
 	
-	def getSpecificVersion(self, changesetNum, destDir):
-		"""copia la versione completa fino al changeset "changesetNum" nella cartella destDir"""
+	def getSpecificVersion(self, changesetNum):
+		"""copia la versione completa fino al changeset "changesetNum" nella cartella branchDir/tmp"""
 		
+		#creo la cartella temporanea
+		destDir = path.join(self.branchDir, TMP_DIR)
+		if (path.isdir(destDir)):
+			shutil.rmtree(destDir)
+
 		#scorro tutti i changeset all'indietro fino al primo changeset di backup
 		currChangeset = self.getLastBackupChangeset(changesetNum)
 
@@ -190,6 +191,8 @@ class Branch:
 			for fileToRemove in uti.readFileByTag("removed", currChangeset.changesetTxt):
 				os.remove(path.join(destDir, fileToRemove))
 		os.remove(path.join(destDir, CHANGESET_FILE))
+
+		return destDir
 
 	
 	def getLastBackupChangeset(self, startChangeset):

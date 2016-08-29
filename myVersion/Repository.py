@@ -59,7 +59,7 @@ class Repository:
 
 		#se sto creando il trunk, creo il primo changeset vuoto, il chiamante deve riempirlo
 		if (isTrunk):
-			changeset = branch.addChangeset("branch created")
+			changeset = branch.addChangeset("branch created", isBackup=True)
 
 		#se sto creando un branch, copio l'ultima versione del trunk
 		else:
@@ -69,13 +69,10 @@ class Repository:
 				#ottengo la LatestVersion e la copio nella cartella temporanea
 				tmpDir = trunk.getLatestVersion()
 				#creo il branch sul disco e ci copio il contenuto della cartella temporanea
-				changeset = branch.addChangeset("branch created", trunk.getLastChangesetNum()) 
+				changeset = branch.addChangeset("branch created", trunk.getLastChangesetNum(), isBackup=True) 
 				dir_uti.copy_tree(tmpDir, changeset.changesetDir)
 			except:
 				raise
-
-		#setto il primo changeset come changeset di backup
-		uti.writeFileByTag("is_backup", 1, changeset.changesetTxt)
 
 
 	def removeBranch(self, branchName):

@@ -112,17 +112,19 @@ class Server(rpyc.Service):
 
 	def exposed_listBranch(self, repoName, branchName):
 		"""ritorna tutti i file e sottocartelle del branch selezionato"""
-
+		
+		#creo una versione completa in una cartella temporanea
 		tmpDir = self.getRepo(repoName).getBranch(branchName).getLatestVersion()
 
+		#memorizzo una lista dei file nella versione
 		list = self.exposed_listDir(tmpDir)
+
 		#rimuovo la cartella temporanea
 		shutil.rmtree(tmpDir)
 
-		for elem in list:
-			elem.replace(tmpDir, "")
-
-		return list
+		#formatto i path dei file per la stampa
+		return [elem.replace(tmpDir,"") for elem in list]
+		
 
 
 	def exposed_showRepos(self):
@@ -145,22 +147,17 @@ class Server(rpyc.Service):
 
 	def exposed_getLatestVersion(self, repoName, branchName):
 		"""scarica l'ultima versione del branch "branchName" nella cartella in una cartella temporanea """
-		
-		return self.getRepo(repoName).getBranch(branchName).getLatestVersion()
+		branch = self.getRepo(repoName).getBranch(branchName)
+
+		return branch.getLatestVersion(), branch.getLastChangesetNum()
 
 
 	def exposed_getSpecificVersion(self, repoName, branchName, changesetNum):
 		"""scarica la versiona aggiornata al changeset "changesetNum" del branch "branchName" in una cartella temporanea """
 
 		branch = self.getRepo(repoName).getBranch(branchName)
-		destDir = path.join(branch.branchDir, TMP_DIR)
-		if (path.isdir(destDir)):
-			shutil.rmtree(destDir)
-#TODO: modificare senza destdir come la getlatest
-		self.getRepo(repoName).getBranch(branchName).getSpecificVersion(changesetNum, destDir), 
+		return self.getRepo(repoName).getBranch(branchName).getSpecificVersion(changesetNum), 
 		
-		return destDir
-
 
 	def getRepoList(self):
 		"""ritorna la lista di repository presenti"""
