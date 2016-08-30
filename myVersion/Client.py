@@ -32,6 +32,8 @@ class Client:
 
 		#setto il path della cartella root
 		self.root = "C:\pyV\pyVclient"
+		if (path.isdir(self.root) == False):
+			os.makedirs(self.root)
 		self.setCurrPath(self.root)
 
 		#setto il riferimento alla connesione con il server
@@ -39,11 +41,14 @@ class Client:
 		#chiedo all'utente se desidera impostare l'ultimo percorso usato
 		if (uti.askQuestion("Impostare l'ultimo percorso aperto?")):
 			#setto il repository se memorizzato nel file
-			self.setRepo(uti.readFileByTag("last_repo", self.getLastRunFile())[0])
+			try:
+				self.setRepo(uti.readFileByTag("last_repo", self.getLastRunFile())[0])
 
-			#setto il branch se memorizzato nel file
-			self.setBranch(uti.readFileByTag("last_branch", self.getLastRunFile())[0])
-			self.printCurrPath()
+				#setto il branch se memorizzato nel file
+				self.setBranch(uti.readFileByTag("last_branch", self.getLastRunFile())[0])
+				self.printCurrPath()
+			except:
+				print("Impossibile effettuare l'operazione", end="\n\n")
 
 
 
@@ -883,15 +888,15 @@ class Client:
 		try:
 			#prendo il file corrispondente dal server e lo sovrascrivo al file locale
 			filePath = self.findFileInPendings(file)
-			try:
-				originalChangeset = int(uti.readFileByTag("last_changeset", self.getLocalVersionFile())[0])
-				serverFile = self.getServerFile(filePath)
+			originalChangeset = int(uti.readFileByTag("last_changeset", self.getLocalVersionFile())[0])
+			serverFile = self.getServerFile(filePath)
 
-				if (uti.askQuestion("Questo comando annullerà le modifiche sul file {}, sei sicuro?".format(file))):
+			if (uti.askQuestion("Questo comando annullerà le modifiche sul file {}, sei sicuro?".format(file))):
+				if (path.isfile(serverFile)):
 					shutil.copy2(serverFile, path.dirname(filePath))
-			except:
-				#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
-				os.remove(file)
+				else:
+					#se il file non è presente sul server era in add sul client, quindi va semplicemente rimosso
+					os.remove(filePath)
 			print("Modifiche annullate.", end="\n\n")
 		except:
 			raise Exception("File non presente in pending.")

@@ -155,7 +155,7 @@ class Server(rpyc.Service):
 		"""scarica la versiona aggiornata al changeset "changesetNum" del branch "branchName" in una cartella temporanea """
 
 		branch = self.getRepo(repoName).getBranch(branchName)
-		return self.getRepo(repoName).getBranch(branchName).getSpecificVersion(changesetNum), 
+		return self.getRepo(repoName).getBranch(branchName).getSpecificVersion(changesetNum)
 		
 
 	def exposed_getLastChangeset(self, repoName, branchName):
@@ -249,6 +249,13 @@ class Server(rpyc.Service):
 ### Main ###
 if __name__ == "__main__":
 	print("Benvenuto su pyVersioning (Server)")
+	
+	#creo la cartella di installazione se non presente
+	root = "C:\pyV\pyVServer"
+	if (path.isdir(root) == False):
+		os.makedirs(root)
+
+	#avvio il servizio rpyc
 	print("Avvio servizio in corso...")
 	server = ThreadedServer(Server, port = 18812)
 	print("Server attivo.")	
