@@ -205,25 +205,14 @@ class Client:
 
 			elif (command == "setrepo"):
 				self.checkCommand(commandList, paramNum=1)
-				try:
-					repoName = commandList.pop()
-					self.setRepo(repoName)
-					self.printCurrPath()
-				except Exception as ex:
-					print(ex, end="\n\n")
-					if (uti.askQuestion("Effettuare il map del repository?")):
-						self.mapRepo(repoName)
+				self.setRepo(commandList.pop())
+				self.printCurrPath()
 
 			elif (command == "setbranch"): 
 				self.checkCommand(commandList, paramNum=1, checkRepo=True)
-				try:
-					branchName = commandList.pop()
-					self.setBranch(branchName)
-					self.printCurrPath()
-				except Exception as ex:
-					print(ex, end="\n\n")
-					if (uti.askQuestion("Effettuare il map del branch?")):
-						self.mapBranch(branchName)
+				branchName = commandList.pop()
+				self.setBranch(branchName)
+				self.printCurrPath()
 
 			elif (command == "history"): 
 				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
@@ -457,9 +446,9 @@ class Client:
 		for branchName in branchList:
 			#verifico se la cartella esiste in locale
 			if (self.existsBranch(branchName)):
-				print("- {} ({})".format(branchName, "mapped"))
+				print("- {} ({}) - changeset originale: {}".format(branchName, "mapped", branchList[branchName]))
 			else:
-				print("- {}".format(branchName))
+				print("- {} - changeset originale: {}".format(branchName, branchList[branchName]))
 		print()
 
 
@@ -551,24 +540,36 @@ class Client:
 		"""setta il repository corrente"""
 
 		#verifico che il repository locale esista
-		if (self.existsRepo(repoName) == False):
-			raise Exception("Il repository {} non esiste o non è stato mappato".format(repoName))
-
-		#aggiorno il repository corrente
-		self.setCurrRepo(repoName)
-		self.setCurrBranch("")
+		if (self.existsRepo(repoName)):
+			#aggiorno il repository corrente
+			self.setCurrRepo(repoName)
+			self.setCurrBranch("")
+		else:
+			#verifico se esiste sul server
+			if (self.server.existsRepo(repoName)):
+				print("Il repository {} non è stato mappato".format(repoName))
+				if (uti.askQuestion("Effettuare il map del repository?")):
+					self.mapRepo(repoName)
+			else:
+				print("Il repository {} non esiste".format(repoName))
 		
 
 	def setBranch(self, branchName):
 		"""setta il branch corrente"""
 
 		#verifico che il branch locale esista
-		if (self.existsBranch(branchName) == False):
-			raise Exception("Il branch {} non esiste o non è stato mappato".format(branchName))
+		if (self.existsBranch(branchName)):
 			
-		#aggiorno il branch corrente
-		self.setCurrBranch(branchName)
-
+			#aggiorno il branch corrente
+			self.setCurrBranch(branchName)
+		else:
+			if (self.server.existsBranch(self.getCurrRepo(), branchName)):
+				print("Il branch {} non è stato mappato".format(branchName))
+				if (uti.askQuestion("Effettuare il map del branch?")):
+					self.mapBranch(branchName)
+			else:	
+				print("Il branch {} non esiste".format(branchName))
+			
 
 	def getLatestVersion(self):
 		"""scarica l'ultima versione e la copia nella cartella del branch"""
@@ -939,7 +940,7 @@ class Client:
 
 	def printHelp(self):
 		"""stampa una lista di comandi con descrizione"""
-		print("> exit - chiude il programma",
+		print("\n> exit - chiude il programma",
 			  "> repolist - stampa la lista dei repositories presenti sul server",
 			  "> branchlist - stampa una lista dei branchs presenti sul repository corrente sul server",
 			  "> createrepo [repoName] - crea il repository \"repoName\" nel server",

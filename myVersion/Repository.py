@@ -39,10 +39,14 @@ class Repository:
 	def getBranchList(self):
 		"""ritorna la lista di branch presenti"""
 
+		list = {}
 		#prendo il contenuto della root
 		#seleziono solo le cartelle (i branch)
-		return [name for name in os.listdir(self.repoDir) 
-						if path.isdir(path.join(self.repoDir, name))]
+		for branchName in os.listdir(self.repoDir):
+			if (path.isdir(path.join(self.repoDir, branchName))):
+				list[branchName] = uti.readFileByTag("changeset_0", self.getBranch(branchName).branchTxt)[0]
+
+		return list
 
 
 	def addBranch(self, branchName, isTrunk=False):

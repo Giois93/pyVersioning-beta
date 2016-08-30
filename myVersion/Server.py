@@ -126,7 +126,6 @@ class Server(rpyc.Service):
 		return [elem.replace(tmpDir,"") for elem in list]
 		
 
-
 	def exposed_showRepos(self):
 		"""ritorna la lista di repository sul server"""
 
