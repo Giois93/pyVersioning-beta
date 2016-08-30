@@ -852,7 +852,7 @@ class Client:
 		if (tag != REMOVED):
 			#copio il file nella cartella temporanea (creo le cartelle se non presenti)
 			#prendo il path del file da copiare
-			tmpFileDir = path.dirname(file.replace(self.getCurrPath(), tmpDir)) #TODO: qui si usa la cartella tmp, per INVIARE AL SERVER, deve essere rimossa quella usata dal server per scaricare o fatta una nuova cartella
+			tmpFileDir = path.dirname(file.replace(self.getCurrPath(), tmpDir))
 			#se non esiste creo il percorso
 			if (path.isdir(tmpFileDir) == False):
 				os.makedirs(tmpFileDir)
