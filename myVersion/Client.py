@@ -8,7 +8,6 @@ import socket
 import rpyc
 import inspect
 import uti
-
 from uti import LOCAL_VERSION_FILE
 from uti import CHANGESET_FILE
 from uti import LAST_RUN_FILE
@@ -1058,7 +1057,7 @@ class Client:
 
 try:
 	#connetto client e server
-	print("Benvenuto in pyVersioning - Beta")
+	print("Benvenuto in pyVersioning")
 	
 	#prendo l'indirizzo del server
 	while (True):

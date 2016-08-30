@@ -248,7 +248,7 @@ class Server(rpyc.Service):
 
 ### Main ###
 if __name__ == "__main__":
-	print("Benvenuto su pyVersioning (Server) - Beta")
+	print("Benvenuto su pyVersioning (Server)")
 	print("Avvio servizio in corso...")
 	server = ThreadedServer(Server, port = 18812)
 	print("Server attivo.")	
