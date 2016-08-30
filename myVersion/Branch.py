@@ -26,7 +26,7 @@ class Branch:
 		self.branchTxt = path.join(self.branchDir, BRANCH_FILE)
 
 
-	def addChangeset(self, comment, changesetNum=None, isBackup=False):
+	def addChangeset(self, comment, isBackup=False):
 		"""crea il prossimo changeset"""
 		
 		#controllo se è necessario creare un changeset di backup (ne viene fatto uno ogni giorno)
@@ -53,23 +53,18 @@ class Branch:
 			except:
 				pass
 
-		#se non è specificato il changeset iniziale prendo l'id dell'ultimo changeset di questo branch
-		if (changesetNum == None):
-			changesetNum = self.getNextChangesetNum() 
-
 		#creo il changeset
-		changeset = Changeset(path.join(self.branchDir, str(changesetNum)))
+		changeset = Changeset(path.join(self.branchDir, str(self.getNextChangesetNum() )))
 
 		if (path.isdir(changeset.changesetDir)):
 			raise Exception
 
-		os.makedirs(changeset.changesetDir)		
+		os.makedirs(changeset.changesetDir)
 
-		#se sto inserendo il primo changeset nel branch scrivo anche il tag "changeset_0"
-		uti.writeFileByTag("changeset_0", str(changesetNum), self.branchTxt)
+		#aggiorno l'ultimo changeset
+		uti.writeFileByTag("last_changeset", str(self.getNextChangesetNum()), self.branchTxt)
 
-		#scrivo il file del nuovo changeset
-		uti.writeFileByTag("last_changeset", str(changesetNum), self.branchTxt)
+		#scrivo il commento per il nuovo changeset
 		uti.writeFileByTag("comment", comment, changeset.changesetTxt)
 		
 		#scrivo se il changeset è un backup

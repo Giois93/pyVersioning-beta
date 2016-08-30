@@ -23,7 +23,7 @@ def readFile(filePath):
 	"""legge l'intero file in una stringa"""
 
 	try:
-		file = open(filePath, "r")
+		file = open(filePath, "r", errors="ignore")
 		fileStr = str(file.read())
 		file.close()
 	except:
@@ -47,9 +47,9 @@ def writeFile(string, filePath, append=True):
 
 	#apro il file
 	if (append): 
-		file = open(filePath, "a")
+		file = open(filePath, "a", errors="ignore")
 	else: 
-		file = open(filePath, "w")
+		file = open(filePath, "w", errors="ignore")
 
 	#scrivo la stringa nel file (cancello righe bianche)
 	print(string, file=file)
@@ -171,10 +171,10 @@ def getDate(dateStr):
 def diff(file1, file2):
 	"""effettua un diff di due file"""
 
-	return difflib.ndiff(open(file1).readlines(), open(file2).readlines())
+	return difflib.ndiff(open(file1, errors="ignore").readlines(), open(file2, errors="ignore").readlines())
 
 	#ottengo le differenze frai due file
-	#diff = difflib.ndiff(open(file1).readlines(), open(file2).readlines())
+	#diff = difflib.ndiff(open(file1, errors="ignore").readlines(), open(file2, errors="ignore").readlines())
 	#
 	##stampo tutte le differenze con il numero di riga corrispondente
 	#line = 0

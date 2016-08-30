@@ -33,24 +33,19 @@ class Client:
 
 		#setto il path della cartella root
 		self.root = "C:\pyV\pyVclient"
+		self.setCurrPath(self.root)
 
 		#setto il riferimento alla connesione con il server
 		self.server = connection.root
-
 		#chiedo all'utente se desidera impostare l'ultimo percorso usato
 		if (uti.askQuestion("Impostare l'ultimo percorso aperto?")):
-			try:
-				#setto il repository se memorizzato nel file
-				self.setRepo(uti.readFileByTag("last_repo", self.getLastRunFile())[0])
+			#setto il repository se memorizzato nel file
+			self.setRepo(uti.readFileByTag("last_repo", self.getLastRunFile())[0])
 
-				#setto il branch se memorizzato nel file
-				self.setBranch(uti.readFileByTag("last_branch", self.getLastRunFile())[0])
-				self.printCurrPath()
-			except:
-				print("Impossibile effettuare l'operazione richiesta", end="\n\n")
-				self.setCurrPath(self.root)
-		else:
-			self.setCurrPath(self.root)
+			#setto il branch se memorizzato nel file
+			self.setBranch(uti.readFileByTag("last_branch", self.getLastRunFile())[0])
+			self.printCurrPath()
+
 
 
 	def copyDirToClient(self, dirFrom, dirTo):
@@ -100,7 +95,7 @@ class Client:
 	def copyFileToServer(self, fileFrom, fileTo):
 		"""copia il file "fileFrom" del client nel path "fileTo" sul server"""
 
-		localFile = open(fileFrom)
+		localFile = open(fileFrom, errors="ignore")
 
 		remoteFile = self.server.File()
 		remoteFile.open(fileTo, "w")
@@ -151,16 +146,16 @@ class Client:
 				os.system("cls")
 
 			elif (command == "opendir"):
-				self.checkCommand(commandList)
+				self.checkCommand(commandList, paramNum=0)
 				os.system("explorer {}".format(self.getCurrPath()))
 				print()
 
 			elif (command == "currdir"):
-				self.checkCommand(commandList)
+				self.checkCommand(commandList, paramNum=0)
 				self.printCurrPath()
 
 			elif (command == "listdir"):
-				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				self.checkCommand(commandList, paramNum=0, checkRepo=True, checkBranch=True)
 				self.listDir()
 
 			elif (command == "createrepo"):
@@ -180,11 +175,11 @@ class Client:
 				self.removeBranch(commandList.pop()) 
 
 			elif (command == "repolist"): 
-				self.checkCommand(commandList)
+				self.checkCommand(commandList, paramNum=0)
 				self.showRepos() 
 			
 			elif (command == "branchlist"): 
-				self.checkCommand(commandList, checkRepo=True)
+				self.checkCommand(commandList, paramNum=0, checkRepo=True)
 				self.showBranches()
 
 			elif (command == "maprepo"): 
@@ -215,11 +210,11 @@ class Client:
 				self.printCurrPath()
 
 			elif (command == "history"): 
-				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				self.checkCommand(commandList, paramNum=0, checkRepo=True, checkBranch=True)
 				self.showHistory()
 
 			elif (command == "getlatest"): 
-				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				self.checkCommand(commandList, paramNum=0, checkRepo=True, checkBranch=True)
 				self.getLatestVersion() 
 
 			elif (command == "getspecific"):
@@ -232,68 +227,86 @@ class Client:
 				self.commitAll()
 
 			elif (command == "pending"): 
-				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				self.checkCommand(commandList, paramNum=0, checkRepo=True, checkBranch=True)
 				self.printPendingChanges()
 				
 			elif (command == "excludeextension"): 
 				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
 				self.excludeExtension(commandList.pop())
+				self.printPendingChanges()
 				
 			elif (command == "excludefile"): 
-				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
-				self.excludeFile(commandList.pop())
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				commandList.reverse()
+				self.excludeFile(" ".join(commandList))
+				self.printPendingChanges()
 
 			elif (command == "includeextension"):
 				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
 				self.includeExtension(commandList.pop())
+				self.printPendingChanges()
 
 			elif (command == "includeallextensions"):
-				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				self.checkCommand(commandList, paramNum=0, checkRepo=True, checkBranch=True)
 				self.includeAllExtension()
+				self.printPendingChanges()
 
 			elif (command == "includefile"):
-				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
-				self.includeFile(commandList.pop())
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				commandList.reverse()
+				self.includeFile(" ".join(commandList))
+				self.printPendingChanges()
 
 			elif (command == "includeallfiles"):
-				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				self.checkCommand(commandList, paramNum=0, checkRepo=True, checkBranch=True)
 				self.includeAllFile()
+				self.printPendingChanges()
+
+			elif (command == "includeall"):
+				self.checkCommand(commandList, paramNum=0, checkRepo=True, checkBranch=True)
+				self.includeAllExtension()
+				self.includeAllFile()
+				self.printPendingChanges()
 
 			elif (command == "printexcluded"):
-				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				self.checkCommand(commandList, paramNum=0, checkRepo=True, checkBranch=True)
 				self.printExcluded()
 
 			elif (command == "commit"): 
-				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
-				self.commitOne(commandList.pop())
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				commandList.reverse()
+				self.commitOne(" ".join(commandList))
 
 			elif (command == "commitall"): 
-				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				self.checkCommand(commandList, paramNum=0, checkRepo=True, checkBranch=True)
 				self.commitAll()
 
 			elif (command == "undo"): 
-				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
 				try:
-					self.undoFile(commandList.pop())
+					commandList.reverse()
+					self.undoFile(" ".join(commandList))
 				except:
 					self.printPendingChanges()
 
 			elif (command == "undoall"): 
-				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
+				self.checkCommand(commandList, paramNum=0, checkRepo=True, checkBranch=True)
 				self.undoAll()
 			
 			elif (command == "compare"):
-				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
 				try:
-					self.compare(commandList.pop())
+					commandList.reverse()
+					self.compare(" ".join(commandList))
 				except Exception as ex:
 					print(ex, end="\n\n")
 					self.printPendingChanges()
 			
 			elif (command == "winmerge"):
-				self.checkCommand(commandList, paramNum=1, checkRepo=True, checkBranch=True)
+				self.checkCommand(commandList, checkRepo=True, checkBranch=True)
 				try:
-					self.merge(commandList.pop())
+					commandList.reverse()
+					self.merge(" ".join(commandList))
 				except Exception as ex:
 					print(ex, end="\n\n")
 					self.printPendingChanges()
@@ -310,10 +323,10 @@ class Client:
 			print(ex, end="\n\n")
 
 
-	def checkCommand(self, commandList, paramNum=0, checkRepo=False, checkBranch=False):
+	def checkCommand(self, commandList, paramNum=None, checkRepo=False, checkBranch=False):
 		"""controlla che i parametri e il path corrente siano compatibili con il comando"""
 
-		if (len(commandList) != paramNum):
+		if ((paramNum != None) & (len(commandList) != paramNum)):
 			raise Exception("Parametri errati")
 		elif ((checkRepo) & (not self.getCurrRepo())):
 			raise Exception("Nessun repository settato")
@@ -389,16 +402,20 @@ class Client:
 			try:
 				if (uti.askQuestion("Questa operazione rimuoverà permanentemente il repository {} dal server. Continuare?".format(repoName))):
 					self.server.removeRepo(repoName)
-					print("Il repository {} è stato rimosso dal server".format(repoName))
+					print("Il repository {} è stato rimosso dal server".format(repoName), end="\n\n")
 
-					if (uti.askQuestion("Eliminare anche la copia locale?")):
-						self.removeRepoMap(repoName)
+					if (self.existsRepo(repoName)):
+						if (uti.askQuestion("Eliminare anche la copia locale?")):
+							self.removeRepoMap(repoName)
 			except:
 				raise Exception("Impossibile effettuare l'operazione.")
 
 
 	def removeBranch(self, branchName):
 		"""rimuove il branch dal server"""
+
+		if (branchName == TRUNK):
+			raise Exception("Impossibile rimuovere il ramo principale.")
 
 		#verifico che la cartella esista
 		if (self.server.existsBranch(self.getCurrRepo(), branchName) == False):
@@ -408,10 +425,10 @@ class Client:
 				uti.askQuestion("Questa operazione rimuoverà permanentemente il branch {} dal server. Continuare?".format(branchName))
 				self.server.removeBranch(self.getCurrRepo(), branchName)
 
-				print("Il branch {} è stato rimosso dal server".format(branchName))
-
-				if (uti.askQuestion("Eliminare anche la copia locale?")):
-					self.removeBranchMap(branchName)
+				print("Il branch {} è stato rimosso dal server".format(branchName), end="\n\n")
+				if (self.existsBranch(branchName)):
+					if (uti.askQuestion("Eliminare anche la copia locale?")):
+						self.removeBranchMap(branchName)
 			except:
 				raise Exception("Impossibile effettuare l'operazione.")
 
@@ -721,7 +738,6 @@ class Client:
 
 		uti.writeFileByTag("ext_ignore", ".{}".format(ext), self.getLocalVersionFile())
 		print("Estensione *.{} esclusa.".format(ext), end="\n\n")
-		self.printPendingChanges()
 
 
 	def includeExtension(self, ext):
@@ -729,7 +745,6 @@ class Client:
 
 		uti.removeByTagAndVal("ext_ignore", ".{}".format(ext), self.getLocalVersionFile())
 		print("Estensione *.{} inclusa.".format(ext), end="\n\n")
-		self.printPendingChanges()
 
 
 	def includeAllExtension(self):
@@ -737,7 +752,6 @@ class Client:
 
 		uti.removeByTag("ext_ignore", self.getLocalVersionFile())
 		print("Tutte le estensioni sono state incluse.", end="\n\n")
-		self.printPendingChanges()
 
 
 	def excludeFile(self, fileName):
@@ -746,7 +760,6 @@ class Client:
 		file = self.findFileInPendings(fileName)
 		uti.writeFileByTag("file_ignore", file, self.getLocalVersionFile())
 		print("File {} escluso.".format(fileName), end="\n\n")
-		self.printPendingChanges()
 
 
 	def includeFile(self, fileName):
@@ -755,7 +768,6 @@ class Client:
 		#file = self.findFileInPendings(fileName)
 		uti.removeByTagAndVal("file_ignore", fileName, self.getLocalVersionFile())
 		print("File {} incluso".format(fileName), end="\n\n")
-		self.printPendingChanges()
 
 
 	def includeAllFile(self):
@@ -763,7 +775,6 @@ class Client:
 
 		uti.removeByTag("file_ignore", self.getLocalVersionFile())
 		print("Tutti i file sono stati inclusi.", end="\n\n")
-		self.printPendingChanges()
 
 	
 	def printExcluded(self):
@@ -778,7 +789,7 @@ class Client:
 			print("*{}".format(ext))
 
 		for file in	excludedFiles:
-			print(file)
+			print(file.replace(self.getCurrPath(), ""))
 		print()
 
 
@@ -786,16 +797,17 @@ class Client:
 		"""crea un nuovo changeset con le modifiche del solo file "fileName" """
 
 		#creo una cartella temporanea
-		tmpDir = path.join(self.getCurrPath(), TMP_DIR)
+		tmpDir = path.join(self.getCurrPath(), TO_COMMIT_DIR)
 		
 		#prendo il file corrente dai pending
 		try:
 			file = self.findFileInPendings(fileName)
+			tag = self.getPendingChanges()[file]
 		except:
 			raise
 		
 		#aggiunto i file da committare nella cartella temporanea
-		self.addForCommit(file, tmpDir)
+		self.addForCommit(file, tag, tmpDir)
 		
 		#effettuo il commit
 		print("Inserire un commento: ")
@@ -856,7 +868,6 @@ class Client:
 		"""effettua il commit dei file contenuti in "sourceDir" su un nuovo changeset"""
 
 		#creo un nuovo changeset in cui copiare la cartella temporanea
-
 		changesetDir = self.server.addChangeset(self.getCurrRepo(), self.getCurrBranch(), comment)
 		self.copyDirToServer(sourceDir, changesetDir)
 
@@ -864,7 +875,7 @@ class Client:
 		if (path.isdir(sourceDir)):
 			shutil.rmtree(sourceDir)
 		
-		uti.writeFileByTag("last_changeset", changesetNum, self.getLocalVersionFile())
+		uti.writeFileByTag("last_changeset", self.server.getLastChangeset(self.getCurrRepo(), self.getCurrBranch()), self.getLocalVersionFile())
 
 
 	def undoFile(self, file):
@@ -906,9 +917,8 @@ class Client:
 		if (path.isfile(pendingFile) == False):
 			raise Exception("File non presente sul client")
 
-		try:
-			serverFile = self.getServerFile(pendingFile)
-		except:
+		serverFile = self.getServerFile(pendingFile)
+		if (path.isfile(serverFile) == False):
 			raise Exception("File non presente sul server")
 
 		print ("".join(uti.diff(serverFile, pendingFile)))
@@ -925,9 +935,8 @@ class Client:
 		if (path.isfile(pendingFile) == False):
 			raise Exception("File non presente sul client")
 
-		try:
-			serverFile = self.getServerFile(pendingFile)
-		except:
+		serverFile = self.getServerFile(pendingFile)
+		if (path.isfile(serverFile) == False):
 			raise Exception("File non presente sul server")
 
 		#lancio winmerge
@@ -935,7 +944,6 @@ class Client:
 		winmergepath = path.join(exePath, "WinMerge", "WinMergePortable.exe")
 
 		os.system("{} {} {}".format(winmergepath, pendingFile, serverFile))
-		print()
 
 
 	def printHelp(self):
@@ -965,12 +973,14 @@ class Client:
 			  "> includeallextensions - include tutte le estensioni precedentemente escluse",
 			  "> includefile [file] - include il file se precedentemente escluso",
 			  "> includeallfiles - include tutti i file precedentemente esclusi",
+			  "> includeall - include tutti i file e estensioni precedentemente esclusi",
 			  "> printexcluded - stampa la lista di estensioni file esclusi",
-			  "> commit [file] [comment] - effettua il commit del file \"file\" associando il commento \"comment\"",
-			  "> commitall [comment] - effettua il commit di tutti i file in pending associando il commento \"comment\"",
+			  "> commit [file] - effettua il commit del file \"file\" associando il commento \"comment\"",
+			  "> commitall - effettua il commit di tutti i file in pending associando il commento \"comment\"",
 			  "> undo [file] - annulla le modifiche sul file \"file\"",
 			  "> undoall - annulla le modifiche su tutti i file in pending e scarica l'ultima versione",
 			  "> compare [file] - effettua un confronto fra il file \"file\" e la versione del server",
+			  "> winmerge [file] - effettua un confronto fra il file \"file\" e la versione del server con winmerge",
 			  "> opendir - apre la cartella corrente",
 			  "> clear - pulisce il terminale",
 			  "> help - stampa la guida", sep="\n", end="\n\n")

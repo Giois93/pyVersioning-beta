@@ -28,7 +28,7 @@ class Server(rpyc.Service):
 
 		def exposed_open(self, filePath, mode="r"):
 			self.filePath = filePath
-			self.file = open(filePath, mode)
+			self.file = open(filePath, mode, errors="ignore")
 
 		def exposed_write(self, bytes):
 			return self.file.write(bytes)
@@ -157,6 +157,11 @@ class Server(rpyc.Service):
 		branch = self.getRepo(repoName).getBranch(branchName)
 		return self.getRepo(repoName).getBranch(branchName).getSpecificVersion(changesetNum), 
 		
+
+	def exposed_getLastChangeset(self, repoName, branchName):
+		"""ritorna l'ultimo changeset del branch"""
+		return self.getRepo(repoName).getBranch(branchName).getLastChangesetNum()
+
 
 	def getRepoList(self):
 		"""ritorna la lista di repository presenti"""
