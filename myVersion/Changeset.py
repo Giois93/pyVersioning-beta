@@ -4,16 +4,18 @@ import time
 import distutils.dir_util as dir_uti
 import uti
 from uti import CHANGESET_FILE
+from uti import COMMIT_FILE
 
 class Changeset:
 	
 	changesetDir = ""	#path del changeset
 	changesetTxt = ""	#path del file changeset.txt.pyV
-
+	commitTxt	 = ""   #path del file commit.txt.pyV
 
 	def __init__(self, changesetDir):
 		self.changesetDir = changesetDir
 		self.changesetTxt = path.join(self.changesetDir, CHANGESET_FILE)
+		self.commitTxt = path.join(self.changesetDir, COMMIT_FILE)
 
 
 	def isBackup(self):

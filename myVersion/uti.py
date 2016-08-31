@@ -10,8 +10,9 @@ LOCAL_VERSION_FILE	= "local.txt.pyV"
 BRANCH_FILE			= "branch.txt.pyV"
 CHANGESET_FILE		= "changeset.txt.pyV"
 LAST_RUN_FILE		= "lastrun.txt.pyV"
+COMMIT_FILE			= "commit.txt.pyV"
 TMP_DIR				= "tmp"
-TO_COMMIT_DIR		= "to_commit"
+COMMIT_DIR			= "commit"
 TRUNK				= "trunk"
 EDIT				= "edit"
 OLD					= "old"
@@ -73,15 +74,21 @@ def writeFileByTag(tag, value, filePath, add=False):
 def removeByTag(tag, filePath):
 	"""cancella le righe contenenti il tag dal file filePath"""
 
-	newFileStr = re.sub("{}=(.*)".format(tag), "", readFile(filePath))
-	writeFile(newFileStr, filePath, False)
+	try:
+		newFileStr = re.sub("{}=(.*)".format(tag), "", readFile(filePath))
+		writeFile(newFileStr, filePath, False)
+	except:
+		pass
 
 
 def removeByTagAndVal(tag, value, filePath):
 	"""cancella la riga dal file "filePath" """
-	
-	newFileStr = re.sub("{}=(.*){}(.*)".format(tag, value), "", readFile(filePath))
-	writeFile(newFileStr, filePath, False)
+
+	try:
+		newFileStr = re.sub("{}=(.*){}(.*)".format(tag, value), "", readFile(filePath))
+		writeFile(newFileStr, filePath, False)
+	except:
+		pass
 
 
 def askAndRemoveDir(dir, askOverride=False):

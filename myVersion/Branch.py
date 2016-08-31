@@ -8,6 +8,7 @@ import time
 import uti
 from uti import BRANCH_FILE
 from uti import CHANGESET_FILE
+from uti import COMMIT_FILE
 from uti import TMP_DIR
 from uti import EDIT
 from uti import OLD
@@ -133,18 +134,30 @@ class Branch:
 
 			#prendo una lista di tutti i file modificati in questo changeset
 			changes = ""
-			for file in uti.readFileByTag(EDIT, changeset.changesetTxt):
-				changes += "{} ({})\n".format(file, EDIT)
-				
-			for file in uti.readFileByTag(OLD, changeset.changesetTxt):
-				changes += "{} ({})\n".format(file, OLD)
-				
-			for file in uti.readFileByTag(ADD, changeset.changesetTxt):
-				changes += "{} ({})\n".format(file, ADD)
-				
-			for file in uti.readFileByTag(REMOVED, changeset.changesetTxt):
-				changes += "{} ({})\n".format(file, REMOVED)
+			try:
+				for file in uti.readFileByTag(EDIT, changeset.commitTxt):
+					changes += "{} ({})\n".format(file, EDIT)
+			except: 
+				pass
 
+			try:
+				for file in uti.readFileByTag(OLD, changeset.commitTxt):
+					changes += "{} ({})\n".format(file, OLD)
+			except: 
+				pass
+
+			try:
+				for file in uti.readFileByTag(ADD, changeset.commitTxt):
+					changes += "{} ({})\n".format(file, ADD)
+			except: 
+				pass
+
+			try:
+				for file in uti.readFileByTag(REMOVED, changeset.commitTxt):
+					changes += "{} ({})\n".format(file, REMOVED)
+			except: 
+				pass
+			
 			#aggiungo il changeset e le sue statistiche
 			results.append("{} - {} - {} \n{}".format(dir, str(date), comment, changes))
 
@@ -183,9 +196,13 @@ class Branch:
 			#copia di tutti i file e sottocartelle contenute nella cartella sourceDir dentro la cartella destDir
 			dir_uti.copy_tree(currChangeset.changesetDir, destDir)
 			#rimuove tutti i file cancellati con questo changeset
-			for fileToRemove in uti.readFileByTag("removed", currChangeset.changesetTxt):
+			for fileToRemove in uti.readFileByTag(REMOVED, currChangeset.commitTxt):
 				os.remove(path.join(destDir, fileToRemove))
-		os.remove(path.join(destDir, CHANGESET_FILE))
+		try:
+			os.remove(path.join(destDir, CHANGESET_FILE))
+			os.remove(path.join(destDir, COMMIT_FILE))
+		except:
+			pass
 
 		return destDir
 

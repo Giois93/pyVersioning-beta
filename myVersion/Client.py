@@ -9,10 +9,10 @@ import rpyc
 import inspect
 import uti
 from uti import LOCAL_VERSION_FILE
-from uti import CHANGESET_FILE
 from uti import LAST_RUN_FILE
 from uti import TMP_DIR
-from uti import TO_COMMIT_DIR
+from uti import COMMIT_DIR
+from uti import COMMIT_FILE
 from uti import TRUNK
 from uti import EDIT
 from uti import OLD
@@ -662,8 +662,8 @@ class Client:
 		for dirPath, dirNames, files in os.walk(self.currPath):
 			if (TMP_DIR in dirNames):
 				dirNames.remove(TMP_DIR)
-			if (TO_COMMIT_DIR in dirNames):
-				dirNames.remove(TO_COMMIT_DIR)
+			if (COMMIT_DIR in dirNames):
+				dirNames.remove(COMMIT_DIR)
 
 			for fileName in files:
 				
@@ -804,7 +804,7 @@ class Client:
 		"""crea un nuovo changeset con le modifiche del solo file "fileName" """
 
 		#creo una cartella temporanea
-		tmpDir = path.join(self.currPath, TO_COMMIT_DIR)
+		tmpDir = path.join(self.currPath, COMMIT_DIR)
 		
 		#prendo il file corrente dai pending
 		try:
@@ -820,14 +820,14 @@ class Client:
 		print("Inserire un commento: ")
 		comment = input()
 		self.doCommit(tmpDir, comment)
-		print("File {} aggiornato con successo.".format(fileName), end="\n\n")
+		print("\nFile {} aggiornato con successo.".format(fileName), end="\n\n")
 
 
 	def commitAll(self):
 		"""crea un nuovo changeset con le modifiche dei file in pending"""
 
 		#creo una cartella temporanea
-		tmpDir = path.join(self.currPath, TO_COMMIT_DIR)
+		tmpDir = path.join(self.currPath, COMMIT_DIR)
 		if (path.isdir(tmpDir)):
 			shutil.rmtree(tmpDir)
 		os.makedirs(tmpDir)
@@ -846,7 +846,7 @@ class Client:
 		comment = input()
 		self.doCommit(tmpDir, comment)
 
-		print("Modifiche inviate con successo.", end="\n\n")
+		print("\nModifiche inviate con successo.", end="\n\n")
 
 		#chiedo all'utente se desidera anche aggiornare la versione locale
 		if (uti.askQuestion("Scaricare ultima versione?")):
@@ -868,7 +868,7 @@ class Client:
 			shutil.copy2(file, tmpFileDir)
 
 		#inserisco il tag nel file changeset.txt.pyV
-		uti.writeFileByTag(tag, file.replace("{}\\".format(self.currPath), ""), path.join(tmpDir, CHANGESET_FILE), True)
+		uti.writeFileByTag(tag, file.replace("{}\\".format(self.currPath), ""), path.join(tmpDir, COMMIT_FILE), True)
 
 
 	def doCommit(self, sourceDir, comment):
