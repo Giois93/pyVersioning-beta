@@ -80,7 +80,7 @@ def removeByTag(tag, filePath):
 def removeByTagAndVal(tag, value, filePath):
 	"""cancella la riga dal file "filePath" """
 	
-	newFileStr = re.sub("{}=(.*){}(.*)\n".format(tag, value), "", readFile(filePath))
+	newFileStr = re.sub("{}=(.*){}(.*)".format(tag, value), "", readFile(filePath))
 	writeFile(newFileStr, filePath, False)
 
 
