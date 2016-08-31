@@ -110,7 +110,7 @@ class Branch:
 
 
 	def getChangesetList(self):
-		"""ritorna la lista dei changeset"""
+		"""ritorna la lista dei changesets con modifiche"""
 
 		#prendo tutte le cartelle all'interno del branch (i changeset)
 		dirs = [ dirName for dirName in os.listdir(self.branchDir) if ((path.isdir(path.join(self.branchDir, dirName))) & (dirName.isdigit())) ]
@@ -152,7 +152,7 @@ class Branch:
 
 	
 	def getLatestVersion(self):
-		"""copia l'ultima versione completa nella cartella"""
+		"""copia l'ultima versione completa in una cartella temporanea"""
 
 		#prendo l'ultimo changeset
 		lastChangeset = self.getLastChangesetNum()
@@ -201,4 +201,3 @@ class Branch:
 		
 		#se non viene trovato nessun changeset di backup alzo un'eccezione
 		raise Exception
-		

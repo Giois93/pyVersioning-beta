@@ -60,6 +60,8 @@ class Server(rpyc.Service):
 
 
 	def exposed_addRepo(self, repoName):
+		"""crea un nuovo repository, il trunk e il changeset 0, ritorna la directory del changeset 0"""
+
 		self.addRepo(repoName)
 		return self.getRepo(repoName).getBranch(TRUNK).getChangeset(0).changesetDir
 
@@ -68,10 +70,6 @@ class Server(rpyc.Service):
 		self.removeRepo(repoName)
 
 
-	def exposed_existsBranch(self, repoName, branchName):
-		return self.getRepo(repoName).existsBranch(branchName)
-
-	
 	def exposed_addBranch(self, repoName, branchName):
 		"""crea un nuovo branch"""
 
@@ -82,10 +80,6 @@ class Server(rpyc.Service):
 		"""rimuove il branch"""
 		
 		self.getRepo(repoName).removeBranch(branchName)
-
-
-	def exposed_mapBranch(self, repoName, branchName, destDir):
-		self.mapBranch(repoName, branchName, destDir)
 
 
 	def exposed_addChangeset(self, repoName, branchName, comment):
@@ -105,8 +99,6 @@ class Server(rpyc.Service):
 
 
 	def exposed_listDir(self, dir):
-
-		#scarico l'ultima versione in una cartella temporanea
 		return uti.listDir(dir)
 
 
@@ -127,7 +119,7 @@ class Server(rpyc.Service):
 		
 
 	def exposed_showRepos(self):
-		"""ritorna la lista di repository sul server"""
+		"""ritorna la lista di repositories sul server"""
 
 		return self.getRepoList()
 
@@ -139,13 +131,13 @@ class Server(rpyc.Service):
 
 
 	def exposed_showChangesets(self, repoName, branchName):
-		"""ritorna la lista di changeset nel branch "branchName" """
+		"""ritorna la lista di changeset nel branch "branchName" con i file modificati"""
 		
 		return self.getRepo(repoName).getBranch(branchName).getChangesetList()
 
 
 	def exposed_getLatestVersion(self, repoName, branchName):
-		"""scarica l'ultima versione del branch "branchName" nella cartella in una cartella temporanea """
+		"""scarica l'ultima versione del branch "branchName" in una cartella temporanea """
 		branch = self.getRepo(repoName).getBranch(branchName)
 
 		return branch.getLatestVersion(), branch.getLastChangesetNum()

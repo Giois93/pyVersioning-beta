@@ -23,9 +23,9 @@ from uti import REMOVED
 class Client:
 	
 	root = ""
-	currPath = ""
-	currRepo = ""
-	currBranch = ""
+	_currPath = ""
+	_currRepo = ""
+	_currBranch = ""
 	server = None
 
 	def __init__(self, connection):
@@ -34,7 +34,7 @@ class Client:
 		self.root = "C:\pyV\pyVclient"
 		if (path.isdir(self.root) == False):
 			os.makedirs(self.root)
-		self.setCurrPath(self.root)
+		self.currPath = self.root
 
 		#setto il riferimento alla connesione con il server
 		self.server = connection.root
@@ -141,8 +141,8 @@ class Client:
 			if (command == "exit"): 
 				self.checkCommand(commandList)
 				#memorizzo gli ultimi repo/branch settati
-				uti.writeFileByTag("last_repo", self.getCurrRepo(), self.getLastRunFile())
-				uti.writeFileByTag("last_branch", self.getCurrBranch(), self.getLastRunFile())
+				uti.writeFileByTag("last_repo", self._currRepo, self.getLastRunFile())
+				uti.writeFileByTag("last_branch", self.currBranch, self.getLastRunFile())
 				print("Programma terminato.", end="\n\n")
 			
 			elif (command == "clear"):
@@ -332,14 +332,14 @@ class Client:
 
 		if ((paramNum != None) & (len(commandList) != paramNum)):
 			raise Exception("Parametri errati")
-		elif ((checkRepo) & (not self.getCurrRepo())):
+		elif ((checkRepo) & (not self.currRepo)):
 			raise Exception("Nessun repository settato")
-		elif ((checkBranch) & (not self.getCurrBranch())):
+		elif ((checkBranch) & (not self.currBranch)):
 			raise Exception("Nessun branch settato")
 
 
 	def existsRepo(self, repoName):
-		"""ritorna True se esiste il repository "repoName" """
+		"""ritorna True se esiste il repository "repoName" in locale"""
 
 		#ottengo la cartella del repository
 		repoDir = path.join(self.root, repoName)
@@ -348,10 +348,10 @@ class Client:
 		
 
 	def existsBranch(self, branchName):
-		"""ritorna True se esiste il branch "branchName" """
+		"""ritorna True se esiste il branch "branchName" in locale"""
 
 		#ottengo la cartella del branch
-		branchDir = path.join(self.root, self.getCurrRepo(), branchName)
+		branchDir = path.join(self.root, self.currRepo, branchName)
 		#verifico che la cartella esista
 		return path.isdir(branchDir)
 
@@ -359,13 +359,13 @@ class Client:
 	def printCurrPath(self):
 		"""stampa il path corrente"""
 
-		print("> {}".format(uti.getPathForPrint(self.getCurrPath())), end="\n\n")
+		print("> {}".format(uti.getPathForPrint(self.currPath)), end="\n\n")
 
 
 	def listDir(self):
-		"""stampa tutti i file e sottocartelle del branch selezionato"""
+		"""stampa tutti i file e sottocartelle del branch selezionato sul server"""
 
-		list = self.server.listBranch(self.getCurrRepo(), self.getCurrBranch())
+		list = self.server.listBranch(self.currRepo, self.currBranch)
 		for elem in list:
 			print(uti.getPathForPrint(elem))
 
@@ -391,7 +391,7 @@ class Client:
 	def createBranch(self, branchName):
 		"""crea un nuovo branch sul server"""
 
-		self.server.addBranch(self.getCurrRepo(), branchName)
+		self.server.addBranch(self.currRepo, branchName)
 		print("Branch {} creato con successo.".format(branchName), end="\n\n")	
 		self.mapBranch(branchName)
 
@@ -422,12 +422,12 @@ class Client:
 			raise Exception("Impossibile rimuovere il ramo principale.")
 
 		#verifico che la cartella esista
-		if (self.server.existsBranch(self.getCurrRepo(), branchName) == False):
+		if (self.server.existsBranch(self.currRepo, branchName) == False):
 			raise Exception("Branch {} non presente".format(branchName))
 		else:
 			try:
 				uti.askQuestion("Questa operazione rimuoverà permanentemente il branch {} dal server. Continuare?".format(branchName))
-				self.server.removeBranch(self.getCurrRepo(), branchName)
+				self.server.removeBranch(self.currRepo, branchName)
 
 				print("Il branch {} è stato rimosso dal server".format(branchName), end="\n\n")
 				if (self.existsBranch(branchName)):
@@ -458,11 +458,11 @@ class Client:
 	def showBranches(self):
 		"""mostra la lista dei branch presenti sul server"""
 
-		branchList = self.server.showBranches(self.getCurrRepo())
+		branchList = self.server.showBranches(self.currRepo)
 		if (len(branchList) == 0):
-			print("\nNessun Branch presente sul repository {}".format(self.getCurrRepo()))
+			print("\nNessun Branch presente sul repository {}".format(self.currRepo))
 		else:
-			print("\nBranches sul repository {}:".format(self.getCurrRepo()))
+			print("\nBranches sul repository {}:".format(self.currRepo))
 
 		for branchName in branchList:
 			#verifico se la cartella esiste in locale
@@ -474,10 +474,10 @@ class Client:
 
 
 	def showHistory(self):
-		"""mostra la lista dei changeset presenti nel branch corrente"""
+		"""mostra la lista dei changeset presenti nel branch corrente con la lista dei file modificati"""
 
-		print("\nChangeset del branch {}:".format(self.getCurrBranch()))
-		for changeSet in self.server.showChangesets(self.getCurrRepo(), self.getCurrBranch()):
+		print("\nChangeset del branch {}:".format(self.currBranch))
+		for changeSet in self.server.showChangesets(self.currRepo, self.currBranch):
 			print("- {}".format(changeSet))
 
 
@@ -509,16 +509,16 @@ class Client:
 
 		#se il branch esiste sul server, creo una cartella sul client
 		#altrimenti viene generata un'eccezione
-		if (self.server.existsBranch(self.getCurrRepo(), branchName) == False):
+		if (self.server.existsBranch(self.currRepo, branchName) == False):
 			raise Exception("Branch {} non presente".format(branchName))
 		else:
 			#ottengo il path del branch
-			clientDir = path.join(self.root, self.getCurrRepo(), branchName)
+			clientDir = path.join(self.root, self.currRepo, branchName)
 
 			#chiedo all'utente se sovrascrivere la cartella
 			if (uti.askAndRemoveDir(clientDir, askOverride=True)):
 				#mappo il branch nella cartella del client
-				branchDir = path.join(self.root, self.getCurrRepo(), branchName)
+				branchDir = path.join(self.root, self.currRepo, branchName)
 				os.makedirs(branchDir)
 				
 				#setto il branch mappato come branch corrente di default
@@ -536,9 +536,9 @@ class Client:
 		if (self.existsRepo(repoName)):
 			repodir = path.join(self.root, repoName)
 			if (uti.askAndRemoveDir(repodir)):
-				if (self.getCurrRepo() == repoName):
-					self.setCurrBranch("")
-					self.setCurrRepo("")
+				if (self.currRepo == repoName):
+					self.currBranch = ""
+					self.currRepo = ""
 					self.printCurrPath()
 		else:
 			raise Exception("Repository {} non presente".format(repoName))
@@ -548,10 +548,10 @@ class Client:
 		"""rimuove la cartella del branch sul client"""
 
 		if (self.existsBranch(branchName)):
-			branchdir = path.join(self.root, self.getCurrRepo(), branchName)
+			branchdir = path.join(self.root, self.currRepo, branchName)
 			if (uti.askAndRemoveDir(branchdir)):
-				if (self.getCurrBranch() == branchName):
-					self.setCurrBranch("")
+				if (self.currBranch == branchName):
+					self.currBranch = ""
 					self.printCurrPath()
 		else:
 			raise Exception("Branch {} non presente".format(branchName))
@@ -563,8 +563,8 @@ class Client:
 		#verifico che il repository locale esista
 		if (self.existsRepo(repoName)):
 			#aggiorno il repository corrente
-			self.setCurrRepo(repoName)
-			self.setCurrBranch("")
+			self.currRepo = repoName
+			self.currBranch = ""
 		else:
 			#verifico se esiste sul server
 			if (self.server.existsRepo(repoName)):
@@ -582,9 +582,9 @@ class Client:
 		if (self.existsBranch(branchName)):
 			
 			#aggiorno il branch corrente
-			self.setCurrBranch(branchName)
+			self.currBranch = branchName
 		else:
-			if (self.server.existsBranch(self.getCurrRepo(), branchName)):
+			if (self.server.existsBranch(self.currRepo, branchName)):
 				print("Il branch {} non è stato mappato".format(branchName))
 				if (uti.askQuestion("Effettuare il map del branch?")):
 					self.mapBranch(branchName)
@@ -596,8 +596,8 @@ class Client:
 		"""scarica l'ultima versione e la copia nella cartella del branch"""
 
 		#prendo la latestVersion da Repository e Branch corrente
-		serverDir, lastChangesetNum = self.server.getLatestVersion(self.getCurrRepo(), self.getCurrBranch())
-		self.copyDirToClient(serverDir, self.getCurrPath())
+		serverDir, lastChangesetNum = self.server.getLatestVersion(self.currRepo, self.currBranch)
+		self.copyDirToClient(serverDir, self.currPath)
 
 		uti.writeFileByTag("last_changeset", lastChangesetNum, self.getLocalVersionFile())
 		print("Versione locale aggiornata con successo", end="\n\n")
@@ -606,19 +606,19 @@ class Client:
 	def getSpecificVersion(self, changesetNum):
 		"""scarica una versione specifica e la copia nella cartella del branch"""
 
-		if (self.server.existsChangeset(self.getCurrRepo(), self.getCurrBranch(), changesetNum) == False):
+		if (self.server.existsChangeset(self.currRepo, self.currBranch, changesetNum) == False):
 			raise Exception("Changeset non presente")
 
 		#prendo la versione specifica da Repository e Branch corrente con il numero di changeset passato
-		serverDir = self.server.getSpecificVersion(self.getCurrRepo(), self.getCurrBranch(), changesetNum)
-		self.copyDirToClient(serverDir, self.getCurrPath())
+		serverDir = self.server.getSpecificVersion(self.currRepo, self.currBranch, changesetNum)
+		self.copyDirToClient(serverDir, self.currPath)
 
 		uti.writeFileByTag("last_changeset", changesetNum, self.getLocalVersionFile())
 		print("Versione locale aggiornata con successo", end="\n\n")
 
 
 	def printPendingChanges(self):
-		"""stampa una lista dei file modificati in locale con data di ultima modifica"""
+		"""stampa una lista dei file modificati in locale"""
 
 		#scorro tutti i file nella lista dei pending
 		pendingList = self.getPendingChanges()
@@ -635,15 +635,15 @@ class Client:
 					serverFileDate = datetime.datetime.fromtimestamp(path.getmtime(serverFile)).strftime("%Y-%m-%d %H:%M:%S")
 					
 					#stampo file e data ultima modifica
-					print("{} ({}) - locale: {} - server: {}".format(file.replace(self.getCurrPath(), ""), pendingList[file], localFileDate, serverFileDate))
+					print("{} ({}) - locale: {} - server: {}".format(file.replace(self.currPath, ""), pendingList[file], localFileDate, serverFileDate))
 
 				elif (pendingList[file] == ADD):
 					#stampo file aggiunti in locale
-					print("{} ({})".format(file.replace(self.getCurrPath(), ""), pendingList[file]))
+					print("{} ({})".format(file.replace(self.currPath, ""), pendingList[file]))
 
 				elif (pendingList[file] == REMOVED):
 					#stampo file rimossi in locale
-					print("{} ({})".format(file.replace(self.getCurrPath(), ""), pendingList[file]))
+					print("{} ({})".format(file.replace(self.currPath, ""), pendingList[file]))
 
 			print()
 
@@ -652,14 +652,14 @@ class Client:
 		"""ritorna una lista dei file modificati in locale"""
 
 		#scarico una latestVersion in una cartella temporanea
-		tmpDir = path.join(self.getCurrPath(), TMP_DIR)
+		tmpDir = path.join(self.currPath, TMP_DIR)
 
-		serverDir, lastChangesetNum = self.server.getLatestVersion(self.getCurrRepo(), self.getCurrBranch())
+		serverDir, lastChangesetNum = self.server.getLatestVersion(self.currRepo, self.currBranch)
 		self.copyDirToClient(serverDir, tmpDir)
 
 		#scorro tutti i file della cartella locale
 		pendings = {}
-		for dirPath, dirNames, files in os.walk(self.getCurrPath()):
+		for dirPath, dirNames, files in os.walk(self.currPath):
 			if (TMP_DIR in dirNames):
 				dirNames.remove(TMP_DIR)
 
@@ -694,7 +694,7 @@ class Client:
 		for dirPath, dirNames, files in os.walk(tmpDir):
 			for fileName in files:
 				serverFile = path.join(dirPath, fileName)
-				localFile = serverFile.replace(tmpDir, self.getCurrPath())
+				localFile = serverFile.replace(tmpDir, self.currPath)
 				#verifico se il file è fra quelli da escludere
 				if (self.isExcluded(localFile)):
 					continue
@@ -738,14 +738,14 @@ class Client:
 	
 
 	def excludeExtension(self, ext):
-		"""aggiunge l'estensione "ext" alla lista delle estensioni da escludere """
+		"""aggiunge l'estensione "ext" alla lista delle estensioni da escludere"""
 
 		uti.writeFileByTag("ext_ignore", ".{}".format(ext), self.getLocalVersionFile(), True)
 		print("Estensione *.{} esclusa.".format(ext), end="\n\n")
 
 
 	def includeExtension(self, ext):
-		"""rimuove l'esclusione sull'estensione "ext" """
+		"""rimuove l'esclusione sull'estensione"""
 
 		uti.removeByTagAndVal("ext_ignore", ".{}".format(ext), self.getLocalVersionFile())
 		print("Estensione *.{} inclusa.".format(ext), end="\n\n")
@@ -767,7 +767,7 @@ class Client:
 
 
 	def includeFile(self, fileName):
-		"""rimuove l'esclusione sul file """
+		"""rimuove l'esclusione sul file"""
 		
 		#file = self.findFileInPendings(fileName)
 		uti.removeByTagAndVal("file_ignore", fileName, self.getLocalVersionFile())
@@ -783,6 +783,7 @@ class Client:
 	
 	def printExcluded(self):
 		"""stampa a video tutte le estensioni e file esclusi"""
+
 		excludedExt = uti.readFileByTag("ext_ignore", self.getLocalVersionFile())
 		excludedFiles = uti.readFileByTag("file_ignore", self.getLocalVersionFile())
 
@@ -793,7 +794,7 @@ class Client:
 			print("*{}".format(ext))
 
 		for file in	excludedFiles:
-			print(file.replace(self.getCurrPath(), ""))
+			print(file.replace(self.currPath, ""))
 		print()
 
 
@@ -801,7 +802,7 @@ class Client:
 		"""crea un nuovo changeset con le modifiche del solo file "fileName" """
 
 		#creo una cartella temporanea
-		tmpDir = path.join(self.getCurrPath(), TO_COMMIT_DIR)
+		tmpDir = path.join(self.currPath, TO_COMMIT_DIR)
 		
 		#prendo il file corrente dai pending
 		try:
@@ -824,7 +825,7 @@ class Client:
 		"""crea un nuovo changeset con le modifiche dei file in pending"""
 
 		#creo una cartella temporanea
-		tmpDir = path.join(self.getCurrPath(), TO_COMMIT_DIR)
+		tmpDir = path.join(self.currPath, TO_COMMIT_DIR)
 		if (path.isdir(tmpDir)):
 			shutil.rmtree(tmpDir)
 		os.makedirs(tmpDir)
@@ -856,7 +857,7 @@ class Client:
 		if (tag != REMOVED):
 			#copio il file nella cartella temporanea (creo le cartelle se non presenti)
 			#prendo il path del file da copiare
-			tmpFileDir = path.dirname(file.replace(self.getCurrPath(), tmpDir))
+			tmpFileDir = path.dirname(file.replace(self.currPath, tmpDir))
 			#se non esiste creo il percorso
 			if (path.isdir(tmpFileDir) == False):
 				os.makedirs(tmpFileDir)
@@ -865,21 +866,21 @@ class Client:
 			shutil.copy2(file, tmpFileDir)
 
 		#inserisco il tag nel file changeset.txt
-		uti.writeFileByTag(tag, file.replace("{}\\".format(self.getCurrPath()), ""), path.join(tmpDir, "changeset.txt"), True)
+		uti.writeFileByTag(tag, file.replace("{}\\".format(self.currPath), ""), path.join(tmpDir, "changeset.txt"), True)
 
 
 	def doCommit(self, sourceDir, comment):
 		"""effettua il commit dei file contenuti in "sourceDir" su un nuovo changeset"""
 
 		#creo un nuovo changeset in cui copiare la cartella temporanea
-		changesetDir = self.server.addChangeset(self.getCurrRepo(), self.getCurrBranch(), comment)
+		changesetDir = self.server.addChangeset(self.currRepo, self.currBranch, comment)
 		self.copyDirToServer(sourceDir, changesetDir)
 
 		#rimuovo la cartella temporanea
 		if (path.isdir(sourceDir)):
 			shutil.rmtree(sourceDir)
 		
-		uti.writeFileByTag("last_changeset", self.server.getLastChangeset(self.getCurrRepo(), self.getCurrBranch()), self.getLocalVersionFile())
+		uti.writeFileByTag("last_changeset", self.server.getLastChangeset(self.currRepo, self.currBranch), self.getLocalVersionFile())
 
 
 	def undoFile(self, file):
@@ -952,6 +953,7 @@ class Client:
 
 	def printHelp(self):
 		"""stampa una lista di comandi con descrizione"""
+
 		print("\n> exit - chiude il programma",
 			  "> repolist - stampa la lista dei repositories presenti sul server",
 			  "> branchlist - stampa una lista dei branchs presenti sul repository corrente sul server",
@@ -989,43 +991,49 @@ class Client:
 			  "> clear - pulisce il terminale",
 			  "> help - stampa la guida", sep="\n", end="\n\n")
 
+	def getCurrPath(self):
+		"""ritorna il path di esecuzione"""
+
+		return self._currPath
 
 	def setCurrPath(self, path):
 		"""setta il path di esecuzione"""
 
-		self.currPath = path
+		self._currPath = path
+
+	currPath = property(getCurrPath, setCurrPath)
+
+	
+	def getCurrRepo(self):
+		"""ritorna il repository selezionato"""
+
+		return self._currRepo
 
 
 	def setCurrRepo(self, repoName):
 		"""setta il repository selezionato"""
 
-		self.currRepo = repoName
-		self.setCurrPath(path.join(self.root, repoName))
+		self._currRepo = repoName
+		self.currPath = path.join(self.root, repoName)
 
 
-	def setCurrBranch(self, branchName):
-		"""setta il branch selezionato"""
-
-		self.currBranch = branchName
-		self.setCurrPath(path.join(self.root, self.getCurrRepo(), branchName))
-
-
-	def getCurrPath(self):
-		"""ritorna il path di esecuzione"""
-
-		return self.currPath
-
-
-	def getCurrRepo(self):
-		"""ritorna il repository selezionato"""
-
-		return self.currRepo
+	currRepo = property(getCurrRepo, setCurrRepo)
 
 
 	def getCurrBranch(self):
 		"""ritorna il branch selezionato"""
 
-		return self.currBranch
+		return self._currBranch
+	
+
+	def setCurrBranch(self, branchName):
+		"""setta il branch selezionato"""
+
+		self._currBranch = branchName
+		self.currPath = path.join(self.root, self.currRepo, branchName)
+
+	
+	currBranch = property(getCurrBranch, setCurrBranch)
 
 
 	def getLocalVersionFile(self):
