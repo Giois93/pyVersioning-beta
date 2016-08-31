@@ -4,7 +4,7 @@ import shutil
 import distutils.dir_util as dir_uti
 import datetime
 import time
-"""import natsort"""
+import natsort
 import uti
 from consts import *
 from Changeset import Changeset
@@ -111,8 +111,9 @@ class Branch:
 		
 		#ritorno una tupla di "chageset - data creazione - commento"
 		results = []
-		"""for dir in natsort.natsorted(dirs):"""
-		for dir in dirs:
+
+		#for dir in dirs:"""
+		for dir in natsort.natsorted(dirs):
 			changeset = self.getChangeset(int(dir))
 			#prendo il path della cartella del changeset
 			dirPath = path.join(self.branchDir, dir)
