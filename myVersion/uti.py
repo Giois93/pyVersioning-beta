@@ -33,7 +33,7 @@ def readFile(filePath):
 
 	
 def readFileByTag(tag, filePath):
-	"""ritorna il valore del tag passato, letto da file"""
+	"""ritorna i valori del tag passato, letto da file"""
 
 	#se ho trovato il tag lo restituisco
 	try:
@@ -51,41 +51,27 @@ def writeFile(string, filePath, append=True):
 	else: 
 		file = open(filePath, "w", errors="ignore")
 
-	#scrivo la stringa nel file (cancello righe bianche)
+	#scrivo la stringa nel file
 	print(string, file=file)
 
 	#chiudo il file
 	file.close()
 
 
-def writeFileByTag(tag, value, filePath):
-	"""cambia il valore al tag passato, scritto su file"""
+def writeFileByTag(tag, value, filePath, add=False):
+	"""scrive/cambia il valore al tag passato, scritto su file"""
 
-	#apro il file
-	try:
-		fileStr = readFile(filePath)
+	#rimuovo il tag già presente 
+	if (add==False):
+		removeByTag(tag, filePath)
 
-		#cerco il tag
-		results = re.findall("{}=(.*)".format(tag), fileStr)
-
-		if (len(results) == 0):
-			#se non ho trovato il tag lo aggiungo
-			writeFile("{}={}".format(tag, str(value)), filePath)
-		else:
-			#se ho trovato il tag lo sostituisco
-			#prendo tutte le occorrenze del tag e le sostituisco con i nuovi valori	
-			newFileStr = re.sub("{}=(.*)".format(tag), "{}={}".format(tag, str(value)), fileStr)
-
-			#sovrascrivo il file
-			writeFile(newFileStr, filePath, False)
-	except:
-		#se non ho trovato il tag lo aggiungo
-		writeFile("{}={}".format(tag, str(value)), filePath)
+	#aggiungo il tag
+	writeFile("{}={}".format(tag, str(value)), filePath)
 
 
 
 def removeByTag(tag, filePath):
-	"""cancella la riga contenente il tag dal file filePath"""
+	"""cancella le righe contenenti il tag dal file filePath"""
 
 	newFileStr = re.sub("{}=(.*)".format(tag), "", readFile(filePath))
 	writeFile(newFileStr, filePath, False)
@@ -121,6 +107,8 @@ def askAndRemoveDir(dir, askOverride=False):
 				#l'utente ha scelto di non sovrascrive
 				print("Operazione annullata", end = "\n\n")
 				return False
+
+	#se la cartella non esiste non serve rimuoverla
 	return True
 
 

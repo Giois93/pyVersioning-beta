@@ -740,7 +740,7 @@ class Client:
 	def excludeExtension(self, ext):
 		"""aggiunge l'estensione "ext" alla lista delle estensioni da escludere """
 
-		uti.writeFileByTag("ext_ignore", ".{}".format(ext), self.getLocalVersionFile())
+		uti.writeFileByTag("ext_ignore", ".{}".format(ext), self.getLocalVersionFile(), True)
 		print("Estensione *.{} esclusa.".format(ext), end="\n\n")
 
 
@@ -762,7 +762,7 @@ class Client:
 		"""aggiunge il file alla lista dei file da escludere"""
 
 		file = self.findFileInPendings(fileName)
-		uti.writeFileByTag("file_ignore", file, self.getLocalVersionFile())
+		uti.writeFileByTag("file_ignore", file, self.getLocalVersionFile(), True)
 		print("File {} escluso.".format(fileName), end="\n\n")
 
 
@@ -865,7 +865,7 @@ class Client:
 			shutil.copy2(file, tmpFileDir)
 
 		#inserisco il tag nel file changeset.txt
-		uti.writeFileByTag(tag, file.replace("{}\\".format(self.getCurrPath()), ""), path.join(tmpDir, "changeset.txt"))
+		uti.writeFileByTag(tag, file.replace("{}\\".format(self.getCurrPath()), ""), path.join(tmpDir, "changeset.txt"), True)
 
 
 	def doCommit(self, sourceDir, comment):

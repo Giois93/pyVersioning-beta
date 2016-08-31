@@ -50,7 +50,9 @@ class Repository:
 
 
 	def addBranch(self, branchName, isTrunk=False):
-		"""crea un nuovo branch copiando il contenuto del trunk
+		"""crea un nuovo branch
+		se il branch è il trunk aggiungo il changeset_0
+		altrimenti crea un branch copiando il contenuto del trunk
 		se il branch esiste già viene sollevata un'eccezione"""
 
 		#creo il percorso del nuovo branch
