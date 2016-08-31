@@ -3,8 +3,7 @@ import os.path as path
 import time
 import distutils.dir_util as dir_uti
 import uti
-from uti import CHANGESET_FILE
-from uti import COMMIT_FILE
+from consts import *
 
 class Changeset:
 	
@@ -23,7 +22,7 @@ class Changeset:
 
 		try:
 			#leggo il tag is_backup del file
-			if (int(uti.readFileByTag("is_backup", self.changesetTxt)[0]) == 1):
+			if (int(uti.readFileByTag(IS_BACKUP, self.changesetTxt)[0]) == 1):
 				return True
 			return False
 		except:

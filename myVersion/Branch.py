@@ -6,14 +6,7 @@ import datetime
 import time
 """import natsort"""
 import uti
-from uti import BRANCH_FILE
-from uti import CHANGESET_FILE
-from uti import COMMIT_FILE
-from uti import TMP_DIR
-from uti import EDIT
-from uti import OLD
-from uti import ADD
-from uti import REMOVED
+from consts import *
 from Changeset import Changeset
 
 class Branch:
@@ -37,7 +30,7 @@ class Branch:
 				lastBackupChangeset = self.getLastBackupChangeset(self.getLastChangesetNum())
 
 				#prendo la data dell'ultimo changeset di backup
-				dateStr = uti.readFileByTag("date", lastBackupChangeset.changesetTxt)[0]
+				dateStr = uti.readFileByTag(DATE, lastBackupChangeset.changesetTxt)[0]
 				date = uti.getDate(dateStr)
 
 				#prendo la data odierna
@@ -63,19 +56,19 @@ class Branch:
 		os.makedirs(changeset.changesetDir)
 
 		#aggiorno l'ultimo changeset
-		uti.writeFileByTag("last_changeset", str(self.getNextChangesetNum()), self.branchTxt)
+		uti.writeFileByTag(LAST_CHANGESET, str(self.getNextChangesetNum()), self.branchTxt)
 
 		#scrivo il commento per il nuovo changeset
-		uti.writeFileByTag("comment", comment, changeset.changesetTxt)
+		uti.writeFileByTag(COMMENT, comment, changeset.changesetTxt)
 		
 		#scrivo se il changeset è un backup
 		if (isBackup):
-			uti.writeFileByTag("is_backup", 1, changeset.changesetTxt)
+			uti.writeFileByTag(IS_BACKUP, 1, changeset.changesetTxt)
 		else:
-			uti.writeFileByTag("is_backup", 0, changeset.changesetTxt);
+			uti.writeFileByTag(IS_BACKUP, 0, changeset.changesetTxt);
 
 		#scrivo data e ora di crezione
-		uti.writeFileByTag("date", "{} {}".format(time.strftime("%d/%m/%Y"), time.strftime("%H:%M:%S")), changeset.changesetTxt)
+		uti.writeFileByTag(DATE, "{} {}".format(time.strftime("%d/%m/%Y"), time.strftime("%H:%M:%S")), changeset.changesetTxt)
 
 		return changeset
 
@@ -99,7 +92,7 @@ class Branch:
 		"""ritorna il numero del last_changeset se il brach esiste, -1 per un nuovo branch"""
 
 		try:
-			return int(uti.readFileByTag("last_changeset", self.branchTxt)[0])
+			return int(uti.readFileByTag(LAST_CHANGESET, self.branchTxt)[0])
 		except:
 			return -1
 
@@ -128,7 +121,7 @@ class Branch:
 			
 			try:
 				#prendo il commento dal file del changeset
-				comment = uti.readFileByTag("comment", changeset.changesetTxt)[0]
+				comment = uti.readFileByTag(COMMENT, changeset.changesetTxt)[0]
 			except:
 				comment = ""
 

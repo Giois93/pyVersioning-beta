@@ -3,8 +3,7 @@ import os.path as path
 import shutil
 import rpyc
 import uti
-from uti import TMP_DIR
-from uti import TRUNK
+from consts import *
 from rpyc.utils.server import ThreadedServer
 from Repository import Repository
 

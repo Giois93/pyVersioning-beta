@@ -5,21 +5,6 @@ import re
 import difflib
 import datetime
 
-#costanti
-LOCAL_VERSION_FILE	= "local.txt.pyV"
-BRANCH_FILE			= "branch.txt.pyV"
-CHANGESET_FILE		= "changeset.txt.pyV"
-LAST_RUN_FILE		= "lastrun.txt.pyV"
-COMMIT_FILE			= "commit.txt.pyV"
-TMP_DIR				= "tmp"
-COMMIT_DIR			= "commit"
-TRUNK				= "trunk"
-EDIT				= "edit"
-OLD					= "old"
-ADD					= "add"
-REMOVED				= "removed"
-
-
 def readFile(filePath):
 	"""legge l'intero file in una stringa"""
 

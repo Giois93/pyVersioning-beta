@@ -8,16 +8,7 @@ import socket
 import rpyc
 import inspect
 import uti
-from uti import LOCAL_VERSION_FILE
-from uti import LAST_RUN_FILE
-from uti import TMP_DIR
-from uti import COMMIT_DIR
-from uti import COMMIT_FILE
-from uti import TRUNK
-from uti import EDIT
-from uti import OLD
-from uti import ADD
-from uti import REMOVED
+from consts import *
 
 
 class Client:
@@ -42,10 +33,10 @@ class Client:
 		if (uti.askQuestion("Impostare l'ultimo percorso aperto?")):
 			#setto il repository se memorizzato nel file
 			try:
-				self.setRepo(uti.readFileByTag("last_repo", self.lastRunFile())[0])
+				self.setRepo(uti.readFileByTag(LAST_REPO, self.lastRunFile)[0])
 
 				#setto il branch se memorizzato nel file
-				self.setBranch(uti.readFileByTag("last_branch", self.lastRunFile())[0])
+				self.setBranch(uti.readFileByTag(LAST_BRANCH, self.lastRunFile)[0])
 				self.printCurrPath()
 			except:
 				print("Impossibile effettuare l'operazione", end="\n\n")
@@ -141,8 +132,8 @@ class Client:
 			if (command == "exit"): 
 				self.checkCommand(commandList)
 				#memorizzo gli ultimi repo/branch settati
-				uti.writeFileByTag("last_repo", self._currRepo, self.lastRunFile())
-				uti.writeFileByTag("last_branch", self.currBranch, self.lastRunFile())
+				uti.writeFileByTag(LAST_REPO, self._currRepo, self.lastRunFile)
+				uti.writeFileByTag(LAST_BRANCH, self.currBranch, self.lastRunFile)
 				print("Programma terminato.", end="\n\n")
 			
 			elif (command == "clear"):
@@ -599,7 +590,7 @@ class Client:
 		serverDir, lastChangesetNum = self.server.getLatestVersion(self.currRepo, self.currBranch)
 		self.copyDirToClient(serverDir, self.currPath)
 
-		uti.writeFileByTag("last_changeset", lastChangesetNum, self.localVersionFile)
+		uti.writeFileByTag(LAST_CHANGESET, lastChangesetNum, self.localVersionFile)
 		print("Versione locale aggiornata con successo", end="\n\n")
 	
 	
@@ -613,7 +604,7 @@ class Client:
 		serverDir = self.server.getSpecificVersion(self.currRepo, self.currBranch, changesetNum)
 		self.copyDirToClient(serverDir, self.currPath)
 
-		uti.writeFileByTag("last_changeset", changesetNum, self.localVersionFile)
+		uti.writeFileByTag(LAST_CHANGESET, changesetNum, self.localVersionFile)
 		print("Versione locale aggiornata con successo", end="\n\n")
 
 
@@ -716,7 +707,7 @@ class Client:
 
 		#leggo le estensioni escluse
 		try:
-			excludedExt = uti.readFileByTag("ext_ignore", self.localVersionFile)
+			excludedExt = uti.readFileByTag(EXT_IGNORE, self.localVersionFile)
 		except:
 			excludedExt = ()
 
@@ -727,7 +718,7 @@ class Client:
 
 		#leggo la lista dei file da escludere
 		try:
-			excludedFiles = uti.readFileByTag("file_ignore", self.localVersionFile)
+			excludedFiles = uti.readFileByTag(FILE_IGNORE, self.localVersionFile)
 		except:
 			excludedFiles = ()
 
@@ -742,21 +733,21 @@ class Client:
 	def excludeExtension(self, ext):
 		"""aggiunge l'estensione "ext" alla lista delle estensioni da escludere"""
 
-		uti.writeFileByTag("ext_ignore", ".{}".format(ext), self.localVersionFile, True)
+		uti.writeFileByTag(EXT_IGNORE, ".{}".format(ext), self.localVersionFile, True)
 		print("Estensione *.{} esclusa.".format(ext), end="\n\n")
 
 
 	def includeExtension(self, ext):
 		"""rimuove l'esclusione sull'estensione"""
 
-		uti.removeByTagAndVal("ext_ignore", ".{}".format(ext), self.localVersionFile)
+		uti.removeByTagAndVal(EXT_IGNORE, ".{}".format(ext), self.localVersionFile)
 		print("Estensione *.{} inclusa.".format(ext), end="\n\n")
 
 
 	def includeAllExtension(self):
 		"""rimuove tutte le esclusioni su estensioni"""
 
-		uti.removeByTag("ext_ignore", self.localVersionFile)
+		uti.removeByTag(EXT_IGNORE, self.localVersionFile)
 		print("Tutte le estensioni sono state incluse.", end="\n\n")
 
 
@@ -764,7 +755,7 @@ class Client:
 		"""aggiunge il file alla lista dei file da escludere"""
 
 		file = self.findFileInPendings(fileName)
-		uti.writeFileByTag("file_ignore", file, self.localVersionFile, True)
+		uti.writeFileByTag(FILE_IGNORE, file, self.localVersionFile, True)
 		print("File {} escluso.".format(fileName), end="\n\n")
 
 
@@ -772,22 +763,22 @@ class Client:
 		"""rimuove l'esclusione sul file"""
 		
 		#file = self.findFileInPendings(fileName)
-		uti.removeByTagAndVal("file_ignore", fileName, self.localVersionFile)
+		uti.removeByTagAndVal(FILE_IGNORE, fileName, self.localVersionFile)
 		print("File {} incluso".format(fileName), end="\n\n")
 
 
 	def includeAllFile(self):
 		"""rimuove tutte le esclusioni su files"""
 
-		uti.removeByTag("file_ignore", self.localVersionFile)
+		uti.removeByTag(FILE_IGNORE, self.localVersionFile)
 		print("Tutti i file sono stati inclusi.", end="\n\n")
 
 	
 	def printExcluded(self):
 		"""stampa a video tutte le estensioni e file esclusi"""
 
-		excludedExt = uti.readFileByTag("ext_ignore", self.localVersionFile)
-		excludedFiles = uti.readFileByTag("file_ignore", self.localVersionFile)
+		excludedExt = uti.readFileByTag(EXT_IGNORE, self.localVersionFile)
+		excludedFiles = uti.readFileByTag(FILE_IGNORE, self.localVersionFile)
 
 		if ((len(excludedExt) == 0) & (len(excludedFiles) == 0)):
 			raise Exception("Nessun file o estensione esclusi")
@@ -882,7 +873,7 @@ class Client:
 		if (path.isdir(sourceDir)):
 			shutil.rmtree(sourceDir)
 		
-		uti.writeFileByTag("last_changeset", self.server.getLastChangeset(self.currRepo, self.currBranch), self.localVersionFile)
+		uti.writeFileByTag(LAST_CHANGESET, self.server.getLastChangeset(self.currRepo, self.currBranch), self.localVersionFile)
 
 
 	def undoFile(self, file):
@@ -891,7 +882,7 @@ class Client:
 		try:
 			#prendo il file corrispondente dal server e lo sovrascrivo al file locale
 			filePath = self.findFileInPendings(file)
-			originalChangeset = int(uti.readFileByTag("last_changeset", self.localVersionFile)[0])
+			originalChangeset = int(uti.readFileByTag(LAST_CHANGESET, self.localVersionFile)[0])
 			serverFile = self.getServerFile(filePath)
 
 			if (uti.askQuestion("Questo comando annullerà le modifiche sul file {}, sei sicuro?".format(file))):
@@ -910,7 +901,7 @@ class Client:
 
 		if (uti.askQuestion("Questo comando cancellerà tutti i pending, sei sicuro?")):
 			print("Modifiche annullate.", end="\n\n")
-			self.getSpecificVersion(int(uti.readFileByTag("last_changeset", self.localVersionFile)[0]))
+			self.getSpecificVersion(int(uti.readFileByTag(LAST_CHANGESET, self.localVersionFile)[0]))
 		
 
 	def compare(self, localFile):

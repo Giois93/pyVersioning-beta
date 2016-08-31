@@ -3,8 +3,7 @@ import os.path as path
 import shutil
 import distutils.dir_util as dir_uti
 import uti
-from uti import TMP_DIR
-from uti import TRUNK
+from consts import *
 from Branch import Branch
 
 class Repository:
@@ -44,7 +43,7 @@ class Repository:
 		#seleziono solo le cartelle (i branch)
 		for branchName in os.listdir(self.repoDir):
 			if (path.isdir(path.join(self.repoDir, branchName))):
-				list[branchName] = uti.readFileByTag("changeset_0", self.getBranch(branchName).branchTxt)[0]
+				list[branchName] = uti.readFileByTag(CHANGESET0, self.getBranch(branchName).branchTxt)[0]
 
 		return list
 
@@ -65,8 +64,8 @@ class Repository:
 		#se sto creando il trunk, creo il primo changeset vuoto, il chiamante deve riempirlo
 		if (isTrunk):
 			changeset = branch.addChangeset("branch created", isBackup=True)
-			#se sto inserendo il primo changeset nel branch scrivo anche il tag "changeset_0"
-			uti.writeFileByTag("changeset_0", str(branch.getLastChangesetNum()), branch.branchTxt)
+			#se sto inserendo il primo changeset nel branch scrivo anche il tag CHANGESET0
+			uti.writeFileByTag(CHANGESET0, str(branch.getLastChangesetNum()), branch.branchTxt)
 
 		#se sto creando un branch, copio l'ultima versione del trunk
 		else:
@@ -77,7 +76,7 @@ class Repository:
 				tmpDir = trunk.getLatestVersion()
 				#creo il branch sul disco e ci copio il contenuto della cartella temporanea
 				changeset = branch.addChangeset("branch created", isBackup=True) 
-				uti.writeFileByTag("changeset_0", str(trunk.getLastChangesetNum()), branch.branchTxt)
+				uti.writeFileByTag(CHANGESET0, str(trunk.getLastChangesetNum()), branch.branchTxt)
 				dir_uti.copy_tree(tmpDir, changeset.changesetDir)
 			except:
 				raise
