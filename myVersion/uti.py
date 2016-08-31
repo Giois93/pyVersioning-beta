@@ -43,6 +43,8 @@ def writeFile(string, filePath, append=True):
 	#chiudo il file
 	file.close()
 
+	#trimFile(filePath) #rimossa - troppo lenta
+
 
 def writeFileByTag(tag, value, filePath, add=False):
 	"""scrive/cambia il valore al tag passato, scritto su file"""
@@ -74,6 +76,12 @@ def removeByTagAndVal(tag, value, filePath):
 		writeFile(newFileStr, filePath, False)
 	except:
 		pass
+
+	
+def trimFile(filePath):
+	"""elimina righe vuote dal file"""
+
+	writeFile(re.sub("\n\Z", "", re.sub("\A\n", "", re.sub("(\n)+", "\n", readFile(filePath)))), filePath)
 
 
 def askAndRemoveDir(dir, askOverride=False):
