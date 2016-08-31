@@ -867,7 +867,7 @@ class Client:
 			#copio il file
 			shutil.copy2(file, tmpFileDir)
 
-		#inserisco il tag nel file changeset.txt
+		#inserisco il tag nel file changeset.txt.pyV
 		uti.writeFileByTag(tag, file.replace("{}\\".format(self.currPath), ""), path.join(tmpDir, CHANGESET_FILE), True)
 
 

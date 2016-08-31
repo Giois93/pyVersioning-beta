@@ -8,7 +8,7 @@ from uti import CHANGESET_FILE
 class Changeset:
 	
 	changesetDir = ""	#path del changeset
-	changesetTxt = ""	#path del file changeset.txt
+	changesetTxt = ""	#path del file changeset.txt.pyV
 
 
 	def __init__(self, changesetDir):

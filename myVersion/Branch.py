@@ -17,7 +17,7 @@ from Changeset import Changeset
 
 class Branch:
 	branchDir = ""		#path del branch
-	branchTxt = ""		#path del file branch.txt
+	branchTxt = ""		#path del file branch.txt.pyV
 
 
 	def __init__(self, branchDir):

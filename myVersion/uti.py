@@ -6,10 +6,10 @@ import difflib
 import datetime
 
 #costanti
-LOCAL_VERSION_FILE	= "local.txt"
-BRANCH_FILE			= "branch.txt"
-CHANGESET_FILE		= "changeset.txt"
-LAST_RUN_FILE		= "lastrun.txt"
+LOCAL_VERSION_FILE	= "local.txt.pyV"
+BRANCH_FILE			= "branch.txt.pyV"
+CHANGESET_FILE		= "changeset.txt.pyV"
+LAST_RUN_FILE		= "lastrun.txt.pyV"
 TMP_DIR				= "tmp"
 TO_COMMIT_DIR		= "to_commit"
 TRUNK				= "trunk"
