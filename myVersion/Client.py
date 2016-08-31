@@ -1,6 +1,5 @@
 import os
 import os.path as path
-import time
 import datetime
 import shutil
 import filecmp

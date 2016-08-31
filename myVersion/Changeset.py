@@ -1,7 +1,4 @@
-import os
 import os.path as path
-import time
-import distutils.dir_util as dir_uti
 import uti
 from consts import *
 
