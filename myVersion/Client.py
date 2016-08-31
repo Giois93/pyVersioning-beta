@@ -656,7 +656,6 @@ class Client:
 				dirNames.remove(COMMIT_DIR)
 
 			for fileName in files:
-				
 				if (fileName == LOCAL_VERSION_FILE):
 					continue
 
