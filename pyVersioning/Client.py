@@ -731,15 +731,21 @@ class Client:
 	def excludeExtension(self, ext):
 		"""aggiunge l'estensione "ext" alla lista delle estensioni da escludere"""
 
-		uti.writeFileByTag(EXT_IGNORE, ".{}".format(ext), self.localVersionFile, True)
+		if (not ext.startswith(".")):
+			ext = ".{}".format(ext)
+		
+		uti.writeFileByTag(EXT_IGNORE, ext, self.localVersionFile, True)
 		print("Estensione *.{} esclusa.".format(ext), end="\n\n")
 
 
 	def includeExtension(self, ext):
 		"""rimuove l'esclusione sull'estensione"""
 
-		uti.removeByTagAndVal(EXT_IGNORE, ".{}".format(ext), self.localVersionFile)
-		print("Estensione *.{} inclusa.".format(ext), end="\n\n")
+		if (not ext.startswith(".")):
+			ext = ".{}".format(ext)
+
+		uti.removeByTagAndVal(EXT_IGNORE, ext, self.localVersionFile)
+		print("Estensione *{} inclusa.".format(ext), end="\n\n")
 
 
 	def includeAllExtension(self):
@@ -794,6 +800,9 @@ class Client:
 
 		#creo una cartella temporanea
 		tmpDir = path.join(self.currPath, COMMIT_DIR)
+		if (path.isdir(tmpDir)):
+			shutil.rmtree(tmpDir)
+		os.makedirs(tmpDir)
 		
 		#prendo il file corrente dai pending
 		try:
