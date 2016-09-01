@@ -948,7 +948,7 @@ class Client:
 		exePath = path.dirname(inspect.getsourcefile(lambda:0))
 		winmergepath = path.join(exePath, "WinMerge", "WinMergePortable.exe")
 
-		os.system("{} {} {}".format(winmergepath, pendingFile, serverFile))
+		os.system("start {} {} {}".format(winmergepath, pendingFile, serverFile))
 
 
 	def printHelp(self):
