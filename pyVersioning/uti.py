@@ -160,17 +160,3 @@ def diff(file1, file2):
 	"""effettua un diff di due file"""
 
 	return difflib.ndiff(open(file1, errors="ignore").readlines(), open(file2, errors="ignore").readlines())
-
-	#ottengo le differenze frai due file
-	#diff = difflib.ndiff(open(file1, errors="ignore").readlines(), open(file2, errors="ignore").readlines())
-	#
-	##stampo tutte le differenze con il numero di riga corrispondente
-	#line = 0
-	#changes = ()
-	#for change in diff:
-	#	++line
-	#	if (change.startswith("+") or change.startswith("-")):
-	#		changes += ("{}: {}".format(str(line), change), )
-	#
-	#return changes
-
