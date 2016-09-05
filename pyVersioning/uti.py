@@ -84,24 +84,24 @@ def trimFile(filePath):
 	writeFile(re.sub("\n\Z", "", re.sub("\A\n", "", re.sub("(\n)+", "\n", readFile(filePath)))), filePath)
 
 
-def askAndRemoveDir(dir, askOverride=False):
+def askAndRemoveDir(dirPath, askOverride=False):
 	"""chiede all'utente se rimuovere/sovrascrivere la cartella "dir" ed eventualmente la rimuove"""
 
 	#verifico se la cartella esiste
-	if (path.isdir(dir)):
+	if (path.isdir(dirPath)):
 		
 		#chiedo all'utente se procede e sovrascrivere la cartella
 		while True:
 			if (askOverride):
-				msg = "La cartella {} è già presente, sovrascrivere?".format(getPathForPrint(dir))
+				msg = "La cartella {} è già presente, sovrascrivere?".format(getPathForPrint(dirPath))
 			else:
-				msg = "Rimuovere la cartella {}?".format(getPathForPrint(dir))
+				msg = "Rimuovere la cartella {}?".format(getPathForPrint(dirPath))
 				
 			if (askQuestion(msg)):
 				#l'utente ha scelto di sovrascrivere
 				#rimuovo la cartella
-				shutil.rmtree(dir)
-				print("Cartella rimossa:", getPathForPrint(dir), end = "\n\n")
+				shutil.rmtree(dirPath)
+				print("Cartella rimossa:", getPathForPrint(dirPath), end ="\n\n")
 				return True
 			else:
 				#l'utente ha scelto di non sovrascrive
@@ -129,24 +129,24 @@ def askQuestion(question):
 			print()
 
 
-def listDir(dir):
+def listDir(dirPath):
 	"""ritorna tutti i file e sottocartelle della dir selezionata"""
 		
 	#creo la lista di tutti i file e sottocartelle
-	list = []
-	for root, dirs, files in os.walk(dir):
+	elemsList = []
+	for root, dirs, files in os.walk(dirPath):
 		for fileName in files:
-			list.append(path.join(root, fileName))
+			elemsList.append(path.join(root, fileName))
 		for dirName in dirs:
-			list.append(path.join(root, dirName))
+			elemsList.append(path.join(root, dirName))
 		
-	return list
+	return elemsList
 
 
-def getPathForPrint(path):
+def getPathForPrint(pathToPrint):
 	"""formatta un path per la stampa a video"""
 
-	return path.replace("/", "\\")
+	return pathToPrint.replace("/", "\\")
 
 
 def getDate(dateStr):

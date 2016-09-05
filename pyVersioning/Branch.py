@@ -25,7 +25,7 @@ class Branch:
 		
 		#controllo se è necessario creare un changeset di backup (ne viene fatto uno ogni giorno)
 		#cerco l'ultimo changeset di backup
-		if(isBackup == False):
+		if (isBackup == False):
 			try:
 				lastBackupChangeset = self.getLastBackupChangeset(self.getLastChangesetNum())
 
@@ -37,7 +37,7 @@ class Branch:
 				today = datetime.date.today()
 				#se è passato un giorno dall'ultimo backup ne creo uno
 				diff = abs(today - date)
-				if(diff.days > 0):
+				if (diff.days > 0):
 					#creo una cartella temporanea e ci copio una ultima versione completa
 					tmpDir = self.getLatestVersion()
 					#creo un changeset di backup con l'ultima versione
@@ -65,7 +65,7 @@ class Branch:
 		if (isBackup):
 			uti.writeFileByTag(IS_BACKUP, 1, changeset.changesetTxt)
 		else:
-			uti.writeFileByTag(IS_BACKUP, 0, changeset.changesetTxt);
+			uti.writeFileByTag(IS_BACKUP, 0, changeset.changesetTxt)
 
 		#scrivo data e ora di crezione
 		uti.writeFileByTag(DATE, "{} {}".format(time.strftime("%d/%m/%Y"), time.strftime("%H:%M:%S")), changeset.changesetTxt)
@@ -85,7 +85,7 @@ class Branch:
 	def getLastChangeset(self):
 		"""ritorna l'ultimo changeset del branch"""
 
-		return getChangeset(self.getLastChangesetNum())
+		return self.getChangeset(self.getLastChangesetNum())
 
 
 	def getLastChangesetNum(self):
@@ -113,10 +113,9 @@ class Branch:
 		results = []
 
 		#for dir in dirs:"""
-		for dir in natsort.natsorted(dirs):
-			changeset = self.getChangeset(int(dir))
+		for currDir in natsort.natsorted(dirs):
+			changeset = self.getChangeset(int(currDir))
 			#prendo il path della cartella del changeset
-			dirPath = path.join(self.branchDir, dir)
 			#prendo la data di creazione del changeset
 			date = datetime.datetime.fromtimestamp(path.getctime(changeset.changesetDir)).strftime("%Y-%m-%d %H:%M:%S")
 			
@@ -153,7 +152,7 @@ class Branch:
 				pass
 			
 			#aggiungo il changeset e le sue statistiche
-			results.append("{} - {} - {} \n{}".format(dir, str(date), comment, changes))
+			results.append("{} - {} - {} \n{}".format(currDir, str(date), comment, changes))
 
 		return results
 
@@ -208,7 +207,7 @@ class Branch:
 		for changesetID in range(startChangeset, -1, -1):
 			currChangeset = Changeset(path.join(self.branchDir, str(changesetID)))
 			if (currChangeset.isBackup()):
-				return currChangeset;
-		
+				return currChangeset
+
 		#se non viene trovato nessun changeset di backup alzo un'eccezione
 		raise Exception

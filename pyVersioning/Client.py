@@ -9,7 +9,6 @@ import inspect
 import uti
 from consts import *
 
-
 class Client:
 	
 	root = ""
@@ -18,7 +17,7 @@ class Client:
 	_currBranch = ""
 	server = None
 
-	def __init__(self, connection):
+	def __init__(self, conn):
 
 		#setto il path della cartella root
 		self.root = "C:\pyV\pyVclient"
@@ -27,7 +26,7 @@ class Client:
 		self.currPath = self.root
 
 		#setto il riferimento alla connesione con il server
-		self.server = connection.root
+		self.server = conn.root
 		#chiedo all'utente se desidera impostare l'ultimo percorso usato
 		if (uti.askQuestion("Impostare l'ultimo percorso aperto?")):
 			#setto il repository se memorizzato nel file
@@ -292,8 +291,8 @@ class Client:
 				try:
 					commandList.reverse()
 					self.compare(" ".join(commandList))
-				except Exception as ex:
-					print(ex, end="\n\n")
+				except Exception as e:
+					print(e, end="\n\n")
 					self.printPendingChanges()
 			
 			elif (command == "winmerge"):
@@ -301,26 +300,26 @@ class Client:
 				try:
 					commandList.reverse()
 					self.merge(" ".join(commandList))
-				except Exception as ex:
-					print(ex, end="\n\n")
+				except Exception as e:
+					print(e, end="\n\n")
 					self.printPendingChanges()
 				print()
 
-			elif (command == "help"): 
+			elif (command == "help"):
 				self.checkCommand(commandList)
 				self.printHelp()
 
 			else: 
 				print("Valore non ammesso", end="\n\n")
 
-		except Exception as ex:
-			print(ex, end="\n\n")
+		except Exception as e:
+			print(e, end="\n\n")
 
 
 	def checkCommand(self, commandList, paramNum=None, checkRepo=False, checkBranch=False):
 		"""controlla che i parametri e il path corrente siano compatibili con il comando"""
 
-		if ((paramNum != None) & (len(commandList) != paramNum)):
+		if ((paramNum is not None) & (len(commandList) != paramNum)):
 			raise Exception("Parametri errati")
 		elif ((checkRepo) & (not self.currRepo)):
 			raise Exception("Nessun repository settato")
@@ -355,8 +354,8 @@ class Client:
 	def listDir(self):
 		"""stampa tutti i file e sottocartelle del branch selezionato sul server"""
 
-		list = self.server.listBranch(self.currRepo, self.currBranch)
-		for elem in list:
+		branchList = self.server.listBranch(self.currRepo, self.currBranch)
+		for elem in branchList:
 			print(uti.getPathForPrint(elem))
 
 		print()
@@ -889,7 +888,6 @@ class Client:
 		try:
 			#prendo il file corrispondente dal server e lo sovrascrivo al file locale
 			filePath = self.findFileInPendings(file)
-			originalChangeset = int(uti.readFileByTag(LAST_CHANGESET, self.localVersionFile)[0])
 			serverFile = self.getServerFile(filePath)
 
 			if (uti.askQuestion("Questo comando annullerà le modifiche sul file {}, sei sicuro?".format(file))):
@@ -951,7 +949,8 @@ class Client:
 		os.system("start {} {} {}".format(winmergepath, pendingFile, serverFile))
 
 
-	def printHelp(self):
+	@staticmethod
+	def printHelp():
 		"""stampa una lista di comandi con descrizione"""
 
 		print("\n> exit - chiude il programma",
@@ -996,10 +995,10 @@ class Client:
 
 		return self._currPath
 
-	def setCurrPath(self, path):
+	def setCurrPath(self, currPath):
 		"""setta il path di esecuzione"""
 
-		self._currPath = path
+		self._currPath = currPath
 
 	currPath = property(getCurrPath, setCurrPath)
 
@@ -1093,6 +1092,7 @@ try:
 
 	#stabilisco la connessione
 	print("Connessione al server...", sep="\n")
+	# noinspection PyUnboundLocalVariable
 	connection = rpyc.connect(host, 18812)
 	print("Connessione stabilita.", end="\n\n")
 	

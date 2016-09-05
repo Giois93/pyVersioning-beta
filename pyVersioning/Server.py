@@ -23,16 +23,19 @@ class Server(rpyc.Service):
 
 
 	### metodi di interfaccia Client-Server rpyc ###
-	class exposed_File():
+	class exposed_File:
+		filePath = ""
+		file = ""
 
 		def exposed_open(self, filePath, mode="r"):
 			self.filePath = filePath
 			self.file = open(filePath, mode, errors="ignore")
 
-		def exposed_write(self, bytes):
-			return self.file.write(bytes)
+		def exposed_write(self, stream):
+			return self.file.write(stream)
 
-		def exposed_read(self, bytes):
+		# noinspection PyUnusedLocal
+		def exposed_read(self, stream):
 			return self.file.read()
 
 		def exposed_close(self):
@@ -96,9 +99,9 @@ class Server(rpyc.Service):
 		except:
 			return False
 
-
-	def exposed_listDir(self, dir):
-		return uti.listDir(dir)
+	# noinspection PyMethodMayBeStatic
+	def exposed_listDir(self, dirPath):
+		return uti.listDir(dirPath)
 
 
 	def exposed_listBranch(self, repoName, branchName):
@@ -108,13 +111,13 @@ class Server(rpyc.Service):
 		tmpDir = self.getRepo(repoName).getBranch(branchName).getLatestVersion()
 
 		#memorizzo una lista dei file nella versione
-		list = self.exposed_listDir(tmpDir)
+		filesList = self.exposed_listDir(tmpDir)
 
 		#rimuovo la cartella temporanea
 		shutil.rmtree(tmpDir)
 
 		#formatto i path dei file per la stampa
-		return [elem.replace(tmpDir,"") for elem in list]
+		return [elem.replace(tmpDir,"") for elem in filesList]
 		
 
 	def exposed_showRepos(self):
@@ -145,7 +148,6 @@ class Server(rpyc.Service):
 	def exposed_getSpecificVersion(self, repoName, branchName, changesetNum):
 		"""scarica la versiona aggiornata al changeset "changesetNum" del branch "branchName" in una cartella temporanea """
 
-		branch = self.getRepo(repoName).getBranch(branchName)
 		return self.getRepo(repoName).getBranch(branchName).getSpecificVersion(changesetNum)
 		
 
@@ -167,10 +169,9 @@ class Server(rpyc.Service):
 		"""ritorna True se il repository è presente sul disco, False altrimenti"""
 
 		if (path.isdir(path.join(self.root, repoName))):
-			return True;
+			return True
 
-		return False;
-
+		return False
 
 	def getRepo(self, repoName):
 		"""ritorna il repository "repoName", se non esiste solleva un'eccezione"""
@@ -178,8 +179,7 @@ class Server(rpyc.Service):
 		if (self.existsRepo(repoName)):
 			return Repository(path.join(self.root, repoName))
 
-		raise Exception("Il repository non esiste.");
-
+		raise Exception("Il repository non esiste.")
 
 	def addRepo(self, repoName):
 		"""viene creato un nuovo repository, se il repository esiste già viene sollevata un'eccezione"""
@@ -209,7 +209,7 @@ class Server(rpyc.Service):
 		branch = self.getRepo(repoName).getBranch(branchName)
 		
 		#se non diversamente specificato, la ricerca parte dall'ultimo changeset
-		if (startChangeset == None):
+		if (startChangeset is None):
 			startChangeset = branch.getLastChangesetNum()
 
 		#scorro tutti i changeset presenti nella cartella del branch a partire da quello specificato
@@ -232,9 +232,7 @@ class Server(rpyc.Service):
 				
 			#se il file esiste in questo branch interrompo la ricerca
 			if (path.isfile(serverFile)):
-				break
-
-		return serverFile
+				return serverFile
 
 
 ### Main ###

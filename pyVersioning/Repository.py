@@ -21,10 +21,9 @@ class Repository:
 		"""ritorna True se il branch è presente sul disco, False altrimenti"""
 
 		if (path.isdir(path.join(self.repoDir, branchName))):
-			return True;
+			return True
 
-		return False;
-
+		return False
 
 	def getBranch(self, branchName):
 		"""ritorna il Branch "branchName", se non esiste solleva un'eccezione"""
@@ -32,20 +31,19 @@ class Repository:
 		if (self.existsBranch(branchName)):
 			return Branch(path.join(self.repoDir, branchName))
 
-		raise Exception("Il branch non esiste.");
-
+		raise Exception("Il branch non esiste.")
 
 	def getBranchList(self):
 		"""ritorna la lista di branch presenti"""
 
-		list = {}
+		branchList = {}
 		#prendo il contenuto della root
 		#seleziono solo le cartelle (i branch)
 		for branchName in os.listdir(self.repoDir):
 			if (path.isdir(path.join(self.repoDir, branchName))):
-				list[branchName] = uti.readFileByTag(CHANGESET0, self.getBranch(branchName).branchTxt)[0]
+				branchList[branchName] = uti.readFileByTag(CHANGESET0, self.getBranch(branchName).branchTxt)[0]
 
-		return list
+		return branchList
 
 
 	def addBranch(self, branchName, isTrunk=False):
@@ -63,7 +61,7 @@ class Repository:
 
 		#se sto creando il trunk, creo il primo changeset vuoto, il chiamante deve riempirlo
 		if (isTrunk):
-			changeset = branch.addChangeset("branch created", isBackup=True)
+			branch.addChangeset("branch created", isBackup=True)
 			#se sto inserendo il primo changeset nel branch scrivo anche il tag CHANGESET0
 			uti.writeFileByTag(CHANGESET0, str(branch.getLastChangesetNum()), branch.branchTxt)
 
