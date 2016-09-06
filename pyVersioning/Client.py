@@ -40,7 +40,6 @@ class Client:
 				print("Impossibile effettuare l'operazione", end="\n\n")
 
 
-
 	def copyDirToClient(self, dirFrom, dirTo):
 		"""copia la cartella "dirFrom" nella cartella "dirTo" """
 		
