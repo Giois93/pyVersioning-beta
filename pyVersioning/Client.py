@@ -942,10 +942,18 @@ class Client:
 			raise Exception("File non presente sul server")
 
 		#lancio winmerge
-		exePath = path.dirname(inspect.getsourcefile(lambda:0))
-		winmergepath = path.join(exePath, "WinMerge", "WinMergePortable.exe")
+		winMergePath = ""
+		try:
+			winMergePath = uti.readFileByTag(WINMERGE_PATH, self.lastRunFile)[0]
+		except:
+			pass
 
-		os.system("start {} {} {}".format(winmergepath, pendingFile, serverFile))
+		while (not path.isfile(winMergePath)):
+			print("\nDigitare il path dell'eseguibile di WinMerge: ")
+			winMergePath = input()
+		
+		uti.writeFileByTag(WINMERGE_PATH, winMergePath, self.lastRunFile)
+		os.system("start {} {} {}".format(winMergePath, pendingFile, serverFile))
 
 
 	@staticmethod
